@@ -23,26 +23,11 @@ source("common_functions.R")
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 
-# Select the configuration (if in a particular country data are weekly,
-# you must use weekly or daily spline data)
-weekly <- FALSE
-daily_spline <- FALSE
+# Select the configuration (with or without variants)
 variants <- TRUE
 
-# Select the variants aggregation to use
+# Select the variants aggregation to use (if variants is set to TRUE)
 who_labels <- TRUE
-
-
-# Initialize some variables with respect to the selected configuration
-weekly_multiplier <- 1
-if(weekly){
-  weekly_multiplier <- 7
-  daily_spline <- FALSE
-}
-
-if(daily_spline){
-  weekly <- FALSE
-}
 
 # Select the country
 country <- "Italy"
@@ -52,8 +37,7 @@ country <- "Italy"
 data <- download_files_and_load_data(country, who_labels)
 df_COVID19_ref_init <- data[[1]]
 df_variants_init <- data[[2]]
-df_variants_USA_init <- data[[3]]
-updated_file <- data[[4]]
+updated_file <- data[[3]]
 
 
 # Initialize other variables
@@ -62,8 +46,8 @@ immunization_end_rate <- 1 / 180
 mcmc_samples <- 1000
 
 ref_data_flag <- rep(FALSE, 4)
-time_steps <- c(7/weekly_multiplier, 14/weekly_multiplier, 21/weekly_multiplier, 28/weekly_multiplier)
-internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", "_MCMC", mcmc_samples, if(weekly) "_Weekly" else "", if(daily_spline) "_DailySpline" else "", "/")
+time_steps <- c(7, 14, 21, 28)
+internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", "_MCMC", mcmc_samples, "/")
 
 
 # Select the scenarios
@@ -126,10 +110,10 @@ for(j in seq(1, length(initial_dates))){
   }
   
   # Compute the final dates
-  final_dates_ref <- c(final_dates[j] + time_steps[1] * weekly_multiplier)
+  final_dates_ref <- c(final_dates[j] + time_steps[1])
   
   for(i in seq(2, length(time_steps))){
-    final_dates_ref <- c(final_dates_ref, final_dates[j] + time_steps[i] * weekly_multiplier)
+    final_dates_ref <- c(final_dates_ref, final_dates[j] + time_steps[i])
   }
   
   
@@ -150,33 +134,19 @@ for(j in seq(1, length(initial_dates))){
   data <- compute_data(dir_name, df_COVID19_ref_init, df_variants_init, immunization_end_rate, !updated_file)
   df_variants_all <- data[[1]]
   df_COVID19_all <- data[[2]]
-  df_COVID19_all_weekly <- data[[3]]
-  SIRD_all <- data[[4]]
-  SIRD_all_weekly <- data[[5]]
-  SIRD_all_spline <- data[[6]]
-  results_all <- data[[7]]
-  results_all_weekly <- data[[8]]
-  results_all_spline <- data[[9]]
+  SIRD_all <- data[[3]]
+  results_all <- data[[4]]
   
   # Check if we can reproduce the real data using a SIRD model from initial_dates[j] to final_dates[j] (with the previously computed rates)
-  SIRD_check(dir_name, "daily", SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, immunization_end_rate, df_COVID19_all$population[1])
-  SIRD_check(dir_name, "weekly", SIRD_all_weekly, results_all_weekly$infection_rates, results_all_weekly$rec_rates, results_all_weekly$fat_rates, immunization_end_rate*7, df_COVID19_all_weekly$population[1])
-  SIRD_check(dir_name, "spline", SIRD_all_spline, results_all_spline$infection_rates, results_all_spline$rec_rates, results_all_spline$fat_rates, immunization_end_rate, df_COVID19_all$population[1])
-  plot_I(dir_name, "daily", SIRD_all)
-  plot_I(dir_name, "weekly", SIRD_all_weekly)
-  plot_I(dir_name, "spline", SIRD_all_spline)
+  SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, immunization_end_rate, df_COVID19_all$population[1])
+  plot_I(dir_name, SIRD_all)
   
   # Plot variants info
-  data <- generate_and_plot_variants_info(paste0(external_dir_name[j], internal_dir_name), df_variants_all, df_COVID19_all, df_COVID19_all_weekly, SIRD_all, SIRD_all_weekly, SIRD_all_spline, results_all, results_all_weekly, results_all_spline, weekly)
+  data <- generate_and_plot_variants_info(paste0(external_dir_name[j], internal_dir_name), df_variants_all, df_COVID19_all, SIRD_all, results_all)
   df_variants_processed <- data[[1]]
   df_COVID19_all <- data[[2]]
-  df_COVID19_all_weekly <- data[[3]]
-  SIRD_all <- data[[4]]
-  SIRD_all_weekly <- data[[5]]
-  SIRD_all_spline <- data[[6]]
-  results_all <- data[[7]]
-  results_all_weekly <- data[[8]]
-  results_all_spline <- data[[9]]
+  SIRD_all <- data[[3]]
+  results_all <- data[[4]]
   
   variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_COVID19_all$population[1])
   SIRD_all_variants <- variants_data[[1]]
@@ -185,7 +155,7 @@ for(j in seq(1, length(initial_dates))){
   variants_name <- unique(df_variants_processed$variant)
   
   for(i in seq(1, length(time_steps))){
-    filtered_data <- filter_data(df_COVID19_all, df_COVID19_all_weekly, SIRD_all, SIRD_all_weekly, SIRD_all_spline, SIRD_all_variants, results_all, results_all_weekly, results_all_spline, results_all_variants, initial_dates[j], final_dates[j], final_dates_ref[i], weekly, daily_spline, variants)
+    filtered_data <- filter_data(df_COVID19_all, SIRD_all, SIRD_all_variants, results_all, results_all_variants, initial_dates[j], final_dates[j], final_dates_ref[i], variants)
     df_COVID19_ref_used <- filtered_data[[1]]
     df_COVID19_used <- filtered_data[[2]]
     SIRD_ref_used <- filtered_data[[3]]
@@ -201,28 +171,25 @@ for(j in seq(1, length(initial_dates))){
     
     
     ref_data_flag[i] <- df_COVID19_all$date[nrow(df_COVID19_all)-1] >= (df_COVID19_used$date[n] + time_steps[i])
-    if(weekly){
-      ref_data_flag[i] <- df_COVID19_all_weekly$date[nrow(df_COVID19_all_weekly)-1] >= (df_COVID19_used$date[n] + time_steps[i] * weekly_multiplier)
-    }
     
     # Forecast on recovery rates
     results_used$rec_rates[which(results_used$rec_rates == 0)] <- min(results_used$rec_rates[which(results_used$rec_rates > 0)])
     rec_rates_log <- log(unique(results_used$rec_rates))
-    fc_rec_rate <- apply_Prophet(dir_name, df_COVID19_used$date, rec_rates_log, time_steps[i], "rec_rate", "/forecast_plot", weekly, mcmc_samples)
+    fc_rec_rate <- apply_Prophet(dir_name, df_COVID19_used$date, rec_rates_log, time_steps[i], "rec_rate", "/forecast_plot", mcmc_samples)
     fc_rec_rate$yhat <- exp(fc_rec_rate$yhat)
     fc_rec_rate$yhat_lower <- exp(fc_rec_rate$yhat_lower)
     fc_rec_rate$yhat_upper <- exp(fc_rec_rate$yhat_upper)
-    forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, unique(results_ref_used$rec_rates), fc_rec_rate, time_steps[i], "recovery_rates", weekly)
+    forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, unique(results_ref_used$rec_rates), fc_rec_rate, time_steps[i], "recovery_rates")
 
     
     # Forecast on fatality_rates
     results_used$fat_rates[which(results_used$fat_rates == 0)] <- min(results_used$fat_rates[which(results_used$fat_rates > 0)])
     fat_rates_log <- log(unique(results_used$fat_rates))
-    fc_fat_rate <- apply_Prophet(dir_name, df_COVID19_used$date, fat_rates_log, time_steps[i], "fat_rate", "/forecast_plot", weekly, mcmc_samples)
+    fc_fat_rate <- apply_Prophet(dir_name, df_COVID19_used$date, fat_rates_log, time_steps[i], "fat_rate", "/forecast_plot", mcmc_samples)
     fc_fat_rate$yhat <- exp(fc_fat_rate$yhat)
     fc_fat_rate$yhat_lower <- exp(fc_fat_rate$yhat_lower)
     fc_fat_rate$yhat_upper <- exp(fc_fat_rate$yhat_upper)
-    forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, unique(results_ref_used$fat_rates), fc_fat_rate, time_steps[i], "fatality_rates", weekly)
+    forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, unique(results_ref_used$fat_rates), fc_fat_rate, time_steps[i], "fatality_rates")
 
 
     if(variants){
@@ -247,7 +214,7 @@ for(j in seq(1, length(initial_dates))){
           results_used_local$infection_rates[which(results_used_local$infection_rates == 0)] <- min(results_used_local$infection_rates[which(results_used_local$infection_rates > 0)])
           
           infection_rates_log <- log(results_used_local$infection_rates)
-          fc_inf_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(infection_rates_log)+1):nrow(df_COVID19_used)], infection_rates_log, time_steps[i], paste0("inf_rate_", variants_name[k]), "/forecast_plot/infection_rates", weekly, mcmc_samples)
+          fc_inf_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(infection_rates_log)+1):nrow(df_COVID19_used)], infection_rates_log, time_steps[i], paste0("inf_rate_", variants_name[k]), "/forecast_plot/infection_rates", mcmc_samples)
           fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
           fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
           fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
@@ -256,7 +223,7 @@ for(j in seq(1, length(initial_dates))){
           fc_inf_rate <- data.frame(yhat=rep(0, time_steps[i]), yhat_lower=rep(0, time_steps[i]), yhat_upper=rep(0, time_steps[i]))
         }
 
-        forecast_plot(paste0(dir_name, "/forecast_plot/infection_rates"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, results_ref_used_local$infection_rates, fc_inf_rate, time_steps[i], paste0("infection_rates_", variants_name[k]), weekly)
+        forecast_plot(paste0(dir_name, "/forecast_plot/infection_rates"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, results_ref_used_local$infection_rates, fc_inf_rate, time_steps[i], paste0("infection_rates_", variants_name[k]))
         
         infection_rates_local <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
         infection_rates <- rbind(infection_rates, infection_rates_local)
@@ -265,7 +232,7 @@ for(j in seq(1, length(initial_dates))){
           # Forecast on I
           SIRD_used_local$I[which(SIRD_used_local$I == 0)] <- min(SIRD_used_local$I[which(SIRD_used_local$I != 0)])
           I_log <- log(SIRD_used_local$I)
-          fc_I <- apply_Prophet(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k]), "/forecast_plot/I", weekly, mcmc_samples)
+          fc_I <- apply_Prophet(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k]), "/forecast_plot/I", mcmc_samples)
           fc_I$yhat <- exp(fc_I$yhat)
           fc_I$yhat_lower <- exp(fc_I$yhat_lower)
           fc_I$yhat_upper <- exp(fc_I$yhat_upper)
@@ -274,7 +241,7 @@ for(j in seq(1, length(initial_dates))){
           fc_I <- data.frame(yhat=rep(0, time_steps[i]), yhat_lower=rep(0, time_steps[i]), yhat_upper=rep(0, time_steps[i]))
         }
         
-        forecast_plot(paste0(dir_name, "/forecast_plot/I"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, SIRD_ref_used_local$I, fc_I, time_steps[i], paste0("I_", variants_name[k]), weekly)
+        forecast_plot(paste0(dir_name, "/forecast_plot/I"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, SIRD_ref_used_local$I, fc_I, time_steps[i], paste0("I_", variants_name[k]))
         
         I_local <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I$yhat, lower=fc_I$yhat_lower, upper=fc_I$yhat_upper)
         I <- rbind(I, I_local)
@@ -289,11 +256,11 @@ for(j in seq(1, length(initial_dates))){
       # Forecast on global infection rates
       infection_rates_log <- log(global_infection_rates$infection_rates)
       infection_rates_log[which(is.infinite(infection_rates_log) | is.na(infection_rates_log))] <- 0
-      fc_inf_rate <- apply_Prophet(dir_name, global_infection_rates$date, infection_rates_log, time_steps[i], "global_inf_rate", "/forecast_plot", weekly, mcmc_samples)
+      fc_inf_rate <- apply_Prophet(dir_name, global_infection_rates$date, infection_rates_log, time_steps[i], "global_inf_rate", "/forecast_plot", mcmc_samples)
       fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
       fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
       fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
-      forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, global_infection_rates$date, global_infection_rates_ref$date, global_infection_rates_ref$infection_rates, fc_inf_rate, time_steps[i], "global_infection_rates", weekly)
+      forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, global_infection_rates$date, global_infection_rates_ref$date, global_infection_rates_ref$infection_rates, fc_inf_rate, time_steps[i], "global_infection_rates")
       
       global_infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
       global_recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
@@ -301,26 +268,26 @@ for(j in seq(1, length(initial_dates))){
 
 
       # Plot the forecast and the comparisons
-      SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), 'Prophet', time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, I, SIRD_used, SIRD_ref_used, N[1], weekly, variants)
+      SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), 'Prophet', time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, I, SIRD_used, SIRD_ref_used, N[1], variants)
     }
     else{
       # Forecast on infection rates
       infection_rates_log <- log(results_used$infection_rates)
       infection_rates_log[which(is.infinite(infection_rates_log) | is.na(infection_rates_log))] <- 0
-      fc_inf_rate <- apply_Prophet(dir_name, SIRD_used$date, infection_rates_log, time_steps[i], "inf_rate", "/forecast_plot", weekly, mcmc_samples)
+      fc_inf_rate <- apply_Prophet(dir_name, SIRD_used$date, infection_rates_log, time_steps[i], "inf_rate", "/forecast_plot", mcmc_samples)
       fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
       fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
       fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
-      forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, results_ref_used$infection_rates, fc_inf_rate, time_steps[i], "infection_rates", weekly)
+      forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, results_ref_used$infection_rates, fc_inf_rate, time_steps[i], "infection_rates")
     
       # Forecast on I
       I_log <- log(SIRD_used$I)
       I_log[which(is.infinite(I_log) | is.na(I_log))] <- 0
-      fc_I <- apply_Prophet(dir_name, SIRD_used$date, I_log, time_steps[i], "I", "/forecast_plot", weekly, mcmc_samples)
+      fc_I <- apply_Prophet(dir_name, SIRD_used$date, I_log, time_steps[i], "I", "/forecast_plot", mcmc_samples)
       fc_I$yhat <- exp(fc_I$yhat)
       fc_I$yhat_lower <- exp(fc_I$yhat_lower)
       fc_I$yhat_upper <- exp(fc_I$yhat_upper)
-      forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, SIRD_ref_used$I, fc_I, time_steps[i], "I", weekly)  
+      forecast_plot(paste0(dir_name, "/forecast_plot"), 'Prophet', ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, SIRD_ref_used$I, fc_I, time_steps[i], "I")  
     
       infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
       recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
@@ -328,7 +295,7 @@ for(j in seq(1, length(initial_dates))){
 
 
       # Plot the forecast and the comparisons
-      SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), 'Prophet', time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, immunization_end_rate, fc_I$yhat, SIRD_used, SIRD_ref_used, N[1], weekly, variants)
+      SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), 'Prophet', time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, immunization_end_rate, fc_I$yhat, SIRD_used, SIRD_ref_used, N[1], variants)
     }
   }
   

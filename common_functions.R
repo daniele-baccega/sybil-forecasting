@@ -12,8 +12,7 @@ download_files_and_load_data <- function(country_long, who_labels){
   
   # Check if the files are updated
   updated_file <- file.exists(paste0("datasets/", country_long, "_", Sys.Date(), ".csv")) &&
-    file.exists(paste0("datasets/variants_data_", Sys.Date(), ".csv")) &&
-    file.exists(paste0("datasets/variants_data_USA_", Sys.Date(), ".csv"))
+    file.exists(paste0("datasets/variants_data_", Sys.Date(), ".csv"))
   
   if(!updated_file){
     # Download the updated data
@@ -27,11 +26,9 @@ download_files_and_load_data <- function(country_long, who_labels){
     system(paste0("rm -r ", Sys.Date()))
     
     download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", paste0("datasets/variants_data_", Sys.Date(), ".csv"))
-    
-    download.file("https://data.cdc.gov/api/views/jr58-6ysp/rows.csv?accessType=DOWNLOAD", paste0("datasets/variants_data_USA_", Sys.Date(), ".csv"))
   }
   
-  # Read the data
+  # Read and preprocess the data
   df_COVID19_ref_init <- read.csv(paste0("datasets/", country_long, "_", Sys.Date(), ".csv"))
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
     filter(administrative_area_level_2 == "", administrative_area_level_3 == "", !is.na(confirmed))
@@ -57,7 +54,6 @@ download_files_and_load_data <- function(country_long, who_labels){
       mutate(variant = str_replace(variant, "/", "-"))
     df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
     
-    # Variants: https://covariants.org/
     df_variants_init$variant[which(df_variants_init$variant %in% c("B.1.1.7"))] <- "Alpha"
     df_variants_init$variant[which(df_variants_init$variant %in% c("B.1.617.2"))] <- "Delta"
     df_variants_init$variant[which(df_variants_init$variant %in% c("BA.1", "BA.2", "BA.2.75", "BA.4", "BA.5", "BQ.1", "XBB", "XBB.1.5"))] <- "Omicron"
@@ -77,7 +73,6 @@ download_files_and_load_data <- function(country_long, who_labels){
       mutate(variant = str_replace(variant, "/", "-"))
     df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
     
-    # Variants: https://covariants.org/
     df_variants_init$variant[which(df_variants_init$variant %in% c("B.1.1.7", "B.1.351", "B.1.525"))] <- "B.1.1.7 - B.1.351 - B.1.525"
     df_variants_init$variant[which(df_variants_init$variant %in% c("B.1.617.2", "B.1.617.1", "B.1.620", "B.1.621"))] <- "B.1.617.2 - B.1.617.1 - B.1.620 - B.1.621"
     df_variants_init$variant[which(df_variants_init$variant %in% c("XBB.1.5", "XBB"))] <- "XBB - XBB.1.5"
@@ -92,12 +87,7 @@ download_files_and_load_data <- function(country_long, who_labels){
   
   df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   
-  
-  df_variants_USA_init <- read.csv(paste0("datasets/variants_data_USA_", Sys.Date(), ".csv"))
-  df_variants_USA_init <- df_variants_USA_init %>%
-    filter(usa_or_hhsregion == "USA")
-  
-  return(list(df_COVID19_ref_init, df_variants_init, df_variants_USA_init, updated_file))
+  return(list(df_COVID19_ref_init, df_variants_init, updated_file))
 }
 
 # Filter out small values in the variants proportion
@@ -174,23 +164,13 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     
     df_COVID19_ref_weekly <- df_COVID19_ref %>%
       group_by(week, year) %>%
-      summarize(new_cases = sum(new_cases),
-                new_deaths = sum(new_deaths),
-                new_recovered = sum(new_recovered),
-                date = first(date)) %>%
-      filter(!is.na(new_cases))
+      summarise(date = first(date))
     
     df_COVID19_ref_weekly <- df_COVID19_ref_weekly[order(df_COVID19_ref_weekly$date),]
-    
-    df_COVID19_ref_weekly$population <- rep(N, nrow(df_COVID19_ref_weekly))
-    df_COVID19_ref_weekly$total_cases <- cumsum(df_COVID19_ref_weekly$new_cases)
-    df_COVID19_ref_weekly$total_recovered <- cumsum(df_COVID19_ref_weekly$new_recovered)
-    df_COVID19_ref_weekly$total_deaths <- cumsum(df_COVID19_ref_weekly$new_deaths)
     
     df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
       filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
     
-    # Daily data
     n <- nrow(df_COVID19_ref)
     
     S_local <- I_local <- R_local <- D_local <- rep(0, n)
@@ -206,69 +186,11 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
       R_local[t] <- R_local[t-1] + df_COVID19_ref$new_recovered[t] - R_local[t-1] * immunization_end_rate
       D_local[t] <- D_local[t-1] + df_COVID19_ref$new_deaths[t]
     }
-    
-    
-    # Weekly data
-    n_weekly <- nrow(df_COVID19_ref_weekly)
-    
-    S_local_weekly <- I_local_weekly <- R_local_weekly <- D_local_weekly <- rep(0, n_weekly)
-    
-    S_local_weekly[1] <- N - df_COVID19_ref_weekly$total_cases[1]
-    I_local_weekly[1] <- df_COVID19_ref_weekly$total_cases[1]
-    R_local_weekly[1] <- df_COVID19_ref_weekly$total_recovered[1]
-    D_local_weekly[1] <- df_COVID19_ref_weekly$total_deaths[1]
-    
-    for(t in 2:n_weekly){
-      S_local_weekly[t] <- S_local_weekly[t-1] - df_COVID19_ref_weekly$new_cases[t] + R_local_weekly[t-1] * (immunization_end_rate * 7)
-      I_local_weekly[t] <- I_local_weekly[t-1] + df_COVID19_ref_weekly$new_cases[t] - (df_COVID19_ref_weekly$new_deaths[t] + df_COVID19_ref_weekly$new_recovered[t])
-      R_local_weekly[t] <- R_local_weekly[t-1] + df_COVID19_ref_weekly$new_recovered[t] - R_local_weekly[t-1] * (immunization_end_rate * 7)
-      D_local_weekly[t] <- D_local_weekly[t-1] + df_COVID19_ref_weekly$new_deaths[t]
-    }
-    
-    
-    # Spline data
-    S_spline <- splinefun(seq(1, n_weekly*7, 7), S_local_weekly, method = "monoH.FC")
-    I_spline <- splinefun(seq(1, n_weekly*7, 7), I_local_weekly, method = "monoH.FC")
-    R_spline <- splinefun(seq(1, n_weekly*7, 7), R_local_weekly, method = "monoH.FC")
-    D_spline <- splinefun(seq(1, n_weekly*7, 7), D_local_weekly, method = "monoH.FC")
-    
-    png(paste0(dir_name, "/S.png"), units="in", width=34, height=15, res=300)
-    plot(seq(1, n_weekly*7, 7), S_local_weekly, cex.lab=1.5, xlab="date", ylab="S")
-    lines(seq(1, length(df_COVID19_ref$date)), S_spline(seq(1, length(df_COVID19_ref$date))), col="red")
-    print(plot)
-    dev.off()
-    
-    png(paste0(dir_name, "/I.png"), units="in", width=34, height=15, res=300)
-    plot(seq(1, n_weekly*7, 7), I_local_weekly, cex.lab=1.5, xlab="date", ylab="I")
-    lines(seq(1, length(df_COVID19_ref$date)), I_spline(seq(1, length(df_COVID19_ref$date))), col="red")
-    print(plot)
-    dev.off()
-    
-    png(paste0(dir_name, "/R.png"), units="in", width=34, height=15, res=300)
-    plot(seq(1, n_weekly*7, 7), R_local_weekly, cex.lab=1.5, xlab="date", ylab="R")
-    lines(seq(1, length(df_COVID19_ref$date)), R_spline(seq(1, length(df_COVID19_ref$date))), col="red")
-    print(plot)
-    dev.off()
-    
-    png(paste0(dir_name, "/D.png"), units="in", width=34, height=15, res=300)
-    plot(seq(1, n_weekly*7, 7), D_local_weekly, cex.lab=1.5, xlab="date", ylab="D")
-    lines(seq(1, length(df_COVID19_ref$date)), D_spline(seq(1, length(df_COVID19_ref$date))), col="red")
-    print(plot)
-    dev.off()
-    
-    S_local_spline <- S_spline(seq(1, length(df_COVID19_ref$date)))
-    I_local_spline <- I_spline(seq(1, length(df_COVID19_ref$date)))
-    R_local_spline <- R_spline(seq(1, length(df_COVID19_ref$date)))
-    D_local_spline <- D_spline(seq(1, length(df_COVID19_ref$date)))
    
     SIRD_all <- data.frame(date=df_COVID19_ref$date, S=S_local, I=I_local, R=R_local, D=D_local)
-    SIRD_all_weekly <- data.frame(date=df_COVID19_ref_weekly$date, S=S_local_weekly, I=I_local_weekly, R=R_local_weekly, D=D_local_weekly)
-    SIRD_all_spline <- data.frame(date=df_COVID19_ref$date, S=S_local_spline, I=I_local_spline, R=R_local_spline, D=D_local_spline)
-
+   
     results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1))
-    results_all_weekly <- get_rates(SIRD_all_weekly[-nrow(SIRD_all_weekly),], SIRD_all_weekly[nrow(SIRD_all_weekly),], immunization_end_rate*7, rep(N, nrow(SIRD_all_weekly)-1))
-    results_all_spline <- get_rates(SIRD_all_spline[-nrow(SIRD_all_spline),], SIRD_all_spline[nrow(SIRD_all_spline),], immunization_end_rate, rep(N, nrow(SIRD_all_spline)-1))
-
+    
     df_variants_ref <- df_variants_ref %>%
       filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
       arrange(variant)
@@ -276,14 +198,14 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
     
     today <- Sys.Date()
-    save(df_variants_ref, df_COVID19_ref, df_COVID19_ref_weekly, S_local, S_local_weekly, S_local_spline, I_local, I_local_weekly, I_local_spline, R_local, R_local_weekly, R_local_spline, D_local, D_local_weekly, D_local_spline, SIRD_all, SIRD_all_weekly, SIRD_all_spline, results_all, results_all_weekly, results_all_spline, file=paste0(dir_name, "/data/data.RData"))
+    save(df_variants_ref, df_COVID19_ref, S_local, I_local, R_local, D_local, SIRD_all, results_all, file=paste0(dir_name, "/data/data.RData"))
     save(today, file=paste0(dir_name, "/data/date.RData"))
   }
   else{
     load(paste0(dir_name, "/data/data.RData"))
   }
   
-  return(list(df_variants_ref, df_COVID19_ref, df_COVID19_ref_weekly, SIRD_all, SIRD_all_weekly, SIRD_all_spline, results_all, results_all_weekly, results_all_spline))
+  return(list(df_variants_ref, df_COVID19_ref, SIRD_all, results_all))
 }
 
 # Computes the infection, the recovery and the fatality rates starting
@@ -298,7 +220,7 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
 
 # Checks if we can re-obtain the real data starting from the previously computed
 # rates; in particular, we used a deterministic SIRD model.
-SIRD_check <- function(dir_name, name, SIRD, infection_rates, rec_rates, fat_rates, immunization_end_rate, N){
+SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, immunization_end_rate, N){
   n <- nrow(SIRD)
   
   S_local <- I_local <- R_local <- D_local <- rep(0, n)
@@ -337,7 +259,7 @@ SIRD_check <- function(dir_name, name, SIRD, infection_rates, rec_rates, fat_rat
   
   df_plot <- rbind(df_plot, df_plot_ref)
   
-  png(paste0(dir_name, "/SIRD_", name, "_check.png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/SIRD_check.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(df_plot) +
     geom_line(aes(x=date, y=value, col=type), linewidth=1.5) +
     facet_wrap(~place, scales="free_y") +
@@ -347,8 +269,16 @@ SIRD_check <- function(dir_name, name, SIRD, infection_rates, rec_rates, fat_rat
 }
 
 # Plot SIRD$I
-plot_I <- function(dir_name, name, SIRD_plot){
-  png(paste0(dir_name, "/I_", name, "_check_five_forecasts.png"), units="in", width=34, height=15, res=300)
+plot_I <- function(dir_name, SIRD_plot){
+  png(paste0(dir_name, "/I.png"), units="in", width=34, height=15, res=300)
+  plot <- ggplot(SIRD_plot, aes(x=date, y=I)) +
+    geom_line(linewidth=1.5) +
+    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
+    labs(x="date", y="infected")
+  print(plot)
+  dev.off()
+  
+  png(paste0(dir_name, "/I_scenarios.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_plot, aes(x=date, y=I)) +
     geom_line(linewidth=1.5) +
     geom_vline(aes(xintercept = as.Date("2020-04-14")), color="red", linetype="dashed", linewidth=1.5) +
@@ -367,7 +297,7 @@ plot_I <- function(dir_name, name, SIRD_plot){
   dev.off()
 }
 
-generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_all, df_COVID19_all_weekly, SIRD_all, SIRD_all_weekly, SIRD_all_spline, results_all, results_all_weekly, results_all_spline, weekly){
+generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_all, SIRD_all, results_all){
   variants_name <- unique(df_variants$variant)
   
   variants_global_df <- data.frame()
@@ -380,20 +310,13 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_al
     
     df_variants_local$percent_variant <- rollapplyr(df_variants_local$percent_variant, 3, (mean), fill = if(v == "Other") 1 else 0)
     
-    if(!weekly){
-      variants_spline <- splinefun(seq(1, n*7, 7), df_variants_local$percent_variant, method = "monoH.FC")
-      variants_data_spline <- variants_spline(seq(1, length(seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1))))
-      variants_data_spline[variants_data_spline < 0] <- 0
-      
-      variants_spline_df <- data.frame(date=seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1), y=variants_data_spline, variant=rep(v, length(variants_data_spline)))
-      
-      variants_global_df <- rbind(variants_global_df, variants_spline_df)
-    }
-    else{
-      variants_df <- data.frame(date=df_variants$date, y=df_variants$percent_variant, variant=rep(v, length(df_variants)))
-      
-      variants_global_df <- rbind(variants_global_df, variants_df)
-    }
+    variants_spline <- splinefun(seq(1, n*7, 7), df_variants_local$percent_variant, method = "monoH.FC")
+    variants_data_spline <- variants_spline(seq(1, length(seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1))))
+    variants_data_spline[variants_data_spline < 0] <- 0
+    
+    variants_spline_df <- data.frame(date=seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1), y=variants_data_spline, variant=rep(v, length(variants_data_spline)))
+    
+    variants_global_df <- rbind(variants_global_df, variants_spline_df)
     
     png(paste0(dir_name, "variants_", v, "_spline_check.png"), units="in", width=34, height=15, res=300)
     plot <- ggplot(variants_spline_df) +
@@ -419,28 +342,13 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_al
   df_COVID19_all <- df_COVID19_all %>%
     filter(date <= df_variants$date[nrow(df_variants)])
   
-  df_COVID19_all_weekly <- df_COVID19_all_weekly %>%
-    filter(date <= df_variants$date[nrow(df_variants)])
-  
   SIRD_all <- SIRD_all %>%
-    filter(date <= df_variants$date[nrow(df_variants)])
-  
-  SIRD_all_weekly <- SIRD_all_weekly %>%
-    filter(date <= df_variants$date[nrow(df_variants)])
-  
-  SIRD_all_spline <- SIRD_all_spline %>%
     filter(date <= df_variants$date[nrow(df_variants)])
   
   results_all <- results_all %>%
     filter(date <= df_variants$date[nrow(df_variants)])
-  
-  results_all_weekly <- results_all_weekly %>%
-    filter(date <= df_variants$date[nrow(df_variants)])
-  
-  results_all_spline <- results_all_spline %>%
-    filter(date <= df_variants$date[nrow(df_variants)])
       
-  return(list(variants_global_df, df_COVID19_all, df_COVID19_all_weekly, SIRD_all, SIRD_all_weekly, SIRD_all_spline, results_all, results_all_weekly, results_all_spline))
+  return(list(variants_global_df, df_COVID19_all, SIRD_all, results_all))
 }
 
 SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N){
@@ -468,7 +376,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
   
   df_all_variants <- data.frame(date=rep(SIRD_all$date[-nrow(SIRD_all)], length(variants_name)), infection_rates=infection_rates_all_variants, rec_rates=rep(results_all$rec_rates[-nrow(SIRD_variant)], length(variants_name)), fat_rates=rep(results_all$fat_rates[-nrow(SIRD_variant)], length(variants_name)), variant=df_variants_names$variant)
 
-  png(paste0(dir_name, "/I_variants_five.png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/I_variants_scenarios.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all_variants_plot, aes(date, I, color=variant))
   for(i in 1:length(variants_name)){
     plot <- plot + geom_line(linewidth=1.5)
@@ -506,33 +414,18 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
 }
 
 # Gets the data frames.
-filter_data <- function(df_COVID19_ref, df_COVID19_ref_weekly, SIRD_all, SIRD_all_weekly, SIRD_all_spline, SIRD_all_variants, results_all, results_all_weekly, results_all_spline, results_all_variants, initial_date, final_date, final_date_ref, weekly, daily_spline, variants){
+filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all, results_all_variants, initial_date, final_date, final_date_ref, variants){
   # Reference dataframes
   df_COVID19_ref <- df_COVID19_ref %>%
     filter(date >= initial_date, date <= final_date_ref)
   
-  df_COVID19_ref_weekly <- df_COVID19_ref_weekly %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
   SIRD_all <- SIRD_all %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
-  SIRD_all_weekly <- SIRD_all_weekly %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
-  SIRD_all_spline <- SIRD_all_spline %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   SIRD_all_variants <- SIRD_all_variants %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   results_all <- results_all %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
-  results_all_weekly <- results_all_weekly %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
-  results_all_spline <- results_all_spline %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   results_all_variants <- results_all_variants %>%
@@ -542,29 +435,14 @@ filter_data <- function(df_COVID19_ref, df_COVID19_ref_weekly, SIRD_all, SIRD_al
   # Dataframes
   df_COVID19 <- df_COVID19_ref %>%
     filter(date <= final_date)
-  
-  df_COVID19_weekly <- df_COVID19_ref_weekly %>%
-    filter(date <= final_date)
-  
+
   SIRD <- SIRD_all %>%
-    filter(date <= final_date)
-  
-  SIRD_weekly <- SIRD_all_weekly %>%
-    filter(date <= final_date)
-  
-  SIRD_spline <- SIRD_all_spline %>%
     filter(date <= final_date)
   
   SIRD_variants <- SIRD_all_variants %>%
     filter(date <= final_date)
   
   results <- results_all %>%
-    filter(date <= final_date)
-  
-  results_weekly <- results_all_weekly %>%
-    filter(date <= final_date)
-  
-  results_spline <- results_all_spline %>%
     filter(date <= final_date)
   
   results_variants <- results_all_variants %>%
@@ -579,22 +457,6 @@ filter_data <- function(df_COVID19_ref, df_COVID19_ref_weekly, SIRD_all, SIRD_al
   SIRD_used <- SIRD
   results_used <- results
   
-  if(weekly){
-    df_COVID19_ref_used <- df_COVID19_ref_weekly
-    SIRD_ref_used <- SIRD_all_weekly
-    results_ref_used <- results_all_weekly
-    df_COVID19_used <-df_COVID19_weekly
-    SIRD_used <- SIRD_weekly
-    results_used <- results_weekly
-  }
-  
-  if(daily_spline){
-    SIRD_ref_used <- SIRD_all_spline
-    results_ref_used <- results_all_spline
-    SIRD_used <- SIRD_spline
-    results_used <- results_spline
-  }
-  
   if(variants){
     SIRD_ref_used <- SIRD_all_variants
     results_ref_used <- results_all_variants
@@ -606,7 +468,7 @@ filter_data <- function(df_COVID19_ref, df_COVID19_ref_weekly, SIRD_all, SIRD_al
 }
 
 # Applies Prophet.
-apply_Prophet <- function(dir_name, date, values, time_step, file_name, plot_dir, weekly, mcmc_samples=0, changepoint_prior_scale=0.05){
+apply_Prophet <- function(dir_name, date, values, time_step, file_name, plot_dir, mcmc_samples=0, changepoint_prior_scale=0.05){
   profet_df <- data.frame(ds=date, y=values)
   
   path <- paste0(dir_name, "/prophet_models/model_", file_name, ".RData")
@@ -618,23 +480,14 @@ apply_Prophet <- function(dir_name, date, values, time_step, file_name, plot_dir
     save(m, file=path)
   }
   
-  future <- make_future_dataframe(m, periods=time_step, freq=if(weekly) "week" else "day", include_history = FALSE)
+  future <- make_future_dataframe(m, periods=time_step, freq="day", include_history = FALSE)
   forecast <- predict(m, future)
-  
-  # png(paste0(dir_name, plot_dir, "/plot_", time_step, "_", file_name , ".png"), units="in", width=34, height=15, res=300)
-  # prophet_plot_components(m, forecast)
-  # dev.off()
   
   return(forecast)
 }
 
 # Generates the forecast plot.
-forecast_plot <- function(dir_name, method, ref_data_flag, final_date, n, n_ref, dates, dates_ref, data_ref, data_fc, i, title, weekly, p=0, d=0, q=0){
-  weekly_step <- 1
-  if(weekly){
-    weekly_step <- 7  
-  }
-  
+forecast_plot <- function(dir_name, method, ref_data_flag, final_date, n, n_ref, dates, dates_ref, data_ref, data_fc, i, title, p=0, d=0, q=0){
   if(ref_data_flag){
     type <- rep(NA, n_ref + (n_ref - n) + 2)
     
@@ -658,7 +511,7 @@ forecast_plot <- function(dir_name, method, ref_data_flag, final_date, n, n_ref,
     type[1:n] <- rep("ground truth", n)
     type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
     
-    date <- c(dates, seq(as.Date(dates[n]), final_date, weekly_step))
+    date <- c(dates, seq(as.Date(dates[n]), final_date, q))
     
     value <- c(data_ref[1:n], data_ref[n], data_fc$yhat)
     low <- c(rep(NA, n), data_ref[n], data_fc$yhat_lower)
@@ -669,15 +522,15 @@ forecast_plot <- function(dir_name, method, ref_data_flag, final_date, n, n_ref,
   
   plot <- ggplot(df_plot, aes(x=date, col=type)) +
     geom_line(aes(y=value), linewidth=1.5) +
-    labs(title=paste0(i*weekly_step, " days"), x="date", y=if(title[1] == "I") "I" else "infection rates", color="Variants", linetype="Type") +
+    labs(title=paste0(i, " days"), x="date", y=if(title[1] == "I") "I" else "infection rates", color="Variants", linetype="Type") +
     scale_colour_manual(values=c("red", "black", "blue")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     guides(color=guide_legend(override.aes=list(fill=NA)))
-  save(plot, file = paste0(gsub("/I", "", gsub("/infection_rates", "", dir_name)), "/RData/forecast_", title, "_", i*weekly_step, "_days.RData"))
+  save(plot, file = paste0(gsub("/I", "", gsub("/infection_rates", "", dir_name)), "/RData/forecast_", title, "_", i, "_days.RData"))
 }
 
 # Deterministic SIRD model.
-SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, variants, time_step, weekly){
+SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, variants, time_step){
   if(variants){
     SIRD_all_variants <- SIRD %>%
       group_by(date) %>%
@@ -729,11 +582,7 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
     I_local[1:n] <- SIRD$I
     R_local[1:n] <- SIRD$R
     D_local[1:n] <- SIRD$D
-    
-    if(weekly){
-      immunization_end_rate <- immunization_end_rate * 7
-    }
-    
+
     for(t in n:(n_ref-1)){
       S_local[t+1] <- S_local[t] - infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate
       I_local[t+1] <- I_local[t] + infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N - I_local[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
@@ -741,23 +590,18 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
       D_local[t+1] <- D_local[t] + I_local[t] * global_fatality_rates$mean[(t-n)+1]
     }
     
-    SIRD_ev <- data.frame(date=seq.Date(SIRD$date[1], SIRD$date[n] + time_step * if(weekly) 7 else 1, if(weekly) 7 else 1), S=S_local, I=I_local, R=R_local, D=D_local)
+    SIRD_ev <- data.frame(date=seq.Date(SIRD$date[1], SIRD$date[n] + time_step, 1), S=S_local, I=I_local, R=R_local, D=D_local)
   }
   
   return(SIRD_ev)
 }
 
 # Evolution of the deterministic SIRD model.
-SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, fc_I, SIRD, SIRD_ref, N, weekly, variants){
+SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, fc_I, SIRD, SIRD_ref, N, variants){
   n <- length(unique(SIRD$date))
   n_ref <- n + time_step
   
-  weekly_step <- 1
-  if(weekly){
-    weekly_step <- 7  
-  }
-  
-  df_local <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, variants, time_step, weekly)
+  df_local <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, variants, time_step)
   
   if(variants){
     variants_name <- unique(infection_rates$variant)
@@ -798,7 +642,7 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
       type <- rep(type, 3 + length(variants_name))
       
-      date <- rep(c(unique(SIRD$date), seq(SIRD$date[n], final_date, weekly_step)), 3 + length(variants_name))
+      date <- rep(c(unique(SIRD$date), seq(SIRD$date[n], final_date, 1)), 3 + length(variants_name))
       
       value <- c()
       place <- c()
@@ -832,8 +676,8 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c(hue_pal()(length(variants_name)), "#808080")) +
       theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-      labs(title=paste0(time_step*weekly_step, " days"), x="date", y="population", color="Variants", linetype="Type")
-    save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step*weekly_step, "_days.RData"))
+      labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type")
+    save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
 
     for(i in 1:length(variants_name)){
       df_local_I <- df_local %>%
@@ -848,7 +692,7 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       fc_I_local <- fc_I %>%
         filter(variant == variants_name[i])
       
-      comparison(dir_name, time_step, weekly_step, "I", paste0("I (", variants_name[i], ")"), ref_data_flag, final_date, SIRD_local$date, SIRD_ref_local$date, df_local_I$I, fc_I_local$mean, SIRD_ref_local$I) 
+      comparison(dir_name, time_step, "I", paste0("I (", variants_name[i], ")"), ref_data_flag, final_date, SIRD_local$date, SIRD_ref_local$date, df_local_I$I, fc_I_local$mean, SIRD_ref_local$I) 
     }
   }
   else{
@@ -870,7 +714,7 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       type[1:n] <- rep("ground truth", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
       
-      date <- rep(c(SIRD$date, seq(SIRD$date[n], final_date, weekly_step)), 4)
+      date <- rep(c(SIRD$date, seq(SIRD$date[n], final_date, 1)), 4)
       value <- c(c(df_local$S[1:n], df_local$S[n], df_local$S[(n+1):length(df_local$S)]), c(df_local$I[1:n], df_local$I[n], df_local$I[(n+1):length(df_local$I)]), c(df_local$R[1:n], df_local$R[n], df_local$R[(n+1):length(df_local$R)]), c(df_local$D[1:n], df_local$D[n], df_local$D[(n+1):length(df_local$D)]))
       place <- c(rep("S", n_ref+1), rep("I", n_ref+1), rep("R", n_ref+1), rep("D", n_ref+1))
       type <- rep(type, 4)
@@ -887,17 +731,17 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c("red", "black", "blue")) +
       theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-      labs(title=paste0(time_step*weekly_step, " days"), x="date", y="population", color="Variants", linetype="Type")
-    save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step*weekly_step, "_days.RData"))
+      labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type")
+    save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
 
-    comparison(dir_name, time_step, weekly_step, "I", "I", ref_data_flag, final_date, SIRD$date, SIRD_ref$date, df_local$I, fc_I, SIRD_ref$I)
+    comparison(dir_name, time_step, "I", "I", ref_data_flag, final_date, SIRD$date, SIRD_ref$date, df_local$I, fc_I, SIRD_ref$I)
   }
   
   return(df_local)
 }
 
 # Generates a comparison plot.
-comparison <- function(dir_name, time_step, weekly_step, variable_name, variable_name_variants, ref_data_flag, final_date_local, dates, dates_ref, variable_local, variable_fc, variable_ref){
+comparison <- function(dir_name, time_step, variable_name, variable_name_variants, ref_data_flag, final_date_local, dates, dates_ref, variable_local, variable_fc, variable_ref){
   n <- length(dates)
   n_ref <- n + time_step
   
@@ -920,7 +764,7 @@ comparison <- function(dir_name, time_step, weekly_step, variable_name, variable
     type[(n+1):(n_ref+1)] <- rep("forecast on the rates", n_ref-n+1)
     type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast on I", n_ref-n+1)
     
-    date <- c(dates, seq(dates[n], final_date_local, weekly_step), seq(dates[n], final_date_local, weekly_step))
+    date <- c(dates, seq(dates[n], final_date_local, 1), seq(dates[n], final_date_local, 1))
     value <- c(variable_local[1:n], variable_local[n], variable_local[(n+1):length(variable_local)], variable_local[n], variable_fc)
     place <- rep("I", n_ref + (n_ref - n) + 2)
   }
@@ -931,8 +775,8 @@ comparison <- function(dir_name, time_step, weekly_step, variable_name, variable
     geom_line(linewidth=1.5) +
     scale_colour_manual(values=c("green4", "red", "black", "blue")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(title=paste0(time_step*weekly_step, " days"), x="date", y="I", color="Variants", linetype="Type")
-  save(plot, file=paste0(dir_name, "/RData/", variable_name_variants, "_compare_", time_step*weekly_step, "_days.RData"))
+    labs(title=paste0(time_step, " days"), x="date", y="I", color="Variants", linetype="Type")
+  save(plot, file=paste0(dir_name, "/RData/", variable_name_variants, "_compare_", time_step, "_days.RData"))
 }
 
 final_plots <- function(dir_name){
