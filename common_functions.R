@@ -5,36 +5,36 @@
 # Prophet: https://facebook.github.io/prophet/docs/quick_start.html
 
 # Download files and load data
-download_files_and_load_data <- function(country_long, who_labels){
-  if(!file.exists("datasets")){
-    system("mkdir datasets")
+download_files_and_load_data <- function(docker_path, country_long, who_labels){
+  if(!file.exists(paste0(docker_path, "datasets"))){
+    system(paste0("mkdir ", docker_path, "datasets"))
   }
   
   # Check if the files are updated
-  updated_file <- file.exists(paste0("datasets/", country_long, "_", Sys.Date(), ".csv")) &&
-    file.exists(paste0("datasets/variants_data_", Sys.Date(), ".csv"))
+  updated_file <- file.exists(paste0(docker_path, "datasets/", country_long, "_", Sys.Date(), ".csv")) &&
+    file.exists(paste0(docker_path, "datasets/variants_data_", Sys.Date(), ".csv"))
   
   if(!updated_file){
     # Download the updated data
-    system("rm datasets/*.csv")
+    system(paste0("rm ", docker_path, "datasets/*.csv"))
 
-    covid19(country = country_long, level = 3, start = "2020-01-01", dir = '.')
-    system(paste0("rm ", Sys.Date(), "/country/index.csv"))
-    if(length(list.files(paste0(Sys.Date(), "/country/"))) == 0)
+    covid19(country = country_long, level = 3, start = "2020-01-01", dir = docker_path)
+    system(paste0("rm ", docker_path,  Sys.Date(), "/country/index.csv"))
+    if(length(list.files(paste0(docker_path, Sys.Date(), "/country/"))) == 0)
       stop(paste0("Country ", country_long, " not found in COVID19 library data"))
-    system(paste0("mv ", Sys.Date(), "/country/*.csv ./datasets/", country_long, "_", Sys.Date(), ".csv"))
-    system(paste0("rm -r ", Sys.Date()))
+    system(paste0("mv ", docker_path, Sys.Date(), "/country/*.csv ", docker_path, "datasets/", country_long, "_", Sys.Date(), ".csv"))
+    system(paste0("rm -r ", docker_path, Sys.Date()))
     
-    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", paste0("datasets/variants_data_", Sys.Date(), ".csv"))
+    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", paste0(docker_path, "datasets/variants_data_", Sys.Date(), ".csv"))
   }
   
   # Read and preprocess the data
-  df_COVID19_ref_init <- read.csv(paste0("datasets/", country_long, "_", Sys.Date(), ".csv"))
+  df_COVID19_ref_init <- read.csv(paste0(docker_path, "datasets/", country_long, "_", Sys.Date(), ".csv"))
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
     filter(administrative_area_level_2 == "", administrative_area_level_3 == "", !is.na(confirmed))
   
   
-  df_variants_init <- read.csv(paste0("datasets/variants_data_", Sys.Date(), ".csv"))
+  df_variants_init <- read.csv(paste0(docker_path, "datasets/variants_data_", Sys.Date(), ".csv"))
   variants_countries <- unique(df_variants_init$country)
   
   if(!country_long %in% variants_countries)
@@ -526,7 +526,7 @@ forecast_plot <- function(dir_name, method, ref_data_flag, final_date, n, n_ref,
     scale_colour_manual(values=c("red", "black", "blue")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     guides(color=guide_legend(override.aes=list(fill=NA)))
-  save(plot, file = paste0(gsub("/I", "", gsub("/infection_rates", "", dir_name)), "/RData/forecast_", title, "_", i, "_days.RData"))
+  save(plot, file = paste0(sub("/I/", "/", sub("/infection_rates/", "/", paste0(dir_name, "/"))), "/RData/forecast_", title, "_", i, "_days.RData"))
 }
 
 # Deterministic SIRD model.
