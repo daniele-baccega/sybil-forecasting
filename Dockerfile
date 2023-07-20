@@ -1,5 +1,5 @@
 # Base image https://hub.docker.com/u/danielebaccega
-FROM danielebaccega/prophet-forecasting
+FROM danielebaccega/prophet
 LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 
 ## Copy files
