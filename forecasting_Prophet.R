@@ -16,10 +16,9 @@ library(stringr)
 library(scales)
 library(patchwork)
 
-docker_path = "/home/docker/prophet-forecasting/"
 
 # Include the common functions
-source(paste0(docker_path, "common_functions.R"))
+source(paste0("common_functions.R"))
 
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
@@ -32,7 +31,7 @@ country <- "Italy"
 
 for(who_labels in c(TRUE, FALSE)){
   # Download file and load data
-  data <- download_files_and_load_data(docker_path, country, who_labels)
+  data <- download_files_and_load_data(country, who_labels)
   df_COVID19_ref_init <- data[[1]]
   df_variants_init <- data[[2]]
   updated_file <- data[[3]]
@@ -96,15 +95,15 @@ for(who_labels in c(TRUE, FALSE)){
   
   # Loop on different 'training' windows
   for(j in seq(1, length(initial_dates))){
-    dir_name <- paste0(docker_path, external_dir_name[j], internal_dir_name, "OneMonth")
+    dir_name <- paste0(external_dir_name[j], internal_dir_name, "OneMonth")
     
     # Create the main directories
     if(!file.exists(external_dir_name[j])){
-      system(paste0("mkdir ", docker_path, external_dir_name[j]))
+      system(paste0("mkdir ", external_dir_name[j]))
     }
     
     if(!file.exists(internal_dir_name)){
-      system(paste0("mkdir ", docker_path, external_dir_name[j], internal_dir_name))
+      system(paste0("mkdir ", external_dir_name[j], internal_dir_name))
     }
     
     # Compute the final dates
@@ -140,7 +139,7 @@ for(who_labels in c(TRUE, FALSE)){
     plot_I(dir_name, SIRD_all)
     
     # Plot variants info
-    data <- generate_and_plot_variants_info(paste0(docker_path, external_dir_name[j], internal_dir_name), df_variants_all, df_COVID19_all, SIRD_all, results_all)
+    data <- generate_and_plot_variants_info(paste0(external_dir_name[j], internal_dir_name), df_variants_all, df_COVID19_all, SIRD_all, results_all)
     df_variants_processed <- data[[1]]
     df_COVID19_all <- data[[2]]
     SIRD_all <- data[[3]]
@@ -301,24 +300,24 @@ for(who_labels in c(TRUE, FALSE)){
   }
   
   if(!who_labels){
-    load(paste0(docker_path, external_dir_name[1], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+    load(paste0(external_dir_name[1], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
     p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(docker_path, external_dir_name[2], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+    load(paste0(external_dir_name[2], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
     p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(docker_path, external_dir_name[3], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+    load(paste0(external_dir_name[3], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
     p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(docker_path, external_dir_name[4], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+    load(paste0(external_dir_name[4], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
     p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(docker_path, external_dir_name[5], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+    load(paste0(external_dir_name[5], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
     p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(docker_path, external_dir_name[6], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+    load(paste0(external_dir_name[6], internal_dir_name, "OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
     p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34))
     
     p <- (p1 + p2 + p3) / (p4 + p5 + p6) +
       plot_layout(guides = "collect") &
       theme(legend.position = "bottom", legend.box = "vertical")
     
-    png(paste0(docker_path, "SIRD_forecast_evolution.png"), units="in", width=34, height=15, res=300)
+    png(paste0("SIRD_forecast_evolution.png"), units="in", width=34, height=15, res=300)
     print(p)
     dev.off()
   }
