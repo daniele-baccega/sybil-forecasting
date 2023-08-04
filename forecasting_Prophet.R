@@ -24,14 +24,20 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 
 # Select the configuration (with or without variants)
+# To reproduce the results set the variable to TRUE
 variants <- TRUE
 
+# Global final date
+# To reproduce the results set the variable to 2023-06-04
+global_final_date <- "2023-06-04"
+
 # Select the country
+# To reproduce the results set the variable to Italy
 country <- "Italy"
 
 for(who_labels in c(TRUE, FALSE)){
   # Download file and load data
-  data <- download_files_and_load_data(country, who_labels)
+  data <- download_files_and_load_data(country, who_labels, global_final_date)
   df_COVID19_ref_init <- data[[1]]
   df_variants_init <- data[[2]]
   updated_file <- data[[3]]
@@ -92,7 +98,7 @@ for(who_labels in c(TRUE, FALSE)){
                      as.Date("2022-01-16"))
   }
   
-  
+  relative_errors_df <- data.frame()
   # Loop on different 'training' windows
   for(j in seq(1, length(initial_dates))){
     dir_name <- paste0(external_dir_name[j], internal_dir_name, "OneMonth")
@@ -128,7 +134,7 @@ for(who_labels in c(TRUE, FALSE)){
     }
     
     # Compute and save all the data
-    data <- compute_data(dir_name, df_COVID19_ref_init, df_variants_init, immunization_end_rate, !updated_file)
+    data <- compute_data(dir_name, df_COVID19_ref_init, df_variants_init, immunization_end_rate, global_final_date, !updated_file)
     df_variants_all <- data[[1]]
     df_COVID19_all <- data[[2]]
     SIRD_all <- data[[3]]
@@ -266,6 +272,7 @@ for(who_labels in c(TRUE, FALSE)){
   
         # Plot the forecast and the comparisons
         SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), 'Prophet', time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, I, SIRD_used, SIRD_ref_used, N[1], variants)
+        compute_error(SIRD_ref_used, I, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants)
       }
       else{
         # Forecast on infection rates
@@ -293,6 +300,7 @@ for(who_labels in c(TRUE, FALSE)){
   
         # Plot the forecast and the comparisons
         SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), 'Prophet', time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, immunization_end_rate, fc_I$yhat, SIRD_used, SIRD_ref_used, N[1], variants)
+        compute_error(SIRD_ref_used, I, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants)
       }
     }
     

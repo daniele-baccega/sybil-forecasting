@@ -5,36 +5,36 @@
 # Prophet: https://facebook.github.io/prophet/docs/quick_start.html
 
 # Download files and load data
-download_files_and_load_data <- function(country_long, who_labels){
+download_files_and_load_data <- function(country_long, who_labels, global_final_date){
   if(!file.exists("datasets")){
     system("mkdir datasets")
   }
   
   # Check if the files are updated
-  updated_file <- file.exists(paste0("datasets/", country_long, "_", Sys.Date(), ".csv")) &&
-    file.exists(paste0("datasets/variants_data_", Sys.Date(), ".csv"))
+  updated_file <- file.exists(paste0("datasets/", country_long, "_", global_final_date, ".csv")) &&
+    file.exists(paste0("datasets/variants_data_", global_final_date, ".csv"))
   
   if(!updated_file){
     # Download the updated data
     system("rm datasets/*.csv")
 
-    covid19(country = country_long, level = 3, start = "2020-01-01", dir = '.')
+    covid19(country = country_long, level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
     system(paste0("rm ", Sys.Date(), "/country/index.csv"))
     if(length(list.files(paste0(Sys.Date(), "/country/"))) == 0)
       stop(paste0("Country ", country_long, " not found in COVID19 library data"))
-    system(paste0("mv ", Sys.Date(), "/country/*.csv ", "datasets/", country_long, "_", Sys.Date(), ".csv"))
+    system(paste0("mv ", Sys.Date(), "/country/*.csv ", "datasets/", country_long, "_", global_final_date, ".csv"))
     system(paste0("rm -r ", Sys.Date()))
     
-    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", paste0("datasets/variants_data_", Sys.Date(), ".csv"))
+    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", paste0("datasets/variants_data_", global_final_date, ".csv"))
   }
   
   # Read and preprocess the data
-  df_COVID19_ref_init <- read.csv(paste0("datasets/", country_long, "_", Sys.Date(), ".csv"))
+  df_COVID19_ref_init <- read.csv(paste0("datasets/", country_long, "_", global_final_date, ".csv"))
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
-    filter(administrative_area_level_2 == "", administrative_area_level_3 == "", !is.na(confirmed))
+    filter(administrative_area_level_2 == "", administrative_area_level_3 == "", !is.na(confirmed), date <= global_final_date)
   
   
-  df_variants_init <- read.csv(paste0("datasets/variants_data_", Sys.Date(), ".csv"))
+  df_variants_init <- read.csv(paste0("datasets/variants_data_", global_final_date, ".csv"))
   variants_countries <- unique(df_variants_init$country)
   
   if(!country_long %in% variants_countries)
@@ -42,7 +42,7 @@ download_files_and_load_data <- function(country_long, who_labels){
   
   if(who_labels){
     df_variants_init <- df_variants_init %>%
-      filter(country == country_long, !is.na(new_cases), source == "GISAID", ! variant %in% c("B.1.1.7+E484K", "BA.3", "BA.2+L452X", "B.1.617.3", "UNK", "B.1.1.529", "AY.4.2", "SGTF")) %>%
+      filter(country == country_long, !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), source == "GISAID", ! variant %in% c("B.1.1.7+E484K", "BA.3", "BA.2+L452X", "B.1.617.3", "UNK", "B.1.1.529", "AY.4.2", "SGTF")) %>%
       mutate(year = as.integer(substr(year_week, 1, 4)),
              week = as.integer(substr(year_week, 6, 7)),
              number_detections_variant = as.integer(number_detections_variant),
@@ -61,7 +61,7 @@ download_files_and_load_data <- function(country_long, who_labels){
   }
   else{
     df_variants_init <- df_variants_init %>%
-      filter(country == country_long, !is.na(new_cases), source == "GISAID", ! variant %in% c("B.1.616", "P.3", "B.1.427/B.1.429", "C.37", "B.1.1.7+E484K", "BA.3", "BA.2+L452X", "B.1.617.3", "UNK", "B.1.1.529", "AY.4.2", "SGTF")) %>%
+      filter(country == country_long, !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%u"), source == "GISAID", ! variant %in% c("B.1.616", "P.3", "B.1.427/B.1.429", "C.37", "B.1.1.7+E484K", "BA.3", "BA.2+L452X", "B.1.617.3", "UNK", "B.1.1.529", "AY.4.2", "SGTF")) %>%
       mutate(year = as.integer(substr(year_week, 1, 4)),
              week = as.integer(substr(year_week, 6, 7)),
              number_detections_variant = as.integer(number_detections_variant),
@@ -135,10 +135,10 @@ filter_variants <- function(df_variants_init){
 }
 
 # Compute and save the necessary data.
-compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, new_data=FALSE){
+compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, global_final_date, new_data=FALSE){
   if(file.exists(paste0(dir_name, "/data/date.RData")) && !new_data){
     load(paste0(dir_name, "/data/date.RData"))
-    new_data <- !(today == Sys.Date())
+    new_data <- !(today == global_final_date)
   }
   else{
     new_data <- TRUE
@@ -197,7 +197,7 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     
     df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
     
-    today <- Sys.Date()
+    today <- global_final_date
     save(df_variants_ref, df_COVID19_ref, S_local, I_local, R_local, D_local, SIRD_all, results_all, file=paste0(dir_name, "/data/data.RData"))
     save(today, file=paste0(dir_name, "/data/date.RData"))
   }
@@ -274,7 +274,7 @@ plot_I <- function(dir_name, SIRD_plot){
   plot <- ggplot(SIRD_plot, aes(x=date, y=I)) +
     geom_line(linewidth=1.5) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="infected")
+    labs(x="date", y="I")
   print(plot)
   dev.off()
   
@@ -286,13 +286,13 @@ plot_I <- function(dir_name, SIRD_plot){
     geom_vline(aes(xintercept = as.Date("2022-01-13")), color="red", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = as.Date("2023-02-07")), color="red", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = as.Date("2022-07-14")), color="red", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date("2020-04-14")-30, label="\nFirst forecast", y=max(I) - max(I)/9 ), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2020-06-30")-30, label="\nSecond forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2022-01-13")-30, label="\nThird forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2023-02-07")-30, label="\nFifth forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2022-07-14")-30, label="\nFourth forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2020-04-14")-30, label="\nFirst forecast", y=max(I) - max(I)/8 ), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2020-06-30")-30, label="\nSecond forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2022-01-13")-30, label="\nThird forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2023-02-07")-30, label="\nFifth forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2022-07-14")-30, label="\nFourth forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="infected")
+    labs(x="date", y="I")
   print(plot)
   dev.off()
 }
@@ -387,14 +387,14 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
     geom_vline(aes(xintercept = as.Date("2022-01-13")), color="red", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = as.Date("2023-02-07")), color="red", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = as.Date("2022-07-14")), color="red", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date("2020-04-14")-40, label="\nFirst forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2020-06-30")-40, label="\nSecond forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2022-01-13")-40, label="\nThird forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2023-02-07")-40, label="\nFifth forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
-    geom_text(aes(x = as.Date("2022-07-14")-40, label="\nFourth forecast", y=max(I) - max(I)/9), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2020-04-14")-40, label="\nFirst forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2020-06-30")-40, label="\nSecond forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2022-01-13")-40, label="\nThird forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2023-02-07")-40, label="\nFifth forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
+    geom_text(aes(x = as.Date("2022-07-14")-40, label="\nFourth forecast", y=max(I) - max(I)/8), size = 13, colour="red", angle=90) +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-  labs(x="date", y="infected", col="Variants")
+  labs(x="date", y="I", col="Variants")
   print(plot)
   dev.off()
   
@@ -406,7 +406,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
   plot <- plot +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="infected", col="Variants")
+    labs(x="date", y="I", col="Variants")
   print(plot)
   dev.off()
   
@@ -492,7 +492,7 @@ forecast_plot <- function(dir_name, method, ref_data_flag, final_date, n, n_ref,
     type <- rep(NA, n_ref + (n_ref - n) + 2)
     
     type[1:n] <- rep("ground truth", n)
-    type[(n+1):(n_ref+1)] <- rep("ground truth (new)", n_ref-n+1)
+    type[(n+1):(n_ref+1)] <- rep("ground truth for validation", n_ref-n+1)
     type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast", n_ref-n+1)
     
     
@@ -611,7 +611,7 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       
       type[1:n] <- rep("ground truth", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
-      type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth (new)", n_ref-n+1)
+      type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
       type <- rep(type, 3 + length(variants_name))
       
       date <- rep(c(unique(SIRD_ref$date), SIRD_ref$date[n], SIRD_ref$date[n:n_ref]), 3 + length(variants_name))
@@ -692,7 +692,7 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       fc_I_local <- fc_I %>%
         filter(variant == variants_name[i])
       
-      comparison(dir_name, time_step, "I", paste0("I (", variants_name[i], ")"), ref_data_flag, final_date, SIRD_local$date, SIRD_ref_local$date, df_local_I$I, fc_I_local$mean, SIRD_ref_local$I) 
+      comparison(dir_name, time_step, paste0("I_", variants_name[i]), ref_data_flag, final_date, SIRD_local$date, SIRD_ref_local$date, df_local_I$I, fc_I_local$mean, SIRD_ref_local$I) 
     }
   }
   else{
@@ -701,7 +701,7 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       
       type[1:n] <- rep("ground truth", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
-      type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth (new)", n_ref-n+1)
+      type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
       
       date <- rep(c(SIRD_ref$date, SIRD_ref$date[n], SIRD_ref$date[n:n_ref]), 4)
       value <- c(c(df_local$S, SIRD_ref$S[n], SIRD_ref$S[n:n_ref]), c(df_local$I, SIRD_ref$I[n], SIRD_ref$I[n:n_ref]), c(df_local$R, SIRD_ref$R[n], SIRD_ref$R[n:n_ref]), c(df_local$D, SIRD_ref$D[n], SIRD_ref$D[n:n_ref]))
@@ -734,14 +734,14 @@ SIRD_evolution <- function(dir_name, method, time_step, ref_data_flag, final_dat
       labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type")
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
 
-    comparison(dir_name, time_step, "I", "I", ref_data_flag, final_date, SIRD$date, SIRD_ref$date, df_local$I, fc_I, SIRD_ref$I)
+    comparison(dir_name, time_step, "I", ref_data_flag, final_date, SIRD$date, SIRD_ref$date, df_local$I, fc_I, SIRD_ref$I)
   }
   
   return(df_local)
 }
 
 # Generates a comparison plot.
-comparison <- function(dir_name, time_step, variable_name, variable_name_variants, ref_data_flag, final_date_local, dates, dates_ref, variable_local, variable_fc, variable_ref){
+comparison <- function(dir_name, time_step, variable_name_variants, ref_data_flag, final_date_local, dates, dates_ref, variable_local, variable_fc, variable_ref){
   n <- length(dates)
   n_ref <- n + time_step
   
@@ -749,9 +749,9 @@ comparison <- function(dir_name, time_step, variable_name, variable_name_variant
     type <- rep(NA, n_ref + (n_ref - n) * 2 + 3)
     
     type[1:n] <- rep("ground truth", n)
-    type[(n+1):(n_ref+1)] <- rep("forecast on the rates", n_ref-n+1)
-    type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth (new)", n_ref-n+1)
-    type[(n_ref+3+(n_ref-n)):(n_ref+3+(n_ref-n)*2)] <- rep(paste0("forecast on ", variable_name), n_ref-n+1)
+    type[(n+1):(n_ref+1)] <- rep("forecast with our approach", n_ref-n+1)
+    type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
+    type[(n_ref+3+(n_ref-n)):(n_ref+3+(n_ref-n)*2)] <- rep(paste0("forecast with typical approach"), n_ref-n+1)
     
     date <- c(dates_ref, dates_ref[n], dates_ref[n:n_ref], dates_ref[n:n_ref])
     value <- c(variable_local, variable_ref[n], variable_ref[n:n_ref], variable_ref[n], variable_fc)
@@ -761,8 +761,8 @@ comparison <- function(dir_name, time_step, variable_name, variable_name_variant
     type <- rep(NA, n_ref + (n_ref - n) + 2)
     
     type[1:n] <- rep("ground truth", n)
-    type[(n+1):(n_ref+1)] <- rep("forecast on the rates", n_ref-n+1)
-    type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast on I", n_ref-n+1)
+    type[(n+1):(n_ref+1)] <- rep("forecast with our approach", n_ref-n+1)
+    type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast with typical approach", n_ref-n+1)
     
     date <- c(dates, seq(dates[n], final_date_local, 1), seq(dates[n], final_date_local, 1))
     value <- c(variable_local[1:n], variable_local[n], variable_local[(n+1):length(variable_local)], variable_local[n], variable_fc)
@@ -890,20 +890,20 @@ final_plots <- function(dir_name){
       dev.off()
       
       
-      load(paste0(dir_name, "/forecast_plot/RData/I (", variants_name[k], ")_compare_7_days.RData"))
+      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_7_days.RData"))
       p1 <- plot 
-      load(paste0(dir_name, "/forecast_plot/RData/I (", variants_name[k], ")_compare_14_days.RData"))
+      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_14_days.RData"))
       p2 <- plot 
-      load(paste0(dir_name, "/forecast_plot/RData/I (", variants_name[k], ")_compare_21_days.RData"))
+      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_21_days.RData"))
       p3 <- plot 
-      load(paste0(dir_name, "/forecast_plot/RData/I (", variants_name[k], ")_compare_28_days.RData"))
+      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_28_days.RData"))
       p4 <- plot 
       
       p <- (p1 + p2) / (p3 + p4) +
         plot_layout(guides = "collect") &
         theme(legend.position = "bottom", legend.box = "vertical")
       
-      png(paste0(dir_name, "/forecast_plot/comparison/I (", variants_name[k], ")_compare.png"), units="in", width=34, height=15, res=300)
+      png(paste0(dir_name, "/forecast_plot/comparison/I_", variants_name[k], "_compare.png"), units="in", width=34, height=15, res=300)
       print(p)
       dev.off()
     }
@@ -962,4 +962,68 @@ final_plots <- function(dir_name){
     print(p)
     dev.off()
   }
+}
+
+compute_error <- function(real, computed_I, computed_rates, final_date, time_step, dir_name, variants){
+  absolute_error_I <- rep(0, time_step)
+  relative_error_I <- rep(0, time_step)
+  absolute_error_rates <- rep(0, time_step)
+  relative_error_rates <- rep(0, time_step)
+  
+  real <- real %>%
+    filter(date > final_date - time_step)
+  
+  computed_I <- computed_I %>%
+    filter(date > final_date - time_step)
+  
+  computed_rates <- computed_rates %>%
+    filter(date > final_date - time_step)
+  
+  if(variants){
+    variants_name <- unique(computed_rates$variant)
+    for(v in variants_name){
+      real_local <- real %>%
+        filter(variant == v)
+      
+      computed_I_local <- computed_I %>%
+        filter(variant == v)
+      
+      absolute_error_I_local <- abs(real_local$I - computed_I_local$mean)
+      relative_error_I_local <- absolute_error_I_local / real_local$I
+      relative_error_I_local[which(is.na(relative_error_I_local))] <- 0
+      
+      relative_error_I <- relative_error_I + relative_error_I_local
+  
+      
+      computed_rates_local <- computed_rates %>%
+        filter(variant == v)
+      
+      absolute_error_rates_local <- abs(real_local$I - computed_rates_local$I)
+      relative_error_rates_local <- absolute_error_rates_local / real_local$I
+      relative_error_rates_local[which(is.na(relative_error_rates_local))] <- 0
+      
+      relative_error_rates <- relative_error_rates + relative_error_rates_local
+    }
+    
+    relative_error_I <- relative_error_I / length(variants_name)
+    relative_error_rates <- relative_error_rates / length(variants_name)
+  }
+  else{
+    absolute_error_I_local <- abs(real$I - computed_I$mean)
+    relative_error_I_local <- absolute_error_I_local / real$I
+    relative_error_I_local[which(is.na(relative_error_I_local))] <- 0
+    
+    relative_error_I <- relative_error_I + relative_error_I_local
+    
+    
+    absolute_error_rates_local <- abs(real$I - computed_rates$I)
+    relative_error_rates_local <- absolute_error_rates_local / real$I
+    relative_error_rates_local[which(is.na(relative_error_rates_local))] <- 0
+    
+    relative_error_rates <- relative_error_rates + relative_error_rates_local
+  }
+  
+  relative_errors_df <- data.frame(min=c(min(relative_error_I), min(relative_error_rates)), max=c(max(relative_error_I), max(relative_error_rates)), mean=c(mean(relative_error_I), mean(relative_error_rates)), var=c(var(relative_error_I), var(relative_error_rates)), sd=c(sd(relative_error_I), sd(relative_error_rates)))
+  
+  write.csv(file = paste0(dir_name, "/errors_", time_step, ".csv"), x = relative_errors_df)
 }
