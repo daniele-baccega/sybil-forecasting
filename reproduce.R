@@ -86,21 +86,24 @@ external_dir_names <- c(paste0(country, "/ProphetJanuary-10-2022/"),
                         paste0(country, "/ProphetJanuary-12-2022/"),
                         paste0(country, "/ProphetJanuary-13-2022/"),
                         paste0(country, "/ProphetJanuary-14-2022/"),
-                        paste0(country, "/ProphetJanuary-15-2022/"))
+                        paste0(country, "/ProphetJanuary-15-2022/"),
+                        paste0(country, "/ProphetJanuary-22-2022/"))
 
 initial_dates <- c(as.Date("2021-12-10"),
                    as.Date("2021-12-11"),
                    as.Date("2021-12-12"),
                    as.Date("2021-12-13"),
                    as.Date("2021-12-14"),
-                   as.Date("2021-12-15"))
+                   as.Date("2021-12-15"),
+                   as.Date("2021-12-22"))
 
 final_dates <- c(as.Date("2022-01-10"),
                  as.Date("2022-01-11"),
                  as.Date("2022-01-12"),
                  as.Date("2022-01-13"),
                  as.Date("2022-01-14"),
-                 as.Date("2022-01-15"))
+                 as.Date("2022-01-15"),
+                 as.Date("2022-01-22"))
 
 forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
@@ -125,6 +128,27 @@ png(paste0(country, "/SIRD_forecast_evolution.png"), units="in", width=34, heigh
 print(p)
 dev.off()
 
+
+load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[4],  "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34))
+
+p <- (p1 + p2 + p3) / (p4 + p5 + p6) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom", legend.box = "vertical")
+
+png(paste0(country, "/BA.2_infection_rates_evolution.png"), units="in", width=34, height=15, res=300)
+print(p)
+dev.off()
 
 
 
