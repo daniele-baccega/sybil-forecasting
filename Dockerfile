@@ -3,8 +3,9 @@ FROM danielebaccega/prophet
 LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 
 ## Copy files
-COPY forecasting_Prophet.R .
+COPY reproduce.R .
+COPY forecast.R .
 COPY common_functions.R .
 
 ## Run the script
-CMD Rscript forecasting_Prophet.R
+CMD Rscript reproduce.R
