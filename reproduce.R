@@ -169,19 +169,16 @@ variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
 external_dir_names <- c(paste0(country, "/FirstScenario/"),
                         paste0(country, "/SecondScenario/"),
                         paste0(country, "/ThirdScenario/"),
-                        paste0(country, "/FourthScenario/"),
-                        paste0(country, "/FifthScenario/"))
+                        paste0(country, "/FourthScenario/"))
 
 initial_dates <- c(as.Date("2022-01-01"),
                    as.Date("2020-03-03"),
                    as.Date("2022-06-14"),
-                   as.Date("2020-05-10"),
-                   as.Date("2023-01-05"))
+                   as.Date("2020-05-10"))
 
 final_dates <- c(as.Date("2022-02-01"),
                  as.Date("2020-04-03"),
                  as.Date("2022-07-14"),
-                 as.Date("2020-06-10"),
-                 as.Date("2023-02-05"))
+                 as.Date("2020-06-10"))
 
 forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
