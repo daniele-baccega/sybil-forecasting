@@ -77,7 +77,7 @@ plot_I <- function(dir_name, SIRD_all, final_dates){
   print(plot)
   dev.off()
   
-  png(paste0(dir_name, "/I_five_scenarios.png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/I_all_scenarios.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
     geom_line(linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[1]), color="red", linetype="dashed", linewidth=1.5) +
@@ -164,7 +164,7 @@ plot_variants_proportion <- function(dir_name, variants_global_df, variants_name
 #   - variants_name:  names of the variants
 #   - final_dates:            final dates
 plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_dates){
-  png(paste0(dir_name, "/I_variants_five_scenarios.png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/I_variants_all_scenarios.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
   for(i in 1:length(variants_name)){
     plot <- plot + geom_line(linewidth=1.5)
