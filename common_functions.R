@@ -17,7 +17,8 @@
 #   - df_COVID19_ref_init:        dataframe with Covid-19 data
 #   - df_variants_init:           dataframe with variants data
 #   - updated_file:               false if the files were not update, true otherwise
-download_files_and_load_data <- function(country_long, global_final_date, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list()){
+#   - reproduce:                  reproduce the results of the paper
+download_files_and_load_data <- function(country_long, global_final_date, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -28,30 +29,36 @@ download_files_and_load_data <- function(country_long, global_final_date, varian
     system("mkdir datasets")
   }
   
+  covid19_data <- paste0("datasets/", country_long, "_", Sys.Date(), ".csv")
+  covid19_variants_data <- paste0("datasets/variants_data_", Sys.Date(), ".csv")
+  
   # Check if the files are updated
-  updated_file <- file.exists(paste0("datasets/", country_long, "_", global_final_date, ".csv")) &&
-    file.exists(paste0("datasets/variants_data_", global_final_date, ".csv"))
+  updated_file <- file.exists(covid19_data) && file.exists(covid19_variants_data)
+  
+  if(reproduce){
+    updated_file <- TRUE
+    covid19_data <- paste0("datasets/", country_long, "_2023-11-22.csv")
+    covid19_variants_data <- "datasets/variants_data_2023-07-25.csv"
+  }
   
   if(!updated_file){
     # Download the updated data
-    system("rm datasets/*.csv")
-
     covid19(country = country_long, level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
     system(paste0("rm ", Sys.Date(), "/country/index.csv"))
     if(length(list.files(paste0(Sys.Date(), "/country/"))) == 0)
       stop(paste0("Country ", country_long, " not found in COVID19 library data"))
-    system(paste0("mv ", Sys.Date(), "/country/*.csv ", "datasets/", country_long, "_", global_final_date, ".csv"))
+    system(paste0("mv ", Sys.Date(), "/country/*.csv ", covid19_data))
     system(paste0("rm -r ", Sys.Date()))
     
-    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", paste0("datasets/variants_data_", global_final_date, ".csv"))
+    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", covid19_variants_data)
   }
   
   # Read and preprocess the data
-  df_COVID19_ref_init <- read.csv(paste0("datasets/", country_long, "_", global_final_date, ".csv"))
+  df_COVID19_ref_init <- read.csv(covid19_data)
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
     filter(administrative_area_level_2 == "", administrative_area_level_3 == "", !is.na(confirmed), date <= global_final_date)
   
-  df_variants_init <- read.csv(paste0("datasets/variants_data_", global_final_date, ".csv"))
+  df_variants_init <- read.csv(covid19_variants_data)
   variants_countries <- unique(df_variants_init$country)
   
   if(!country_long %in% variants_countries)
@@ -155,7 +162,7 @@ filter_variants <- function(df_variants_init){
 compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, global_final_date, new_data=FALSE){
   if(file.exists(paste0(dir_name, "/data/date.RData")) && !new_data){
     load(paste0(dir_name, "/data/date.RData"))
-    new_data <- !(today == global_final_date)
+    new_data <- !(today == Sys.Date())
   }
   else{
     new_data <- TRUE
@@ -217,7 +224,7 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     
     df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
     
-    today <- global_final_date
+    today <- Sys.Date()
     save(df_variants_ref, df_COVID19_ref, S_local, I_local, R_local, D_local, SIRD_all, results_all, file=paste0(dir_name, "/data/data.RData"))
     save(today, file=paste0(dir_name, "/data/date.RData"))
   }

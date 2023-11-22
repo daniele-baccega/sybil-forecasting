@@ -17,9 +17,10 @@
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-forecast <- function(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list()){
+#   - reproduce:                  reproduce the results of the paper
+forecast <- function(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
   # Download file and load data
-  data <- download_files_and_load_data(country, global_final_date, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_final_date, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
   df_COVID19_init <- data[[1]]
   df_variants_init <- data[[2]]
   updated_file <- data[[3]]
@@ -70,7 +71,7 @@ forecast <- function(variants, global_final_date, country, external_dir_names, i
     }
     
     # Compute and save all the data
-    data <- compute_data(dir_name, df_COVID19_init, df_variants_init, immunization_end_rate, global_final_date, !updated_file)
+    data <- compute_data(dir_name, df_COVID19_init, df_variants_init, immunization_end_rate, global_final_date, !updated_file || reproduce)
     df_variants_all <- data[[1]]
     df_COVID19_all <- data[[2]]
     SIRD_all <- data[[3]]

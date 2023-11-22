@@ -30,9 +30,14 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 variants <- TRUE
 
 # Global final date
-# To reproduce the results set the variable to 2023-06-04
-global_final_date <- "2023-06-04"
+global_final_date <- Sys.Date()
 
+# Reproduce the results in the paper set the variable to TRUE
+reproduce <- TRUE
+
+if(reproduce){
+  global_final_date <- "2023-06-04"
+}
 
 
 # Scenarios with Italy
@@ -68,7 +73,7 @@ final_dates <- c(as.Date("2020-04-14"),
                  as.Date("2020-06-30"),
                  as.Date("2023-02-07"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
 
 
 
@@ -105,7 +110,7 @@ final_dates <- c(as.Date("2022-01-10"),
                  as.Date("2022-01-15"),
                  as.Date("2022-01-22"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
 
 load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
 p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
@@ -113,7 +118,7 @@ load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/
 p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
 load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
 p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
-load(paste0(external_dir_names[4],  "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
+load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
 p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
 load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/SIRD_forecast_28_days.RData"))
 p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
@@ -129,13 +134,35 @@ print(p)
 dev.off()
 
 
+load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.1_28_days.RData"))
+p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.1_28_days.RData"))
+p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.1_28_days.RData"))
+p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.1_28_days.RData"))
+p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.1_28_days.RData"))
+p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
+load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.1_28_days.RData"))
+p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34))
+
+p <- (p1 + p2 + p3) / (p4 + p5 + p6) +
+  plot_layout(guides = "collect") &
+  theme(legend.position = "bottom", legend.box = "vertical")
+
+png(paste0(country, "/BA.1_infection_rates_evolution.png"), units="in", width=34, height=15, res=300)
+print(p)
+dev.off()
+
+
 load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
 p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
 load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
 p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
 load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
 p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
-load(paste0(external_dir_names[4],  "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
+load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
 p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
 load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/OneMonth/forecast_plot/RData/forecast_infection_rates_BA.2_28_days.RData"))
 p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
@@ -181,4 +208,4 @@ final_dates <- c(as.Date("2022-02-01"),
                  as.Date("2022-07-14"),
                  as.Date("2020-06-10"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
