@@ -258,7 +258,7 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
   if(ref_data_flag){
     type <- rep(NA, n_ref + (n_ref - n) + 2)
     
-    type[1:n] <- rep("ground truth", n)
+    type[1:n] <- rep("training data", n)
     type[(n+1):(n_ref+1)] <- rep("ground truth for validation", n_ref-n+1)
     type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast", n_ref-n+1)
     
@@ -273,7 +273,7 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
   else{
     type <- rep(NA, n_ref + 1)
     
-    type[1:n] <- rep("ground truth", n)
+    type[1:n] <- rep("training data", n)
     type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
     
     date <- c(dates, seq(as.Date(dates[n]), final_date, q))
@@ -288,7 +288,7 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
   plot <- ggplot(df_plot, aes(x=date, col=type)) +
     geom_line(aes(y=value), linewidth=1.5) +
     labs(title=paste0(i, " days"), x="date", y=if(title[1] == "I") "population" else gsub("_", " ", gsub("_rates*", "_rates", title)), color="Variants", linetype="Type") +
-    scale_colour_manual(values=c("#F3474D", "#000000", "#6B95DB")) +
+    scale_colour_manual(values=c("#F3474D", "#6B95DB", "#000000")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     guides(color=guide_legend(override.aes=list(fill=NA)))
   if(substr(title, 1, 1) == "I"){
@@ -318,7 +318,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
     if(ref_data_flag){
       type <- rep(NA, n_ref + (n_ref - n) + 2)
       
-      type[1:n] <- rep("ground truth", n)
+      type[1:n] <- rep("training data", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
       type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
       type <- rep(type, 3 + length(variants_name))
@@ -350,7 +350,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
     else{
       type <- rep(NA, n_ref + 1)
       
-      type[1:n] <- rep("ground truth", n)
+      type[1:n] <- rep("training data", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
       type <- rep(type, 3 + length(variants_name))
       
@@ -390,7 +390,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       geom_line(aes(date, value, col=variant, linetype=type), linewidth=1.5) +
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c(hue_pal()(length(variants_name)), "#808080")) +
-      theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
+      theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38), strip.text.x = element_blank()) +
       labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
@@ -415,7 +415,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
     if(ref_data_flag){
       type <- rep(NA, n_ref + (n_ref - n) + 2)
       
-      type[1:n] <- rep("ground truth", n)
+      type[1:n] <- rep("training data", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
       type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
       
@@ -427,7 +427,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
     else{
       type <- rep(NA, n_ref + 1)
       
-      type[1:n] <- rep("ground truth", n)
+      type[1:n] <- rep("training data", n)
       type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
       
       date <- rep(c(SIRD$date, seq(SIRD$date[n], final_date, 1)), 4)
@@ -445,8 +445,8 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
     plot <- ggplot(df_plot) +
       geom_line(aes(date, value, col=type), linewidth=1.5) +
       facet_wrap(~place, scales="free_y") +
-      scale_colour_manual(values=c("#F3474D", "#000000", "#6B95DB")) +
-      theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
+      scale_colour_manual(values=c("#F3474D", "#6B95DB", "#000000")) +
+      theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38), strip.text.x = element_blank()) +
       labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
@@ -475,10 +475,10 @@ comparison <- function(dir_name, time_step, variable_name_variants, ref_data_fla
   if(ref_data_flag){
     type <- rep(NA, n_ref + (n_ref - n) * 2 + 3)
     
-    type[1:n] <- rep("ground truth", n)
+    type[1:n] <- rep("training data", n)
     type[(n+1):(n_ref+1)] <- rep("forecast with Sybil", n_ref-n+1)
     type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
-    type[(n_ref+3+(n_ref-n)):(n_ref+3+(n_ref-n)*2)] <- rep(paste0("forecast with standard approach"), n_ref-n+1)
+    type[(n_ref+3+(n_ref-n)):(n_ref+3+(n_ref-n)*2)] <- rep(paste0("forecast with Prophet"), n_ref-n+1)
     
     date <- c(dates_ref, dates_ref[n], dates_ref[n:n_ref], dates_ref[n:n_ref])
     value <- c(variable_local, variable_ref[n], variable_ref[n:n_ref], variable_ref[n], variable_fc)
@@ -487,9 +487,9 @@ comparison <- function(dir_name, time_step, variable_name_variants, ref_data_fla
   else{
     type <- rep(NA, n_ref + (n_ref - n) + 2)
     
-    type[1:n] <- rep("ground truth", n)
+    type[1:n] <- rep("training data", n)
     type[(n+1):(n_ref+1)] <- rep("forecast with Sybil", n_ref-n+1)
-    type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast with standard approach", n_ref-n+1)
+    type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast with Prophet", n_ref-n+1)
     
     date <- c(dates, seq(dates[n], final_date_local, 1), seq(dates[n], final_date_local, 1))
     value <- c(variable_local[1:n], variable_local[n], variable_local[(n+1):length(variable_local)], variable_local[n], variable_fc)
@@ -500,7 +500,7 @@ comparison <- function(dir_name, time_step, variable_name_variants, ref_data_fla
   
   plot <- ggplot(df_plot, aes(date, value, col=type)) +
     geom_line(linewidth=1.5) +
-    scale_colour_manual(values=c("#F3474D", "#6C9F6B", "#000000", "#6B95DB")) +
+    scale_colour_manual(values=c("#F3474D", "#6C9F6B", "#6B95DB", "#000000")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type") +
     scale_y_continuous(labels = label_scientific())
