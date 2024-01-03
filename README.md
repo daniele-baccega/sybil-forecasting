@@ -5,7 +5,7 @@ Accurate epidemic forecasting is pivotal in early detection, prevention, and con
 By providing timely information on disease transmission dynamics, identifying potential high-risk areas, and evaluating the effectiveness of interventions, forecasting empowers public health agencies to implement targeted strategies, allocate resources efficiently, and alleviate strain on healthcare systems.
 
 ## WHAT IS THIS?
-we propose **Sybil**, an integrated machine learning and compartmental model framework capable of providing improved prediction accuracy and explainability.
+We propose **Sybil**, an integrated machine learning and compartmental model framework capable of providing improved prediction accuracy and explainability.
 Sybil exploits the relative stability of disease characteristics indices to project in the future and employs a simple and widely recognized analytical model to draw the infection dynamic.
 Sybil marks the difference with other approaches in the literature thanks to _i)_ its capability of providing accurate forecasts, even when there are relevant changes in the diffusion process, _ii)_ replicability of the approach and _iii)_ reduced need for training data.
 
