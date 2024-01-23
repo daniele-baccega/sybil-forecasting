@@ -1,4 +1,7 @@
 ## INTRODUCTION
+The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
+The rapid global spread of the virus has affected nearly every part of the world.
+Consequently, healthcare systems worldwide are grappling with the significant challenge posed by COVID-19, requiring robust surveillance, widespread testing, contact tracing, and stringent infection control measures.
 Forecasting the trajectory and impact of epidemics is crucial for efficient planning, resource allocation, and decision-making within public health authorities.
 Epidemic forecasting involves a multidisciplinary approach, integrating epidemiology, mathematical modeling, data analysis, and computational methods to gain insights into the future progression of outbreaks.
 Accurate epidemic forecasting is pivotal in early detection, prevention, and control of infectious diseases.
@@ -34,10 +37,11 @@ To reproduce the results presented in the paper run:
 
 ## REFERENCES
 [1] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018) https://doi.org/0.7287/peerj.preprints.3190v2
+
 [2] Harvey, A.C., Peters, S.: Estimation procedures for structural time series models. Journal of forecasting 9(2), 89–108 (1990) https://doi.org/10.1002/for.3980090203 
 
 ## COPYRIGHT AND LICENSE
-Copyright _Daniele Baccega, Paolo Castagno, Matteo Sereno, Antonio Fernández Anta_
+Copyright _Daniele Baccega, Paolo Castagno, Antonio Fernández Anta, Matteo Sereno_
 
 ![CC BY-NC-SA 3.0](http://ccl.northwestern.edu/images/creativecommons/byncsa.png)
 
