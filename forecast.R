@@ -42,11 +42,11 @@ forecast <- function(variants, global_final_date, country, external_dir_names, i
     
     # Create the main directories
     if(!file.exists(external_dir_names[j])){
-      system(paste0("mkdir ", external_dir_names[j]))
+      system(paste0("mkdir -p ", external_dir_names[j]))
     }
     
     if(!file.exists(internal_dir_name)){
-      system(paste0("mkdir ", external_dir_names[j], internal_dir_name))
+      system(paste0("mkdir -p ", external_dir_names[j], internal_dir_name))
     }
     
     # Compute the final dates
@@ -59,15 +59,15 @@ forecast <- function(variants, global_final_date, country, external_dir_names, i
     
     # Create the specific directories
     if(!file.exists(dir_name)){
-      system(paste0("mkdir ", dir_name))
-      system(paste0("mkdir ", dir_name, "/prophet_models"))
-      system(paste0("mkdir ", dir_name, "/data"))
-      system(paste0("mkdir ", dir_name, "/forecast_plot"))
+      system(paste0("mkdir -p ", dir_name))
+      system(paste0("mkdir -p ", dir_name, "/prophet_models"))
+      system(paste0("mkdir -p ", dir_name, "/data"))
+      system(paste0("mkdir -p ", dir_name, "/forecast_plot"))
       
-      system(paste0("mkdir ", dir_name, "/forecast_plot/I"))
-      system(paste0("mkdir ", dir_name, "/forecast_plot/infection_rates"))
-      system(paste0("mkdir ", dir_name, "/forecast_plot/comparison"))
-      system(paste0("mkdir ", dir_name, "/forecast_plot/RData"))
+      system(paste0("mkdir -p ", dir_name, "/forecast_plot/I"))
+      system(paste0("mkdir -p ", dir_name, "/forecast_plot/infection_rates"))
+      system(paste0("mkdir -p ", dir_name, "/forecast_plot/comparison"))
+      system(paste0("mkdir -p ", dir_name, "/forecast_plot/RData"))
     }
     
     # Compute and save all the data
