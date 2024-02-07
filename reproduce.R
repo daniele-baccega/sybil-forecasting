@@ -46,7 +46,6 @@ country <- "Italy"
 if(!file.exists(country)){
   system(paste0("mkdir -p ", country))
   system(paste0("mkdir -p ", country, "/V4"))
-  system(paste0("mkdir -p ", country, "/V4/FirstAscendingScenario"))
   system(paste0("mkdir -p ", country, "/V4/SecondAscendingScenario"))
   system(paste0("mkdir -p ", country, "/V11"))
 }
@@ -63,16 +62,19 @@ external_dir_names <- c(paste0(country, "/V4/FirstScenario/"),
                         paste0(country, "/V4/SecondScenario/"),
                         paste0(country, "/V4/ThirdScenario/"),
                         paste0(country, "/V4/FourthScenario/"),
-                        paste0(country, "/V4/FifthScenario/"))
+                        paste0(country, "/V4/FifthScenario/"),
+                        paste0(country, "/V4/SixthScenario/"))
 
 initial_dates <- c(as.Date("2020-03-14"),
                    as.Date("2021-12-13"),
+                   as.Date("2021-11-09"),
                    as.Date("2022-06-14"),
                    as.Date("2020-05-30"),
                    as.Date("2023-01-07"))
 
 final_dates <- c(as.Date("2020-04-14"),
                  as.Date("2022-01-13"),
+                 as.Date("2021-12-09"),
                  as.Date("2022-07-14"),
                  as.Date("2020-06-30"),
                  as.Date("2023-02-07"))
@@ -81,18 +83,18 @@ forecast(variants, global_final_date, country, external_dir_names, initial_dates
 
 
 # First ascending scenario
-external_dir_names <- c(paste0(country, "/V4/FirstAscendingScenario/February15-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/February18-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/February21-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/February24-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/February27-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March2-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March5-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March8-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March11-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March14-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March17-2021/"),
-                        paste0(country, "/V4/FirstAscendingScenario/March20-2021/"))
+external_dir_names <- c(paste0(country, "/V4/SecondAscendingScenario/February15-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/February18-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/February21-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/February24-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/February27-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March2-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March5-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March8-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March11-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March14-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March17-2021/"),
+                        paste0(country, "/V4/SecondAscendingScenario/March20-2021/"))
 
 initial_dates <- c(as.Date("2021-01-15"),
                    as.Date("2021-01-18"),
@@ -152,7 +154,7 @@ for(i in 1:4){
     plot_layout(guides = "collect") &
     theme(legend.position = "bottom", legend.box = "vertical")
   
-  png(paste0(country, "/V4/FirstAscendingScenario/FirstAscendingScenario_", i*7, "days.png"), units="in", width=34, height=22, res=300)
+  png(paste0(country, "/V4/SecondAscendingScenario/SecondAscendingScenario_", i*7, "days.png"), units="in", width=34, height=22, res=300)
   print(p)
   dev.off()
 }
@@ -187,25 +189,25 @@ for(i in 1:4){
     plot_layout(guides = "collect") &
     theme(legend.position = "bottom", legend.box = "vertical")
   
-  png(paste0(country, "/V4/FirstAscendingScenario/Alpha_infection_rates_evolution_", i*7, "days.png"), units="in", width=34, height=22, res=300)
+  png(paste0(country, "/V4/SecondAscendingScenario/Alpha_infection_rates_evolution_", i*7, "days.png"), units="in", width=34, height=22, res=300)
   print(p)
   dev.off()
 }
 
 
 # Second ascending scenario
-external_dir_names <- c(paste0(country, "/V4/SecondAscendingScenario/December9-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December12-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December15-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December18-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December21-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December24-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December27-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/December30-2021/"),
-                        paste0(country, "/V4/SecondAscendingScenario/January2-2022/"),
-                        paste0(country, "/V4/SecondAscendingScenario/January5-2022/"),
-                        paste0(country, "/V4/SecondAscendingScenario/January8-2022/"),
-                        paste0(country, "/V4/SecondAscendingScenario/January11-2022/"))
+external_dir_names <- c(paste0(country, "/V4/ThirdScenario/December9-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December12-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December15-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December18-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December21-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December24-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December27-2021/"),
+                        paste0(country, "/V4/ThirdScenario/December30-2021/"),
+                        paste0(country, "/V4/ThirdScenario/January2-2022/"),
+                        paste0(country, "/V4/ThirdScenario/January5-2022/"),
+                        paste0(country, "/V4/ThirdScenario/January8-2022/"),
+                        paste0(country, "/V4/ThirdScenario/January11-2022/"))
 
 initial_dates <- c(as.Date("2021-11-09"),
                    as.Date("2021-11-12"),
@@ -265,7 +267,7 @@ for(i in 1:4){
     plot_layout(guides = "collect") &
     theme(legend.position = "bottom", legend.box = "vertical")
   
-  png(paste0(country, "/V4/SecondAscendingScenario/SecondAscendingScenario_", i*7, "days.png"), units="in", width=34, height=22, res=300)
+  png(paste0(country, "/V4/ThirdScenario/ThirdScenario_", i*7, "days.png"), units="in", width=34, height=22, res=300)
   print(p)
   dev.off()
 }
@@ -300,7 +302,7 @@ for(i in 1:4){
     plot_layout(guides = "collect") &
     theme(legend.position = "bottom", legend.box = "vertical")
   
-  png(paste0(country, "/V4/SecondAscendingScenario/Omicron_infection_rates_evolution_", i*7, "days.png"), units="in", width=34, height=22, res=300)
+  png(paste0(country, "/V4/ThirdScenario/Omicron_infection_rates_evolution_", i*7, "days.png"), units="in", width=34, height=22, res=300)
   print(p)
   dev.off()
 }

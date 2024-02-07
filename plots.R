@@ -74,7 +74,7 @@ plot_I <- function(dir_name, SIRD_all, final_dates){
   plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
     geom_line(linewidth=1.5) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population") +
+    labs(x="Date", y="Population") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -87,13 +87,15 @@ plot_I <- function(dir_name, SIRD_all, final_dates){
     geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[4]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[5]), color="#F3474D", linetype="dashed", linewidth=1.5) +
+    geom_vline(aes(xintercept = final_dates[6]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
     geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     geom_text(aes(x = final_dates[4]-30, label="\n4th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     geom_text(aes(x = final_dates[5]-30, label="\n5th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[6]-30, label="\n6th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population") +
+    labs(x="Date", y="Population") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -108,7 +110,7 @@ plot_I <- function(dir_name, SIRD_all, final_dates){
     geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population") +
+    labs(x="Date", y="Population") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -119,7 +121,7 @@ plot_I <- function(dir_name, SIRD_all, final_dates){
     geom_vline(aes(xintercept = as.Date(final_dates[1])), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_text(aes(x = as.Date(final_dates[1])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population") +
+    labs(x="Date", y="Population") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -139,7 +141,7 @@ plot_variant_proportion <- function(dir_name, variants_spline_df, v, variants_na
     geom_line(aes(x=date, y=y, col=variant), linewidth=1.5) +
     scale_colour_manual(values=hue_pal()(length(variants_name))[i]) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="proportion", col="Variant")
+    labs(x="Date", y="Proportion", col="Variant")
   print(plot)
   dev.off()
 }
@@ -156,7 +158,7 @@ plot_variants_proportion <- function(dir_name, variants_global_df, variants_name
     geom_line(aes(x=date, y=y, col=variant), linewidth=1.5) +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="proportion", col="Variants")
+    labs(x="Date", y="Proportion", col="Variants")
   print(plot)
   dev.off()
 }
@@ -180,14 +182,16 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
     geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[4]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[5]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = final_dates[1]-40, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-40, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-40, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[4]-40, label="\n4th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[5]-40, label="\n5th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_vline(aes(xintercept = final_dates[6]), color="#F3474D", linetype="dashed", linewidth=1.5) +
+    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[4]-30, label="\n4th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[5]-30, label="\n5th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[6]-30, label="\n6th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population", col="Variants") +
+    labs(x="Date", y="Population", col="Variants") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -202,12 +206,12 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
     geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=1.5) +
     geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = final_dates[1]-40, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-40, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-40, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population", col="Variants") +
+    labs(x="Date", y="Population", col="Variants") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -219,9 +223,9 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
   }
   plot <- plot +
     geom_vline(aes(xintercept = as.Date(final_dates[1])), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date(final_dates[1])-40, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = as.Date(final_dates[1])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population", col="Variants") +
+    labs(x="Date", y="Population", col="Variants") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -232,13 +236,13 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
     plot <- plot + geom_line(linewidth=1.5)
   }
   plot <- plot +
-    geom_vline(aes(xintercept = as.Date("2021-01-15")), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = as.Date("2021-11-09")), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date("2021-01-15")-40, label="\n1st ascending forecast", y=max(I) - max(I)/6), size = 11, colour="#F3474D", angle=90) +
-    geom_text(aes(x = as.Date("2021-11-09")-40, label="\n2nd ascending forecast", y=max(I) - max(I)/6), size = 11, colour="#F3474D", angle=90) +
+    geom_vline(aes(xintercept = as.Date("2021-02-15")), color="#F3474D", linetype="dashed", linewidth=1.5) +
+    geom_vline(aes(xintercept = as.Date("2021-12-09")), color="#F3474D", linetype="dashed", linewidth=1.5) +
+    geom_text(aes(x = as.Date("2021-02-15")-30, label="\n2nd ascending forecast", y=max(I) - max(I)/6), size = 11, colour="#F3474D", angle=90) +
+    geom_text(aes(x = as.Date("2021-12-09")-30, label="\n1st ascending forecast", y=max(I) - max(I)/6), size = 11, colour="#F3474D", angle=90) +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population", col="Variants") +
+    labs(x="Date", y="Population", col="Variants") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -252,7 +256,7 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
   plot <- plot +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="date", y="population", col="Variants") +
+    labs(x="Date", y="Population", col="Variants") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -304,7 +308,7 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
   
   plot <- ggplot(df_plot, aes(x=date, col=type)) +
     geom_line(aes(y=value), linewidth=1.5) +
-    labs(title=paste0(i, " days"), x="date", y=if(title[1] == "I") "population" else gsub("_", " ", gsub("_rates*", "_rates", title)), color="Variants", linetype="Type") +
+    labs(title=paste0(i, " days"), x="Date", y=if(title[1] == "I") "Population" else gsub("fatality", "Fatality", gsub("recovery", "Recovery", gsub("infection", "Infection", gsub("_", " ", gsub("_rates*", "_rates", title))))), color="Variants", linetype="Type") +
     scale_colour_manual(values=c("#F3474D", "#6B95DB", "#000000")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     guides(color=guide_legend(override.aes=list(fill=NA)))
@@ -408,7 +412,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c(hue_pal()(length(variants_name)), "#808080")) +
       theme(panel.spacing = unit(1, "cm"), legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38), strip.text.x = element_blank()) +
-      labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type") +
+      labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
     
@@ -464,7 +468,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c("#F3474D", "#6B95DB", "#000000")) +
       theme(panel.spacing = unit(1, "cm"), legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38), strip.text.x = element_blank()) +
-      labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type") +
+      labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
     
@@ -519,7 +523,7 @@ comparison <- function(dir_name, time_step, variable_name_variants, ref_data_fla
     geom_line(linewidth=1.5) +
     scale_colour_manual(values=c("#F3474D", "#6C9F6B", "#6B95DB", "#000000")) +
     theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(title=paste0(time_step, " days"), x="date", y="population", color="Variants", linetype="Type") +
+    labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
     scale_y_continuous(labels = label_scientific())
   save(plot, file=paste0(dir_name, "/RData/", variable_name_variants, "_compare_", time_step, "_days.RData"))
 }
