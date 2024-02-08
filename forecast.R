@@ -14,20 +14,18 @@
 #   - external_dir_names:         names of the external directories
 #   - initial_dates:              initial dates
 #   - final_dates:                final dates
+#   - immunization_end_rate:      immunization end rate
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
 #   - reproduce:                  reproduce the results of the paper
-forecast <- function(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
+forecast <- function(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
   # Download file and load data
   data <- download_files_and_load_data(country, global_final_date, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
   df_COVID19_init <- data[[1]]
   df_variants_init <- data[[2]]
   updated_file <- data[[3]]
-  
-  
-  # Initialize some variables
-  immunization_end_rate <- 1 / 180
+
   
   mcmc_samples <- 1000
   

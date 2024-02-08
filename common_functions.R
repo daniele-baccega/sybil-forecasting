@@ -12,12 +12,12 @@
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
+#   - reproduce:                  reproduce the results of the paper
 #
 # Output:
 #   - df_COVID19_ref_init:        dataframe with Covid-19 data
 #   - df_variants_init:           dataframe with variants data
 #   - updated_file:               false if the files were not update, true otherwise
-#   - reproduce:                  reproduce the results of the paper
 download_files_and_load_data <- function(country_long, global_final_date, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
@@ -55,8 +55,12 @@ download_files_and_load_data <- function(country_long, global_final_date, varian
   
   # Read and preprocess the data
   df_COVID19_ref_init <- read.csv(covid19_data)
+  df_COVID19_ref_init$confirmed[is.na(df_COVID19_ref_init$confirmed)] <- 0
+  df_COVID19_ref_init$deaths[is.na(df_COVID19_ref_init$deaths)] <- 0
+  df_COVID19_ref_init$recovered[is.na(df_COVID19_ref_init$recovered)] <- 0
+  df_COVID19_ref_init[df_COVID19_ref_init == ""] <- NA
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
-    filter(administrative_area_level_2 == "", administrative_area_level_3 == "", !is.na(confirmed), date <= global_final_date)
+    filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3), !is.na(confirmed), date <= global_final_date)
   
   df_variants_init <- read.csv(covid19_variants_data)
   variants_countries <- unique(df_variants_init$country)
