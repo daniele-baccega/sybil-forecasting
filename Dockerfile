@@ -4,7 +4,7 @@ LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 
 ## Copy files
 COPY reproduce.R .
-COPY forecast.R .
+COPY Sybil.R .
 COPY common_functions.R .
 
 ## Run the script
