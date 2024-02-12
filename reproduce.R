@@ -17,8 +17,8 @@ library(scales)
 library(patchwork)
 
 
-# Include the forecast function and the common functions
-source("forecast.R")
+# Include the Sybil function and the common functions
+source("Sybil.R")
 source("plots.R")
 source("common_functions.R")
 
@@ -82,7 +82,7 @@ final_dates <- c(as.Date("2020-04-14"),
                  as.Date("2020-06-30"),
                  as.Date("2023-02-07"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
 
 
 # First ascending scenario on Italy
@@ -125,7 +125,7 @@ final_dates <- c(as.Date("2021-12-09"),
                  as.Date("2022-01-08"),
                  as.Date("2022-01-11"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
 
 plots_first_ascending_scenario(external_dir_names, country)
 
@@ -170,7 +170,7 @@ final_dates <- c(as.Date("2021-02-15"),
                  as.Date("2021-03-17"),
                  as.Date("2021-03-20"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
 
 plots_second_ascending_scenario(external_dir_names, country)
 
@@ -208,7 +208,7 @@ final_dates <- c(as.Date("2022-01-10"),
                  as.Date("2022-01-15"),
                  as.Date("2022-01-22"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
 
 plots_v11_scenario(external_dir_names, country)
 
@@ -243,4 +243,4 @@ final_dates <- c(as.Date("2022-02-01"),
                  as.Date("2022-07-14"),
                  as.Date("2020-06-10"))
 
-forecast(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
