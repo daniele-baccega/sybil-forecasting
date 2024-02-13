@@ -1,4 +1,4 @@
-# Prophet with Covid-19 data
+# Sybil
 #
 # Author: Daniele Baccega
 # Data: COVID19 R library
@@ -15,13 +15,16 @@
 #   - initial_dates:              initial dates
 #   - final_dates:                final dates
 #   - immunization_end_rate:      immunization end rate
+#   - reproduce:                  reproduce the results of the paper
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-#   - reproduce:                  reproduce the results of the paper
-Sybil <- function(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
+Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), country = "Italy", external_dir_names = paste0(country, "/FirstScenario/"), initial_dates = c(as.Date("2020-03-14")), final_dates = c(as.Date("2020-04-14")), immunization_end_rate = 1 / 180, reproduce = FALSE, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+  if(length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names))
+    stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
+  
   # Download file and load data
-  data <- download_files_and_load_data(country, global_final_date, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+  data <- download_files_and_load_data(country, global_final_date, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
   df_COVID19_init <- data[[1]]
   df_variants_init <- data[[2]]
   updated_file <- data[[3]]
@@ -35,22 +38,17 @@ Sybil <- function(variants, global_final_date, country, external_dir_names, init
   
   relative_errors_df <- data.frame()
   # Loop on different 'training' windows
-  for(j in seq(1, length(initial_dates))){
-    dir_name <- paste0(external_dir_names[j], internal_dir_name, "OneMonth")
+  for(j in seq(1, length(external_dir_names))){
+    dir_name <- paste0(external_dir_names[j], internal_dir_name)
     
     # Create the main directories
     if(!file.exists(external_dir_names[j])){
       system(paste0("mkdir -p ", external_dir_names[j]))
     }
     
-    if(!file.exists(internal_dir_name)){
-      system(paste0("mkdir -p ", external_dir_names[j], internal_dir_name))
-    }
-    
     # Compute the final dates
-    final_dates_ref <- c(final_dates[j] + time_steps[1])
-    
-    for(i in seq(2, length(time_steps))){
+    final_dates_ref <- c()
+    for(i in seq(1, length(time_steps))){
       final_dates_ref <- c(final_dates_ref, final_dates[j] + time_steps[i])
     }
     
@@ -75,7 +73,7 @@ Sybil <- function(variants, global_final_date, country, external_dir_names, init
     SIRD_all <- data[[3]]
     results_all <- data[[4]]
     
-    # Check if we can reproduce the real data using a SIRD model from initial_dates[j] to final_dates[j] (with the previously computed rates)
+    # Check if we can reproduce the real data using a SIRD model with the previously computed rates
     SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, immunization_end_rate, df_COVID19_all$population[1])
     plot_I(dir_name, SIRD_all, final_dates)
     
@@ -90,8 +88,12 @@ Sybil <- function(variants, global_final_date, country, external_dir_names, init
     SIRD_all_variants <- variants_data[[1]]
     results_all_variants <- variants_data[[2]]
     
-    variants_name <- unique(df_variants_processed$variant)
+    if(final_dates[j] > SIRD_all$date[nrow(SIRD_all)]){
+      print(paste0("Warning: ", final_dates[j], " is greater than the last date in the data! Skip"))
+      next
+    }
     
+    variants_name <- unique(df_variants_processed$variant)
     for(i in seq(1, length(time_steps))){
       filtered_data <- filter_data(df_COVID19_all, SIRD_all, SIRD_all_variants, results_all, results_all_variants, initial_dates[j], final_dates[j], final_dates_ref[i], variants)
       df_COVID19_ref_used <- filtered_data[[1]]

@@ -1,4 +1,4 @@
-# Prophet with Covid-19 data (paper's results)
+# Sybil (paper's results)
 #
 # Author: Daniele Baccega
 # Data: COVID19 R library
@@ -53,6 +53,7 @@ if(!file.exists(country)){
   system(paste0("mkdir -p ", country, "/V11"))
 }
 
+# Select the variants to disregard and to aggregate
 variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "SGTF", "UNK")
 variants_aggregated <- list(Alpha = c("B.1.1.7"),
                             Delta = c("B.1.617.2"),
@@ -82,7 +83,7 @@ final_dates <- c(as.Date("2020-04-14"),
                  as.Date("2020-06-30"),
                  as.Date("2023-02-07"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
 
 # First ascending scenario on Italy
@@ -125,7 +126,7 @@ final_dates <- c(as.Date("2021-12-09"),
                  as.Date("2022-01-08"),
                  as.Date("2022-01-11"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
 plots_first_ascending_scenario(external_dir_names, country)
 
@@ -170,7 +171,7 @@ final_dates <- c(as.Date("2021-02-15"),
                  as.Date("2021-03-17"),
                  as.Date("2021-03-20"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
 plots_second_ascending_scenario(external_dir_names, country)
 
@@ -208,7 +209,7 @@ final_dates <- c(as.Date("2022-01-10"),
                  as.Date("2022-01-15"),
                  as.Date("2022-01-22"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
 plots_v11_scenario(external_dir_names, country)
 
@@ -243,4 +244,4 @@ final_dates <- c(as.Date("2022-02-01"),
                  as.Date("2022-07-14"),
                  as.Date("2020-06-10"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, variants_to_disregard, variants_aggregated, variants_aggregated_names, reproduce)
+Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)

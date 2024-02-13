@@ -1,4 +1,4 @@
-# Prophet with Covid-19 data
+# Sybil
 #
 # Author: Daniele Baccega
 # Data: COVID19 R library
@@ -9,16 +9,16 @@
 # Inputs:
 #   - country_long:               name of the interested country (e.g. Italy, Austria)
 #   - global_final_date:          final date for the data
+#   - reproduce:                  reproduce the results of the paper
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-#   - reproduce:                  reproduce the results of the paper
 #
 # Output:
 #   - df_COVID19_ref_init:        dataframe with Covid-19 data
 #   - df_variants_init:           dataframe with variants data
 #   - updated_file:               false if the files were not update, true otherwise
-download_files_and_load_data <- function(country_long, global_final_date, variants_to_disregard, variants_aggregated = list(), variants_aggregated_names = list(), reproduce){
+download_files_and_load_data <- function(country_long, global_final_date, reproduce, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -75,7 +75,7 @@ download_files_and_load_data <- function(country_long, global_final_date, varian
            number_detections_variant = as.integer(number_detections_variant),
            number_sequenced_known_variant = as.integer(number_sequenced_known_variant),
            percent_variant = number_detections_variant / number_sequenced_known_variant) %>%
-    filter(!(year == 2020 & week %in% c(1, 2, 3, 4, 5, 6, 7, 8)))
+    filter(!(year == 2020 & week %in% seq(1, 8)))
 
   df_variants_init <- df_variants_init %>%
     mutate(variant = str_replace(variant, "/", "-"))
@@ -144,6 +144,7 @@ filter_variants <- function(df_variants_init){
   
   df_variants$percent_variant[which(df_variants$variant == "Other")] <- df_variants$percent_variant[which(df_variants$variant == "Other")] + other_proportion
   df_variants$percent_variant[which(df_variants$variant == "Other" & df_variants$year == 2020 & df_variants$week < 45)] <- 1.0
+  df_variants$percent_variant[which(df_variants$variant != "Other" & df_variants$year == 2020 & df_variants$week < 45)] <- 0.0
   
   return(df_variants)
 }
