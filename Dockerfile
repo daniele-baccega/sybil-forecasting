@@ -3,9 +3,9 @@ FROM danielebaccega/prophet
 LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 
 ## Copy files
-COPY reproduce.R .
+COPY Italy.R .
 COPY Sybil.R .
 COPY common_functions.R .
 
 ## Run the script
-CMD Rscript reproduce.R
+CMD Rscript Italy.R

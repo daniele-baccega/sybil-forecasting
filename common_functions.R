@@ -9,10 +9,10 @@
 # Inputs:
 #   - country_long:               name of the interested country (e.g. Italy, Austria)
 #   - global_final_date:          final date for the data
-#   - reproduce:                  reproduce the results of the paper
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
+#   - reproduce:                  reproduce the results of the paper
 #
 # Output:
 #   - df_COVID19_ref_init:        dataframe with Covid-19 data
@@ -55,12 +55,18 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   
   # Read and preprocess the data
   df_COVID19_ref_init <- read.csv(covid19_data)
-  df_COVID19_ref_init$confirmed[is.na(df_COVID19_ref_init$confirmed)] <- 0
-  df_COVID19_ref_init$deaths[is.na(df_COVID19_ref_init$deaths)] <- 0
-  df_COVID19_ref_init$recovered[is.na(df_COVID19_ref_init$recovered)] <- 0
   df_COVID19_ref_init[df_COVID19_ref_init == ""] <- NA
+  df_COVID19_ref_init$confirmed[is.na(df_COVID19_ref_init$confirmed) & df_COVID19_ref_init$date <= "2020-04-01"] <- 0
+  df_COVID19_ref_init$deaths[is.na(df_COVID19_ref_init$deaths) & df_COVID19_ref_init$date <= "2020-04-01"] <- 0
+  
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
-    filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3), !is.na(confirmed), date <= global_final_date)
+    filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3))
+  
+  df_COVID19_ref_init <- df_COVID19_ref_init %>%
+    mutate(confirmed = na.approx(confirmed, na.rm = FALSE), deaths = na.approx(deaths, na.rm = FALSE))
+  
+  df_COVID19_ref_init <- df_COVID19_ref_init %>%
+    filter(!is.na(confirmed), !is.na(deaths), date <= global_final_date)
   
   df_variants_init <- read.csv(covid19_variants_data)
   variants_countries <- unique(df_variants_init$country)
@@ -156,6 +162,7 @@ filter_variants <- function(df_variants_init){
 #   - df_COVID19_ref:         dataframe with Covid-19 data
 #   - df_variants_ref:        dataframe with variants data
 #   - immunization_end_rate:  immunization end rate
+#   - recovery_rate:          recovery rate
 #   - global_final_date:      final date for the data
 #   . new_data:               true if the files were not update, false otherwise
 #
@@ -163,8 +170,10 @@ filter_variants <- function(df_variants_init){
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_COVID19_ref:         dataframe with Covid-19 data (after preprocessing)
 #   - SIRD_all:               evolution of the infection using a SIRD model
+#   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, global_final_date, new_data=FALSE){
+#   - results_all_spline:     infection, recovery and fatality rates extracted from the SIRD model (daily spline)
+compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, recovery_rate, global_final_date, new_data=FALSE){
   if(file.exists(paste0(dir_name, "/data/date.RData")) && !new_data){
     load(paste0(dir_name, "/data/date.RData"))
     new_data <- !(today == Sys.Date())
@@ -178,9 +187,9 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     N <- df_COVID19_ref$population[1]
      
     df_COVID19_ref <- df_COVID19_ref %>%
-      mutate(total_cases = confirmed, total_deaths = deaths, total_recovered = recovered) %>%
-      select(date, total_cases, total_deaths, total_recovered, population) %>%
-      mutate(new_cases = diff(c(0, total_cases)), new_deaths = diff(c(0, total_deaths)), new_recovered = diff(c(0, total_recovered))) %>%
+      mutate(total_cases = confirmed, total_deaths = deaths) %>%
+      select(date, total_cases, total_deaths, population) %>%
+      mutate(new_cases = diff(c(0, total_cases)), new_deaths = diff(c(0, total_deaths))) %>%
       filter(!is.na(new_cases), date >= "2020-02-24")
     
     df_COVID19_ref$date <- as.Date(df_COVID19_ref$date)
@@ -194,9 +203,16 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     
     df_COVID19_ref_weekly <- df_COVID19_ref %>%
       group_by(week, year) %>%
-      summarise(date = first(date))
+      summarize(new_cases = sum(new_cases),
+                new_deaths = sum(new_deaths),
+                date = first(date)) %>%
+      filter(!is.na(new_cases))
     
     df_COVID19_ref_weekly <- df_COVID19_ref_weekly[order(df_COVID19_ref_weekly$date),]
+    
+    df_COVID19_ref_weekly$population <- rep(N, nrow(df_COVID19_ref_weekly))
+    df_COVID19_ref_weekly$total_cases <- cumsum(df_COVID19_ref_weekly$new_cases)
+    df_COVID19_ref_weekly$total_deaths <- cumsum(df_COVID19_ref_weekly$new_deaths)
     
     df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
       filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
@@ -208,20 +224,57 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     
     S_local[1] <- N - df_COVID19_ref$total_cases[1]
     I_local[1] <- df_COVID19_ref$total_cases[1]
-    R_local[1] <- df_COVID19_ref$total_recovered[1]
+    R_local[1] <- 0
     D_local[1] <- df_COVID19_ref$total_deaths[1]
     
     for(t in 2:n){
       S_local[t] <- S_local[t-1] - df_COVID19_ref$new_cases[t] + R_local[t-1] * immunization_end_rate
-      I_local[t] <- I_local[t-1] + df_COVID19_ref$new_cases[t] - (df_COVID19_ref$new_deaths[t] + df_COVID19_ref$new_recovered[t])
-      R_local[t] <- R_local[t-1] + df_COVID19_ref$new_recovered[t] - R_local[t-1] * immunization_end_rate
+      I_local[t] <- I_local[t-1] + df_COVID19_ref$new_cases[t] - (df_COVID19_ref$new_deaths[t] + recovery_rate * I_local[t-1])
+      R_local[t] <- R_local[t-1] + recovery_rate * I_local[t-1] - R_local[t-1] * immunization_end_rate
       D_local[t] <- D_local[t-1] + df_COVID19_ref$new_deaths[t]
     }
+    
+    
+    # Weekly data (we need this data to generate daily spline data)
+    n_weekly <- nrow(df_COVID19_ref_weekly)
+    
+    S_local_weekly <- I_local_weekly <- R_local_weekly <- D_local_weekly <- rep(0, n_weekly)
+    
+    S_local_weekly[1] <- N - df_COVID19_ref_weekly$total_cases[1]
+    I_local_weekly[1] <- df_COVID19_ref_weekly$total_cases[1]
+    R_local_weekly[1] <- 0
+    D_local_weekly[1] <- df_COVID19_ref_weekly$total_deaths[1]
+    
+    recovery_rate_weekly <- recovery_rate * 7
+    immunization_end_rate_weekly <- immunization_end_rate * 7
+    
+    for(t in 2:n_weekly){
+      S_local_weekly[t] <- S_local_weekly[t-1] - df_COVID19_ref_weekly$new_cases[t] + R_local_weekly[t-1] * immunization_end_rate_weekly
+      I_local_weekly[t] <- I_local_weekly[t-1] + df_COVID19_ref_weekly$new_cases[t] - (df_COVID19_ref_weekly$new_deaths[t] + recovery_rate_weekly * I_local_weekly[t-1])
+      R_local_weekly[t] <- R_local_weekly[t-1] + recovery_rate_weekly * I_local_weekly[t-1] - R_local_weekly[t-1] * immunization_end_rate_weekly
+      D_local_weekly[t] <- D_local_weekly[t-1] + df_COVID19_ref_weekly$new_deaths[t]
+    }
+    
+    
+    # Spline data
+    S_spline <- splinefun(seq(1, n_weekly*7, 7), S_local_weekly, method = "monoH.FC")
+    I_spline <- splinefun(seq(1, n_weekly*7, 7), I_local_weekly, method = "monoH.FC")
+    R_spline <- splinefun(seq(1, n_weekly*7, 7), R_local_weekly, method = "monoH.FC")
+    D_spline <- splinefun(seq(1, n_weekly*7, 7), D_local_weekly, method = "monoH.FC")
+    
+    S_local_spline <- S_spline(seq(1, length(df_COVID19_ref$date)))
+    I_local_spline <- I_spline(seq(1, length(df_COVID19_ref$date)))
+    R_local_spline <- R_spline(seq(1, length(df_COVID19_ref$date)))
+    D_local_spline <- D_spline(seq(1, length(df_COVID19_ref$date)))
    
     SIRD_all <- data.frame(date=df_COVID19_ref$date, S=S_local, I=I_local, R=R_local, D=D_local)
+    SIRD_all_weekly <- data.frame(date=df_COVID19_ref_weekly$date, S=S_local_weekly, I=I_local_weekly, R=R_local_weekly, D=D_local_weekly)
+    SIRD_all_spline <- data.frame(date=df_COVID19_ref$date, S=S_local_spline, I=I_local_spline, R=R_local_spline, D=D_local_spline)
     
     # Extract the rates
     results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1))
+    results_all_weekly <- get_rates(SIRD_all_weekly[-nrow(SIRD_all_weekly),], SIRD_all_weekly[nrow(SIRD_all_weekly),], immunization_end_rate, rep(N, nrow(SIRD_all_weekly)-1))
+    results_all_spline <- get_rates(SIRD_all_spline[-nrow(SIRD_all_spline),], SIRD_all_spline[nrow(SIRD_all_spline),], immunization_end_rate, rep(N, nrow(SIRD_all_spline)-1))
     
     df_variants_ref <- df_variants_ref %>%
       filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
@@ -230,14 +283,14 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
     
     today <- Sys.Date()
-    save(df_variants_ref, df_COVID19_ref, S_local, I_local, R_local, D_local, SIRD_all, results_all, file=paste0(dir_name, "/data/data.RData"))
+    save(df_variants_ref, df_COVID19_ref, S_local, S_local_spline, I_local, I_local_spline, R_local, R_local_spline, D_local, D_local_spline, SIRD_all, SIRD_all_spline, results_all, results_all_spline, file=paste0(dir_name, "/data/data.RData"))
     save(today, file=paste0(dir_name, "/data/date.RData"))
   }
   else{
     load(paste0(dir_name, "/data/data.RData"))
   }
   
-  return(list(df_variants_ref, df_COVID19_ref, SIRD_all, results_all))
+  return(list(df_variants_ref, df_COVID19_ref, SIRD_all, SIRD_all_spline, results_all, results_all_spline))
 }
 
 # Computes the infection, recovery and  fatality rates starting from the system of ODEs of the SIRD model.
@@ -263,18 +316,25 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
 # Generate variants information and plot
 #
 # Inputs:
-#   - dir_name:           name of the directory in which put the results
-#   - df_variants:        dataframe with variants data
-#   - df_COVID19_all:     dataframe with Covid-19 data
-#   - SIRD_all:           evolution of the infection using a SIRD model
-#   - results_all:        infection, recovery and fatality rates extracted from the SIRD model
+#   - dir_name:               name of the directory in which put the results
+#   - df_variants:            dataframe with variants data
+#   - df_COVID19_all:         dataframe with Covid-19 data
+#   - df_COVID19_all_spline:  dataframe with Covid-19 data (daily spline)
+#   - SIRD_all:               evolution of the infection using a SIRD model
+#   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
+#   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
+#   - results_all_spline:     infection, recovery and fatality rates extracted from the SIRD model (daily spline)
+#   - daily_spline            true if we approximate daily data with a spline, false otherwise
 #
 # Output:
-#   - variants_global_df: infection, recovery and fatality rates extracted from the SIRD model
-#   - df_COVID19_all:     dataframe with Covid-19 data
-#   - SIRD_all:           evolution of the infection using a SIRD model
-#   - results_all:        infection, recovery and fatality rates extracted from the SIRD model
-generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_all, SIRD_all, results_all){
+#   - variants_global_df:     infection, recovery and fatality rates extracted from the SIRD model
+#   - df_COVID19_all:         dataframe with Covid-19 data
+#   - df_COVID19_all_spline:  dataframe with Covid-19 data (daily spline)
+#   - SIRD_all:               evolution of the infection using a SIRD model
+#   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
+#   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
+#   - results_all_spline:     infection, recovery and fatality rates extracted from the SIRD model (daily spline)
+generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_all, SIRD_all, SIRD_all_spline, results_all, results_all_spline, daily_spline){
   variants_name <- unique(df_variants$variant)
   
   # Preprocess variants data
@@ -309,28 +369,43 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_al
   SIRD_all <- SIRD_all %>%
     filter(date <= df_variants$date[nrow(df_variants)])
   
+  SIRD_all_spline <- SIRD_all_spline %>%
+    filter(date <= df_variants$date[nrow(df_variants)])
+  
   results_all <- results_all %>%
     filter(date <= df_variants$date[nrow(df_variants)])
+  
+  results_all_spline <- results_all_spline %>%
+    filter(date <= df_variants$date[nrow(df_variants)])
       
-  return(list(variants_global_df, df_COVID19_all, SIRD_all, results_all))
+  return(list(variants_global_df, df_COVID19_all, SIRD_all, SIRD_all_spline, results_all, results_all_spline))
 }
 
 # Generate the SIvRD model.
 #
 # Inputs:
-#   - dir_name:               name of the directory in which put the results
-#   - df_variants:            dataframe with variants data
-#   - SIRD_all:               evolution of the infection using a SIRD model
-#   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-#   - immunization_end_rate:  immunization end rate
-#   - N:                      total population
-#   - final_dates:            final dates
+#   - dir_name:                   name of the directory in which put the results
+#   - df_variants:                dataframe with variants data
+#   - SIRD_all:                   evolution of the infection using a SIRD model
+#   - SIRD_all_spline:            evolution of the infection using a SIRD model (daily spline)
+#   - results_all:                infection, recovery and fatality rates extracted from the SIRD model
+#   - results_all (daily spline): infection, recovery and fatality rates extracted from the SIRD model (daily spline)
+#   - immunization_end_rate:      immunization end rate
+#   - N:                          total population
+#   - daily_spline            true if we approximate daily data with a spline, false otherwise
 #
 # Output:
 #   - SIRD_all_variants:      evolution of the infection using a SIvRD model
 #   - df_all_variants:        infection, recovery and fatality rates extracted from the SIvRD model for each variant
-SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N, final_dates){
+SIRD_variants <- function(dir_name, df_variants, SIRD_all, SIRD_all_spline, results_all, results_all_spline, immunization_end_rate, N, daily_spline){
   variants_name <- unique(df_variants$variant)
+  
+  SIRD_all_used <- SIRD_all
+  results_all_used <- results_all
+  if(daily_spline){
+    SIRD_all_used <- SIRD_all_spline
+    results_all_used <- results_all_spline
+  }
   
   # Generate the SIvRD model and compute the infection rates for each variant
   SIRD_all_variants <- data.frame()
@@ -339,10 +414,10 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
     df_variants_local <- df_variants %>%
       filter(variant == variants_name[i])
     
-    I_variant <- SIRD_all$I * df_variants_local$y
+    I_variant <- SIRD_all_used$I * df_variants_local$y
     
-    SIRD_variant <- data.frame(date=SIRD_all$date, S=SIRD_all$S, I=I_variant, R=SIRD_all$R, D=SIRD_all$D)
-    infection_rates_variant <- (diff(SIRD_variant$I) + SIRD_variant$I[-nrow(SIRD_variant)] * (results_all$rec_rates[-nrow(SIRD_variant)] + results_all$fat_rates[-nrow(SIRD_variant)])) * (rep(N, nrow(SIRD_variant)-1) / (SIRD_variant$S[-nrow(SIRD_variant)] * SIRD_all$I[-nrow(SIRD_variant)]))
+    SIRD_variant <- data.frame(date=SIRD_all_used$date, S=SIRD_all_used$S, I=I_variant, R=SIRD_all_used$R, D=SIRD_all_used$D)
+    infection_rates_variant <- (diff(SIRD_variant$I) + SIRD_variant$I[-nrow(SIRD_variant)] * (results_all_used$rec_rates[-nrow(SIRD_variant)] + results_all_used$fat_rates[-nrow(SIRD_variant)])) * (rep(N, nrow(SIRD_variant)-1) / (SIRD_variant$S[-nrow(SIRD_variant)] * SIRD_all_used$I[-nrow(SIRD_variant)]))
     infection_rates_variant[is.na(infection_rates_variant) | is.infinite(infection_rates_variant) | infection_rates_variant < 0] <- 0
     
     infection_rates_all_variants <- c(infection_rates_all_variants, infection_rates_variant)
@@ -351,13 +426,22 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
   }
 
   df_variants_names <- df_variants %>%
-    filter(date != SIRD_all$date[nrow(SIRD_all)])
+    filter(date != SIRD_all_used$date[nrow(SIRD_all_used)])
   
-  df_all_variants <- data.frame(date=rep(SIRD_all$date[-nrow(SIRD_all)], length(variants_name)), infection_rates=infection_rates_all_variants, rec_rates=rep(results_all$rec_rates[-nrow(SIRD_variant)], length(variants_name)), fat_rates=rep(results_all$fat_rates[-nrow(SIRD_variant)], length(variants_name)), variant=df_variants_names$variant)
-
-  plot_I_variants(dir_name, SIRD_all_variants, variants_name, final_dates)
+  df_all_variants <- data.frame(date=rep(SIRD_all_used$date[-nrow(SIRD_all_used)], length(variants_name)), infection_rates=infection_rates_all_variants, rec_rates=rep(results_all_used$rec_rates[-nrow(SIRD_variant)], length(variants_name)), fat_rates=rep(results_all_used$fat_rates[-nrow(SIRD_variant)], length(variants_name)), variant=df_variants_names$variant)
   
   return(list(SIRD_all_variants, df_all_variants))
+}
+
+# Save the global rates and the rates for each variant in CSVs.
+#
+# Inputs:
+#   - dir_name:               name of the directory in which put the results
+#   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
+#   - results_all_variants:   infection, recovery and fatality rates extracted from the SIvRD model
+save_rates <- function(dir_name, results_all, results_all_variants){
+  write.csv(results_all_variants, paste0(dir_name, "/rates_variants.csv"))
+  write.csv(results_all, paste0(dir_name, "/rates.csv"))
 }
 
 # Gets the data frames.
@@ -365,12 +449,15 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
 # Inputs:
 #   - df_COVID19_ref:         dataframe with Covid-19 data (with the ground truth of the forecast)
 #   - SIRD_all:               evolution of the infection using a SIRD model
+#   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
 #   - SIRD_all_variants:      evolution of the infection using a SIvRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
+#   - results_all_spline:     infection, recovery and fatality rates extracted from the SIRD model (daily spline)
 #   - results_all_variants:   infection, recovery and fatality rates extracted from the SIvRD model for each variant
 #   - initial_date:           initial date (for training)
 #   - final_date:             final date (for training)
 #   - final_date_ref:         final date (for forecast)
+#   - daily_spline            true if we approximate daily data with a spline, false otherwise
 #   - variants:               true if we are considering variants, false otherwise
 #
 # Output:
@@ -380,7 +467,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
 #   - SIRD_used:            evolution of the infection
 #   - results_ref_used:     infection, recovery and fatality rates (with the ground truth of the forecast)
 #   - results_used:         infection, recovery and fatality rates
-filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all, results_all_variants, initial_date, final_date, final_date_ref, variants){
+filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_spline, SIRD_all_variants, results_all, results_all_spline, results_all_variants, initial_date, final_date, final_date_ref, daily_spline, variants){
   # Reference dataframes
   df_COVID19_ref <- df_COVID19_ref %>%
     filter(date >= initial_date, date <= final_date_ref)
@@ -388,10 +475,16 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all
   SIRD_all <- SIRD_all %>%
     filter(date >= initial_date, date <= final_date_ref)
   
+  SIRD_all_spline <- SIRD_all_spline %>%
+    filter(date >= initial_date, date <= final_date_ref)
+  
   SIRD_all_variants <- SIRD_all_variants %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   results_all <- results_all %>%
+    filter(date >= initial_date, date <= final_date_ref)
+  
+  results_all_spline <- results_all_spline %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   results_all_variants <- results_all_variants %>%
@@ -405,10 +498,16 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all
   SIRD <- SIRD_all %>%
     filter(date <= final_date)
   
+  SIRD_spline <- SIRD_all_spline %>%
+    filter(date <= final_date)
+  
   SIRD_variants <- SIRD_all_variants %>%
     filter(date <= final_date)
   
   results <- results_all %>%
+    filter(date <= final_date)
+  
+  results_spline <- results_all_spline %>%
     filter(date <= final_date)
   
   results_variants <- results_all_variants %>%
@@ -422,6 +521,13 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all
   df_COVID19_used <-df_COVID19
   SIRD_used <- SIRD
   results_used <- results
+  
+  if(daily_spline){
+    SIRD_ref_used <- SIRD_all_spline
+    results_ref_used <- results_all_spline
+    SIRD_used <- SIRD_spline
+    results_used <- results_spline
+  }
   
   if(variants){
     SIRD_ref_used <- SIRD_all_variants
@@ -473,7 +579,7 @@ apply_Prophet <- function(dir_name, date, values, time_step, file_name, mcmc_sam
 #   - SIRD:                   evolution of the infection using a SIRD/SIvRD model
 #   - infection_rates:        infection rates for each variant
 #   - global_infection_rates: global infection rates
-#   - global_recovery_rates:  global recovery rates
+#   - recovery_rate:          recovery rate
 #   - global_fatality_rates:  global fatality rates
 #   - immunization_end_rate:  immunization end rate
 #   - variants:               true if we are considering variants, false otherwise
@@ -481,7 +587,7 @@ apply_Prophet <- function(dir_name, date, values, time_step, file_name, mcmc_sam
 #
 # Output:
 #   - SIRD_ev:                evolution of the SIRD/SIvRD in the considered forecast window model using the forecasted rates
-SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, variants, time_step){
+SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, variants, time_step){
   if(variants){
     SIRD_all_variants <- SIRD %>%
       group_by(date) %>%
@@ -499,8 +605,8 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
     
     for(t in n:(n_ref-1)){
       S_local_all_variants[t+1] <- S_local_all_variants[t] - global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N + R_local_all_variants[t] * immunization_end_rate
-      I_local_all_variants[t+1] <- I_local_all_variants[t] + global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_all_variants[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
-      R_local_all_variants[t+1] <- R_local_all_variants[t] + I_local_all_variants[t] * global_recovery_rates$mean[(t-n)+1] - R_local_all_variants[t] * immunization_end_rate
+      I_local_all_variants[t+1] <- I_local_all_variants[t] + global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_all_variants[t] * (recovery_rate + global_fatality_rates$mean[(t-n)+1])
+      R_local_all_variants[t+1] <- R_local_all_variants[t] + I_local_all_variants[t] * recovery_rate - R_local_all_variants[t] * immunization_end_rate
       D_local_all_variants[t+1] <- D_local_all_variants[t] + I_local_all_variants[t] * global_fatality_rates$mean[(t-n)+1]
     }
     
@@ -518,13 +624,13 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
       I_local_variant[1:n] <- SIRD_variant$I
       
       for(t in n:(n_ref-1)){
-        I_local_variant[t+1] <- I_local_variant[t] + infection_rates_variant$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_variant[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
+        I_local_variant[t+1] <- I_local_variant[t] + infection_rates_variant$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_variant[t] * (recovery_rate + global_fatality_rates$mean[(t-n)+1])
       }
       
       I_local <- rbind(I_local, data.frame(I=I_local_variant, variant=rep(variants_name[i], n_ref)))
     }
     
-    SIRD_ev <- data.frame(date=seq.Date(SIRD_all_variants$date[1], SIRD_all_variants$date[n]+time_step, 1), S=rep(S_local_all_variants, length(variants_name)), I=I_local$I, R=rep(R_local_all_variants, length(variants_name)), D=rep(D_local_all_variants, length(variants_name)), variant=I_local$variant)
+    SIRD_ev <- data.frame(date=seq.Date(SIRD_all_variants$date[1], SIRD_all_variants$date[n] + time_step, 1), S=rep(S_local_all_variants, length(variants_name)), I=I_local$I, R=rep(R_local_all_variants, length(variants_name)), D=rep(D_local_all_variants, length(variants_name)), variant=I_local$variant)
   }
   else{
     S_local <- I_local <- R_local <- D_local <- rep(NA, n_ref)
@@ -536,8 +642,8 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
 
     for(t in n:(n_ref-1)){
       S_local[t+1] <- S_local[t] - infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate
-      I_local[t+1] <- I_local[t] + infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N - I_local[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
-      R_local[t+1] <- R_local[t] + I_local[t] * global_recovery_rates$mean[(t-n)+1] - R_local[t] * immunization_end_rate
+      I_local[t+1] <- I_local[t] + infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N - I_local[t] * (recovery_rate + global_fatality_rates$mean[(t-n)+1])
+      R_local[t+1] <- R_local[t] + I_local[t] * recovery_rate - R_local[t] * immunization_end_rate
       D_local[t+1] <- D_local[t] + I_local[t] * global_fatality_rates$mean[(t-n)+1]
     }
     
@@ -556,7 +662,7 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
 #   - final_date:             final date (for training)
 #   - infection_rates:        infection rates for each variant
 #   - global_infection_rates: global infection rates
-#   - global_recovery_rates:  global recovery rates
+#   - recovery_rate:          recovery rate
 #   - global_fatality_rates:  global fatality rates
 #   - immunization_end_rate:  immunization end rate
 #   - fc_I:                   forecast on I
@@ -567,11 +673,11 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
 #
 # Output:
 #   - SIRD_ev:                evolution of the SIRD/SIvRD in the considered forecast window model using the forecasted rates
-SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, fc_I, SIRD, SIRD_ref, N, variants){
+SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, fc_I, SIRD, SIRD_ref, N, variants){
   n <- length(unique(SIRD$date))
   n_ref <- n + time_step
   
-  SIRD_ev <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, variants, time_step)
+  SIRD_ev <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, variants, time_step)
   
   plot_SIRD_evolution(SIRD_ev, n, n_ref, dir_name, time_step, ref_data_flag, final_date, infection_rates, fc_I, SIRD, SIRD_ref, variants)
   

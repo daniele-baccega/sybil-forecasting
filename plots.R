@@ -68,58 +68,11 @@ SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, im
 # Inputs:
 #   - dir_name: name of the directory in which put the results
 #   - SIRD_all: evolution of the infection using a SIRD model
-#   - final_dates:            final dates
-plot_I <- function(dir_name, SIRD_all, final_dates){
-  png(paste0(dir_name, "/I.png"), units="in", width=34, height=15, res=300)
+#   - type:     daily or daily spline
+plot_I <- function(dir_name, SIRD_all, type = ""){
+  png(paste0(dir_name, "/I_", type, ".png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
     geom_line(linewidth=1.5) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/I_all_scenarios.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
-    geom_line(linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[4]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[5]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[6]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[4]-30, label="\n4th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[5]-30, label="\n5th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[6]-30, label="\n6th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/I_three_scenarios.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
-    geom_line(linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/I_one_scenario.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
-    geom_line(linewidth=1.5) +
-    geom_vline(aes(xintercept = as.Date(final_dates[1])), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date(final_dates[1])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     labs(x="Date", y="Population") +
     scale_y_continuous(labels = label_scientific())
@@ -169,84 +122,7 @@ plot_variants_proportion <- function(dir_name, variants_global_df, variants_name
 #   - dir_name:       name of the directory in which put the results
 #   - SIRD_all:       evolution of the infection using a SIvRD model
 #   - variants_name:  names of the variants
-#   - final_dates:            final dates
-plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_dates){
-  png(paste0(dir_name, "/I_variants_all_scenarios.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
-  for(i in 1:length(variants_name)){
-    plot <- plot + geom_line(linewidth=1.5)
-  }
-  plot <- plot +
-    geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[4]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[5]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[6]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[4]-30, label="\n4th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[5]-30, label="\n5th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[6]-30, label="\n6th forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    scale_colour_manual(values=hue_pal()(length(variants_name))) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population", col="Variants") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/I_variants_three_scenarios.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
-  for(i in 1:length((variants_name))){
-    plot <- plot + geom_line(linewidth=1.5)
-  }
-  
-  plot <- plot +
-    geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    scale_colour_manual(values=hue_pal()(length(variants_name))) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population", col="Variants") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/I_variants_one_scenario.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
-  for(i in 1:length(variants_name)){
-    plot <- plot + geom_line(linewidth=1.5)
-  }
-  plot <- plot +
-    geom_vline(aes(xintercept = as.Date(final_dates[1])), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date(final_dates[1])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population", col="Variants") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/I_variants_ascending_scenarios.png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
-  for(i in 1:length(variants_name)){
-    plot <- plot + geom_line(linewidth=1.5)
-  }
-  plot <- plot +
-    geom_vline(aes(xintercept = as.Date("2021-02-15")), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_vline(aes(xintercept = as.Date("2021-12-09")), color="#F3474D", linetype="dashed", linewidth=1.5) +
-    geom_text(aes(x = as.Date("2021-02-15")-30, label="\n2nd ascending forecast", y=max(I) - max(I)/6), size = 11, colour="#F3474D", angle=90) +
-    geom_text(aes(x = as.Date("2021-12-09")-30, label="\n1st ascending forecast", y=max(I) - max(I)/6), size = 11, colour="#F3474D", angle=90) +
-    scale_colour_manual(values=hue_pal()(length(variants_name))) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Population", col="Variants") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
+plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name){
   png(paste0(dir_name, "/I_variants.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
   for(i in 1:length(variants_name)){
@@ -297,7 +173,7 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
     type[1:n] <- rep("training data", n)
     type[(n+1):(n_ref+1)] <- rep("forecast", n_ref-n+1)
     
-    date <- c(dates, seq(as.Date(dates[n]), final_date, q))
+    date <- c(dates, seq(as.Date(dates[n]), final_date, 1))
     
     value <- c(data_ref[1:n], data_ref[n], data_fc$yhat)
     low <- c(rep(NA, n), data_ref[n], data_fc$yhat_lower)
@@ -552,24 +428,6 @@ final_plots <- function(dir_name, variants_name){
   dev.off()
   
   
-  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_7_days.RData"))
-  p1 <- plot
-  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_14_days.RData"))
-  p2 <- plot 
-  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_21_days.RData"))
-  p3 <- plot 
-  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_28_days.RData"))
-  p4 <- plot 
-  
-  p <- (p1 + p2) / (p3 + p4) +
-    plot_layout(guides = "collect") &
-    theme(legend.position = "bottom", legend.box = "vertical")
-  
-  png(paste0(dir_name, "/forecast_plot/forecast_recovery_rates.png"), units="in", width=34, height=15, res=300)
-  print(p)
-  dev.off()
-  
-  
   load(paste0(dir_name, "/forecast_plot/RData/forecast_fatality_rates_7_days.RData"))
   p1 <- plot 
   load(paste0(dir_name, "/forecast_plot/RData/forecast_fatality_rates_14_days.RData"))
@@ -713,221 +571,6 @@ final_plots <- function(dir_name, variants_name){
       theme(legend.position = "bottom", legend.box = "vertical")
     
     png(paste0(dir_name, "/forecast_plot/comparison/I_compare.png"), units="in", width=34, height=15, res=300)
-    print(p)
-    dev.off()
-  }
-}
-
-plots_first_ascending_scenario <- function(external_dir_names, country){
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("December 9"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("December 12"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("December 15"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("December 18"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("December 21"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("December 24"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[7], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p7 <- plot + labs(title = expression("December 27"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[8], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p8 <- plot + labs(title = expression("December 30"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[9], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p9 <- plot + labs(title = expression("January 2"^"nd")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[10], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p10 <- plot + labs(title = expression("January 5"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[11], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p11 <- plot + labs(title = expression("January 8"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[12], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p12 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) / (p7 + p8 + p9) / (p10 + p11 + p12) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V4/ThirdScenario/ThirdScenario_", i*7, "days.png"), units="in", width=34, height=22, res=300)
-    print(p)
-    dev.off()
-  }
-  
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("December 9"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("December 12"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("December 15"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("December 18"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("December 21"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("December 24"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[7], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p7 <- plot + labs(title = expression("December 27"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[8], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p8 <- plot + labs(title = expression("December 30"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[9], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p9 <- plot + labs(title = expression("January 2"^"nd")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[10], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p10 <- plot + labs(title = expression("January 5"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[11], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p11 <- plot + labs(title = expression("January 8"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[12], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Omicron_", i*7, "_days.RData"))
-    p12 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) / (p7 + p8 + p9) / (p10 + p11 + p12) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V4/ThirdScenario/Omicron_infection_rates_evolution_", i*7, "days.png"), units="in", width=34, height=22, res=300)
-    print(p)
-    dev.off()
-  }
-}
-
-plots_second_ascending_scenario <- function(external_dir_names, country){
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("February 15"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("February 18"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("February 21"^"st")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("February 24"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("February 27"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("March 2"^"nd")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[7], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p7 <- plot + labs(title = expression("March 5"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[8], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p8 <- plot + labs(title = expression("March 8"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[9], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p9 <- plot + labs(title = expression("March 11"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[10], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p10 <- plot + labs(title = expression("March 14"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[11], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p11 <- plot + labs(title = expression("March 17"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[12], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p12 <- plot + labs(title = expression("March 20"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) / (p7 + p8 + p9) / (p10 + p11 + p12) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V4/SecondAscendingScenario/SecondAscendingScenario_", i*7, "days.png"), units="in", width=34, height=22, res=300)
-    print(p)
-    dev.off()
-  }
-  
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("February 15"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("February 18"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("February 21"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("February 24"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("February 27"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("March 2"^"nd")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[7], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p7 <- plot + labs(title = expression("March 5"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[8], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p8 <- plot + labs(title = expression("March 8"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[9], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p9 <- plot + labs(title = expression("March 11"^"nd")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[10], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p10 <- plot + labs(title = expression("March 14"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[11], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p11 <- plot + labs(title = expression("March 17"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[12], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_Alpha_", i*7, "_days.RData"))
-    p12 <- plot + labs(title = expression("March 20"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) / (p7 + p8 + p9) / (p10 + p11 + p12) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V4/SecondAscendingScenario/Alpha_infection_rates_evolution_", i*7, "days.png"), units="in", width=34, height=22, res=300)
-    print(p)
-    dev.off()
-  }
-}
-
-plots_v11_scenario <- function(external_dir_names, country){
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V11/SIRD_forecast_evolution_", i*7, "_days.png"), units="in", width=34, height=15, res=300)
-    print(p)
-    dev.off()
-  }
-  
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.1_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.1_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.1_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.1_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.1_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.1_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V11/BA.1_infection_rates_evolution_", i*7, "_.png"), units="in", width=34, height=15, res=300)
-    print(p)
-    dev.off()
-  }
-  
-  for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.2_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[2], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.2_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[3], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.2_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[4], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.2_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[5], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.2_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34))
-    load(paste0(external_dir_names[6], "SIRD_Variants_Reinfection_MCMC1000/forecast_plot/RData/forecast_infection_rates_BA.2_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34))
-    
-    p <- (p1 + p2 + p3) / (p4 + p5 + p6) +
-      plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(country, "/V11/BA.2_infection_rates_evolution_", i*7, "_.png"), units="in", width=34, height=15, res=300)
     print(p)
     dev.off()
   }

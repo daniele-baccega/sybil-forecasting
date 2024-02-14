@@ -1,4 +1,4 @@
-# Sybil (paper's results)
+# Prophet with Covid-19 data (paper's results)
 #
 # Author: Daniele Baccega
 # Data: COVID19 R library
@@ -16,21 +16,26 @@ library(stringr)
 library(scales)
 library(patchwork)
 
-
 # Include the Sybil function and the common functions
 source("Sybil.R")
-source("plots.R")
 source("common_functions.R")
+source("plots.R")
+source("plots_ascending_scenarios.R")
 
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 
-# Select the configuration (with or without variants)
-# To reproduce the results set the variable to TRUE
+# Select the configuration (with or without variants, daily or daily-spline data)
+# If in a particular country data are weekly you have to use daily spline data.
+daily_spline <- TRUE
 variants <- TRUE
+
+# Forecast or only extract the rates?
+forecast <- TRUE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
+recovery_rate <- 1 / 10
 
 # Global final date
 global_final_date <- Sys.Date()
@@ -39,7 +44,7 @@ global_final_date <- Sys.Date()
 reproduce <- TRUE
 
 if(reproduce){
-  global_final_date <- "2023-06-04"
+  global_final_date <- as.Date("2023-06-04")
 }
 
 
@@ -53,7 +58,7 @@ if(!file.exists(country)){
   system(paste0("mkdir -p ", country, "/V11"))
 }
 
-# Select the variants to disregard and to aggregate
+# Aggregate variants
 variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "SGTF", "UNK")
 variants_aggregated <- list(Alpha = c("B.1.1.7"),
                             Delta = c("B.1.617.2"),
@@ -83,7 +88,7 @@ final_dates <- c(as.Date("2020-04-14"),
                  as.Date("2020-06-30"),
                  as.Date("2023-02-07"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
 
 # First ascending scenario on Italy
@@ -126,9 +131,9 @@ final_dates <- c(as.Date("2021-12-09"),
                  as.Date("2022-01-08"),
                  as.Date("2022-01-11"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
-plots_first_ascending_scenario(external_dir_names, country)
+plots_first_ascending_scenario(external_dir_names, country, daily_spline)
 
 
 # Second ascending scenario on Italy
@@ -171,9 +176,9 @@ final_dates <- c(as.Date("2021-02-15"),
                  as.Date("2021-03-17"),
                  as.Date("2021-03-20"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
-plots_second_ascending_scenario(external_dir_names, country)
+plots_second_ascending_scenario(external_dir_names, country, daily_spline)
 
 
 # Scenarios with Austria (V=11)
@@ -209,9 +214,9 @@ final_dates <- c(as.Date("2022-01-10"),
                  as.Date("2022-01-15"),
                  as.Date("2022-01-22"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
-plots_v11_scenario(external_dir_names, country)
+plots_v11_scenario(external_dir_names, country, daily_spline)
 
 
 # Scenarios with Austria (V=4)
@@ -244,4 +249,4 @@ final_dates <- c(as.Date("2022-02-01"),
                  as.Date("2022-07-14"),
                  as.Date("2020-06-10"))
 
-Sybil(variants, global_final_date, country, external_dir_names, initial_dates, final_dates, immunization_end_rate, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
