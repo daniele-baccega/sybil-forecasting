@@ -112,7 +112,7 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
       
       ref_data_flag[i] <- df_COVID19_all$date[nrow(df_COVID19_all)-1] >= (df_COVID19_used$date[n] + time_steps[i])
       
-      # Forecast on recovery rates
+      # Forecast on global recovery rates
       results_used$rec_rates[which(results_used$rec_rates <= 1e-10)] <- min(results_used$rec_rates[which(results_used$rec_rates > 1e-10)])
       rec_rates_log <- log(unique(results_used$rec_rates))
       fc_rec_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(rec_rates_log)+1):nrow(df_COVID19_used)], rec_rates_log, time_steps[i], "rec_rate", mcmc_samples)
@@ -122,7 +122,7 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
       forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, results_ref_used$rec_rates, fc_rec_rate, time_steps[i], "recovery_rates")
       
       
-      # Forecast on fatality_rates
+      # Forecast on global fatality_rates
       results_used$fat_rates[which(results_used$fat_rates <= 1e-10)] <- min(results_used$fat_rates[which(results_used$fat_rates > 1e-10)])
       fat_rates_log <- log(unique(results_used$fat_rates))
       fc_fat_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(fat_rates_log)+1):nrow(df_COVID19_used)], fat_rates_log, time_steps[i], "fat_rate", mcmc_samples)
