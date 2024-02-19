@@ -28,14 +28,14 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 # Select the configuration (with or without variants, daily or daily-spline data)
 # If in a particular country data are weekly you have to use daily spline data.
 daily_spline <- TRUE
-variants <- TRUE
+variants <- FALSE
 
 # Forecast or only extract the rates?
 forecast <- TRUE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
-recovery_rate <- 1 / 10
+recovery_rate <- 1 / 14
 
 # Global final date
 global_final_date <- Sys.Date()
@@ -133,7 +133,7 @@ final_dates <- c(as.Date("2021-12-09"),
 
 Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
-plots_first_ascending_scenario(external_dir_names, country, daily_spline)
+plots_first_ascending_scenario(external_dir_names, country, daily_spline, variants)
 
 
 # Second ascending scenario on Italy
@@ -178,7 +178,7 @@ final_dates <- c(as.Date("2021-02-15"),
 
 Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
-plots_second_ascending_scenario(external_dir_names, country, daily_spline)
+plots_second_ascending_scenario(external_dir_names, country, daily_spline, variants)
 
 
 # Scenarios with Austria (V=11)
@@ -216,7 +216,7 @@ final_dates <- c(as.Date("2022-01-10"),
 
 Sybil(variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
 
-plots_v11_scenario(external_dir_names, country, daily_spline)
+plots_v11_scenario(external_dir_names, country, daily_spline, variants)
 
 
 # Scenarios with Austria (V=4)

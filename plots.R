@@ -68,9 +68,8 @@ SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, im
 # Inputs:
 #   - dir_name: name of the directory in which put the results
 #   - SIRD_all: evolution of the infection using a SIRD model
-#   - type:     daily or daily spline
-plot_I <- function(dir_name, SIRD_all, type = ""){
-  png(paste0(dir_name, "/I_", type, ".png"), units="in", width=34, height=15, res=300)
+plot_I <- function(dir_name, SIRD_all){
+  png(paste0(dir_name, "/I.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
     geom_line(linewidth=1.5) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +

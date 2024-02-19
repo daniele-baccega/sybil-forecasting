@@ -9,16 +9,17 @@
 # Inputs:
 #   - country_long:               name of the interested country (e.g. Italy, Austria)
 #   - global_final_date:          final date for the data
+#   - reproduce:                  reproduce the results of the paper
+#   - variants                    true if we are considering variants, false otherwise
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-#   - reproduce:                  reproduce the results of the paper
 #
 # Output:
 #   - df_COVID19_ref_init:        dataframe with Covid-19 data
 #   - df_variants_init:           dataframe with variants data
 #   - updated_file:               false if the files were not update, true otherwise
-download_files_and_load_data <- function(country_long, global_final_date, reproduce, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_final_date, reproduce, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -43,10 +44,10 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   
   if(!updated_file){
     # Download the updated data
-    covid19(country = country_long, level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
+    covid19(country = gsub("_", " ", country_long), level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
     system(paste0("rm ", Sys.Date(), "/country/index.csv"))
     if(length(list.files(paste0(Sys.Date(), "/country/"))) == 0)
-      stop(paste0("Country ", country_long, " not found in COVID19 library data"))
+      stop(paste0("Country ", gsub("_", " ", country_long), " not found in COVID19 library data"))
     system(paste0("mv ", Sys.Date(), "/country/*.csv ", covid19_data))
     system(paste0("rm -r ", Sys.Date()))
     
@@ -68,38 +69,41 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
     filter(!is.na(confirmed), !is.na(deaths), date <= global_final_date)
   
-  df_variants_init <- read.csv(covid19_variants_data)
-  variants_countries <- unique(df_variants_init$country)
+  df_variants_init <- data.frame()
+  if(variants){
+    df_variants_init <- read.csv(covid19_variants_data)
+    variants_countries <- unique(df_variants_init$country)
+    
+    if(!gsub("_", " ", country_long) %in% variants_countries)
+      stop(paste0("Country ", gsub("_", " ", country_long), " not found in variants data"))
+    
+    df_variants_init <- df_variants_init %>%
+      filter(country == gsub("_", " ", country_long), !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), source == "GISAID", ! variant %in% variants_to_disregard) %>%
+      mutate(year = as.integer(substr(year_week, 1, 4)),
+             week = as.integer(substr(year_week, 6, 7)),
+             number_detections_variant = as.integer(number_detections_variant),
+             number_sequenced_known_variant = as.integer(number_sequenced_known_variant),
+             percent_variant = number_detections_variant / number_sequenced_known_variant) %>%
+      filter(!(year == 2020 & week %in% seq(1, 8)))
   
-  if(!country_long %in% variants_countries)
-    stop(paste0("Country ", country_long, " not found in variants data"))
-  
-  df_variants_init <- df_variants_init %>%
-    filter(country == country_long, !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), source == "GISAID", ! variant %in% variants_to_disregard) %>%
-    mutate(year = as.integer(substr(year_week, 1, 4)),
-           week = as.integer(substr(year_week, 6, 7)),
-           number_detections_variant = as.integer(number_detections_variant),
-           number_sequenced_known_variant = as.integer(number_sequenced_known_variant),
-           percent_variant = number_detections_variant / number_sequenced_known_variant) %>%
-    filter(!(year == 2020 & week %in% seq(1, 8)))
-
-  df_variants_init <- df_variants_init %>%
-    mutate(variant = str_replace(variant, "/", "-"))
-  df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
-  
-  # Aggregate variants
-  for(i in 1:length(variants_aggregated)){
-    df_variants_init$variant[which(df_variants_init$variant %in% variants_aggregated[[i]])] <- variants_aggregated_names[[i]]
+    df_variants_init <- df_variants_init %>%
+      mutate(variant = str_replace(variant, "/", "-"))
+    df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
+    
+    # Aggregate variants
+    for(i in 1:length(variants_aggregated)){
+      df_variants_init$variant[which(df_variants_init$variant %in% variants_aggregated[[i]])] <- variants_aggregated_names[[i]]
+    }
+    
+    df_variants_init <- df_variants_init %>%
+      group_by(year_week) %>%
+      aggregate(percent_variant ~ year_week + variant + week + year, FUN=sum) %>%
+      arrange(year_week)
+    
+    df_variants_init <- filter_variants(df_variants_init)
+    
+    df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   }
-  
-  df_variants_init <- df_variants_init %>%
-    group_by(year_week) %>%
-    aggregate(percent_variant ~ year_week + variant + week + year, FUN=sum) %>%
-    arrange(year_week)
-  
-  df_variants_init <- filter_variants(df_variants_init)
-  
-  df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   
   return(list(df_COVID19_ref_init, df_variants_init, updated_file))
 }
@@ -164,7 +168,8 @@ filter_variants <- function(df_variants_init){
 #   - immunization_end_rate:  immunization end rate
 #   - recovery_rate:          recovery rate
 #   - global_final_date:      final date for the data
-#   . new_data:               true if the files were not update, false otherwise
+#   - variants                true if we are considering variants, false otherwise
+#   - new_data:               true if the files were not update, false otherwise
 #
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
@@ -173,7 +178,7 @@ filter_variants <- function(df_variants_init){
 #   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
 #   - results_all_spline:     infection, recovery and fatality rates extracted from the SIRD model (daily spline)
-compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, recovery_rate, global_final_date, new_data=FALSE){
+compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, recovery_rate, global_final_date, variants, new_data=FALSE){
   if(file.exists(paste0(dir_name, "/data/date.RData")) && !new_data){
     load(paste0(dir_name, "/data/date.RData"))
     new_data <- !(today == Sys.Date())
@@ -213,9 +218,6 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     df_COVID19_ref_weekly$population <- rep(N, nrow(df_COVID19_ref_weekly))
     df_COVID19_ref_weekly$total_cases <- cumsum(df_COVID19_ref_weekly$new_cases)
     df_COVID19_ref_weekly$total_deaths <- cumsum(df_COVID19_ref_weekly$new_deaths)
-    
-    df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
-      filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
     
     n <- nrow(df_COVID19_ref)
     
@@ -276,11 +278,16 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     results_all_weekly <- get_rates(SIRD_all_weekly[-nrow(SIRD_all_weekly),], SIRD_all_weekly[nrow(SIRD_all_weekly),], immunization_end_rate, rep(N, nrow(SIRD_all_weekly)-1))
     results_all_spline <- get_rates(SIRD_all_spline[-nrow(SIRD_all_spline),], SIRD_all_spline[nrow(SIRD_all_spline),], immunization_end_rate, rep(N, nrow(SIRD_all_spline)-1))
     
-    df_variants_ref <- df_variants_ref %>%
-      filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
-      arrange(variant)
-    
-    df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
+    if(variants){
+      df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
+        filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
+      
+      df_variants_ref <- df_variants_ref %>%
+        filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
+        arrange(variant)
+      
+      df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
+    }
     
     today <- Sys.Date()
     save(df_variants_ref, df_COVID19_ref, S_local, S_local_spline, I_local, I_local_spline, R_local, R_local_spline, D_local, D_local_spline, SIRD_all, SIRD_all_spline, results_all, results_all_spline, file=paste0(dir_name, "/data/data.RData"))
@@ -433,15 +440,14 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, SIRD_all_spline, resu
   return(list(SIRD_all_variants, df_all_variants))
 }
 
-# Save the global rates and the rates for each variant in CSVs.
+# Save the rates in a csv file.
 #
 # Inputs:
-#   - dir_name:               name of the directory in which put the results
-#   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-#   - results_all_variants:   infection, recovery and fatality rates extracted from the SIvRD model
-save_rates <- function(dir_name, results_all, results_all_variants){
-  write.csv(results_all_variants, paste0(dir_name, "/rates_variants.csv"))
-  write.csv(results_all, paste0(dir_name, "/rates.csv"))
+#   - dir_name:     name of the directory in which put the results
+#   - results_all:  infection, recovery and fatality rates extracted from the SIRD model
+#   - type:         file name
+save_rates <- function(dir_name, results_all, type){
+  write.csv(results_all, paste0(dir_name, "/", type, ".csv"))
 }
 
 # Gets the data frames.
@@ -478,16 +484,10 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_spline, SIRD_all_vari
   SIRD_all_spline <- SIRD_all_spline %>%
     filter(date >= initial_date, date <= final_date_ref)
   
-  SIRD_all_variants <- SIRD_all_variants %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
   results_all <- results_all %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   results_all_spline <- results_all_spline %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
-  results_all_variants <- results_all_variants %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   
@@ -501,16 +501,10 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_spline, SIRD_all_vari
   SIRD_spline <- SIRD_all_spline %>%
     filter(date <= final_date)
   
-  SIRD_variants <- SIRD_all_variants %>%
-    filter(date <= final_date)
-  
   results <- results_all %>%
     filter(date <= final_date)
   
   results_spline <- results_all_spline %>%
-    filter(date <= final_date)
-  
-  results_variants <- results_all_variants %>%
     filter(date <= final_date)
   
   
@@ -530,6 +524,18 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_spline, SIRD_all_vari
   }
   
   if(variants){
+    SIRD_all_variants <- SIRD_all_variants %>%
+      filter(date >= initial_date, date <= final_date_ref)
+    
+    results_all_variants <- results_all_variants %>%
+      filter(date >= initial_date, date <= final_date_ref)
+    
+    SIRD_variants <- SIRD_all_variants %>%
+      filter(date <= final_date)
+    
+    results_variants <- results_all_variants %>%
+      filter(date <= final_date)
+    
     SIRD_ref_used <- SIRD_all_variants
     results_ref_used <- results_all_variants
     SIRD_used <- SIRD_variants
@@ -552,7 +558,7 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_spline, SIRD_all_vari
 #
 # Output:
 #   - forecast:                 forecast
-apply_Prophet <- function(dir_name, date, values, time_step, file_name, mcmc_samples=0, changepoint_prior_scale=0.05){
+apply_Prophet <- function(dir_name, date, values, time_step, file_name, mcmc_samples=1000, changepoint_prior_scale=0.05){
   profet_df <- data.frame(ds=date, y=values)
   
   path <- paste0(dir_name, "/prophet_models/model_", file_name, ".RData")
