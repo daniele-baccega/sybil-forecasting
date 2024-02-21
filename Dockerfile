@@ -6,6 +6,8 @@ LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 COPY reproduce.R .
 COPY Sybil.R .
 COPY common_functions.R .
+COPY plots.R .
+COPY datasets .
 
 ## Run the script
 CMD Rscript reproduce.R

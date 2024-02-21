@@ -12,19 +12,19 @@
 #   - global_final_date:          final date for the data
 #   - country:                    name of the interested country (e.g. Italy, Austria)
 #   - external_dir_names:         names of the external directories
-#   - initial_dates:              initial dates
-#   - final_dates:                final dates
 #   - immunization_end_rate:      immunization end rate
 #   - reproduce:                  reproduce the results of the paper
+#   - initial_dates:              initial dates
+#   - final_dates:                final dates
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), country = "Italy", external_dir_names = paste0(country, "/FirstScenario/"), initial_dates = c(as.Date("2020-03-14")), final_dates = c(as.Date("2020-04-14")), immunization_end_rate = 1 / 180, reproduce = FALSE, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), country = "Italy", external_dir_names = paste0(country, "/FirstScenario/"), immunization_end_rate = 1 / 180, reproduce = FALSE, initial_dates = c(as.Date("2020-03-14")), final_dates = c(as.Date("2020-04-14")), variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   
   # Download file and load data
-  data <- download_files_and_load_data(country, global_final_date, reproduce, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_final_date, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
   df_COVID19_init <- data[[1]]
   df_variants_init <- data[[2]]
   updated_file <- data[[3]]
@@ -46,13 +46,6 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
       system(paste0("mkdir -p ", external_dir_names[j]))
     }
     
-    # Compute the final dates
-    final_dates_ref <- c()
-    for(i in seq(1, length(time_steps))){
-      final_dates_ref <- c(final_dates_ref, final_dates[j] + time_steps[i])
-    }
-    
-    
     # Create the specific directories
     if(!file.exists(dir_name)){
       system(paste0("mkdir -p ", dir_name))
@@ -67,7 +60,7 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
     }
     
     # Compute and save all the data
-    data <- compute_data(dir_name, df_COVID19_init, df_variants_init, immunization_end_rate, global_final_date, !updated_file || reproduce)
+    data <- compute_data(dir_name, df_COVID19_init, df_variants_init, immunization_end_rate, global_final_date, variants, !updated_file || reproduce)
     df_variants_all <- data[[1]]
     df_COVID19_all <- data[[2]]
     SIRD_all <- data[[3]]
@@ -75,25 +68,35 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
     
     # Check if we can reproduce the real data using a SIRD model with the previously computed rates
     SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, immunization_end_rate, df_COVID19_all$population[1])
+    
+    # Compute the final dates
+    final_dates_ref <- c()
+    for(i in seq(1, length(time_steps))){
+      final_dates_ref <- c(final_dates_ref, final_dates[j] + time_steps[i])
+    }
+    
     plot_I(dir_name, SIRD_all, final_dates)
     
-    # Plot variants info
-    data <- generate_and_plot_variants_info(paste0(external_dir_names[j], internal_dir_name), df_variants_all, df_COVID19_all, SIRD_all, results_all)
-    df_variants_processed <- data[[1]]
-    df_COVID19_all <- data[[2]]
-    SIRD_all <- data[[3]]
-    results_all <- data[[4]]
-    
-    variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_COVID19_all$population[1], final_dates)
-    SIRD_all_variants <- variants_data[[1]]
-    results_all_variants <- variants_data[[2]]
+    SIRD_all_variants <- data.frame()
+    results_all_variants <- data.frame()
+    if(variants){
+      # Plot variants info
+      data <- generate_and_plot_variants_info(paste0(external_dir_names[j], internal_dir_name), df_variants_all, df_COVID19_all, SIRD_all, results_all)
+      df_variants_processed <- data[[1]]
+      df_COVID19_all <- data[[2]]
+      SIRD_all <- data[[3]]
+      results_all <- data[[4]]
+      
+      variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_COVID19_all$population[1], final_dates)
+      SIRD_all_variants <- variants_data[[1]]
+      results_all_variants <- variants_data[[2]]
+    }
     
     if(final_dates[j] > SIRD_all$date[nrow(SIRD_all)]){
       print(paste0("Warning: ", final_dates[j], " is greater than the last date in the data! Skip"))
       next
     }
     
-    variants_name <- unique(df_variants_processed$variant)
     for(i in seq(1, length(time_steps))){
       filtered_data <- filter_data(df_COVID19_all, SIRD_all, SIRD_all_variants, results_all, results_all_variants, initial_dates[j], final_dates[j], final_dates_ref[i], variants)
       df_COVID19_ref_used <- filtered_data[[1]]
@@ -133,6 +136,9 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
       
       
       if(variants){
+        variants_name <- unique(df_variants_processed$variant)
+        plot_I_variants(dir_name, SIRD_all_variants, variants_name, final_dates)
+        
         infection_rates <- data.frame()
         I <- data.frame()
         
@@ -234,6 +240,7 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
         recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
         fatality_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat, lower=fc_fat_rate$yhat_lower, upper=fc_fat_rate$yhat_upper)
         
+        I <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_I$yhat, lower=fc_I$yhat_lower, upper=fc_I$yhat_upper)
         
         # Plot the forecast and the comparisons
         SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, immunization_end_rate, fc_I$yhat, SIRD_used, SIRD_ref_used, N[1], variants)

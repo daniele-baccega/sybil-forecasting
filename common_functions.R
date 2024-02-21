@@ -10,6 +10,7 @@
 #   - country_long:               name of the interested country (e.g. Italy, Austria)
 #   - global_final_date:          final date for the data
 #   - reproduce:                  reproduce the results of the paper
+#   - variants                    true if we are considering variants, false otherwise
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
@@ -18,7 +19,7 @@
 #   - df_COVID19_ref_init:        dataframe with Covid-19 data
 #   - df_variants_init:           dataframe with variants data
 #   - updated_file:               false if the files were not update, true otherwise
-download_files_and_load_data <- function(country_long, global_final_date, reproduce, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_final_date, reproduce, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -62,38 +63,41 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
     filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3), !is.na(confirmed), date <= global_final_date)
   
-  df_variants_init <- read.csv(covid19_variants_data)
-  variants_countries <- unique(df_variants_init$country)
+  df_variants_init <- data.frame()
+  if(variants){
+    df_variants_init <- read.csv(covid19_variants_data)
+    variants_countries <- unique(df_variants_init$country)
+    
+    if(!country_long %in% variants_countries)
+      stop(paste0("Country ", country_long, " not found in variants data"))
+    
+    df_variants_init <- df_variants_init %>%
+      filter(country == country_long, !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), source == "GISAID", ! variant %in% variants_to_disregard) %>%
+      mutate(year = as.integer(substr(year_week, 1, 4)),
+             week = as.integer(substr(year_week, 6, 7)),
+             number_detections_variant = as.integer(number_detections_variant),
+             number_sequenced_known_variant = as.integer(number_sequenced_known_variant),
+             percent_variant = number_detections_variant / number_sequenced_known_variant) %>%
+      filter(!(year == 2020 & week %in% seq(1, 8)))
   
-  if(!country_long %in% variants_countries)
-    stop(paste0("Country ", country_long, " not found in variants data"))
-  
-  df_variants_init <- df_variants_init %>%
-    filter(country == country_long, !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), source == "GISAID", ! variant %in% variants_to_disregard) %>%
-    mutate(year = as.integer(substr(year_week, 1, 4)),
-           week = as.integer(substr(year_week, 6, 7)),
-           number_detections_variant = as.integer(number_detections_variant),
-           number_sequenced_known_variant = as.integer(number_sequenced_known_variant),
-           percent_variant = number_detections_variant / number_sequenced_known_variant) %>%
-    filter(!(year == 2020 & week %in% seq(1, 8)))
-
-  df_variants_init <- df_variants_init %>%
-    mutate(variant = str_replace(variant, "/", "-"))
-  df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
-  
-  # Aggregate variants
-  for(i in 1:length(variants_aggregated)){
-    df_variants_init$variant[which(df_variants_init$variant %in% variants_aggregated[[i]])] <- variants_aggregated_names[[i]]
+    df_variants_init <- df_variants_init %>%
+      mutate(variant = str_replace(variant, "/", "-"))
+    df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
+    
+    # Aggregate variants
+    for(i in 1:length(variants_aggregated)){
+      df_variants_init$variant[which(df_variants_init$variant %in% variants_aggregated[[i]])] <- variants_aggregated_names[[i]]
+    }
+    
+    df_variants_init <- df_variants_init %>%
+      group_by(year_week) %>%
+      aggregate(percent_variant ~ year_week + variant + week + year, FUN=sum) %>%
+      arrange(year_week)
+    
+    df_variants_init <- filter_variants(df_variants_init)
+    
+    df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   }
-  
-  df_variants_init <- df_variants_init %>%
-    group_by(year_week) %>%
-    aggregate(percent_variant ~ year_week + variant + week + year, FUN=sum) %>%
-    arrange(year_week)
-  
-  df_variants_init <- filter_variants(df_variants_init)
-  
-  df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   
   return(list(df_COVID19_ref_init, df_variants_init, updated_file))
 }
@@ -157,6 +161,7 @@ filter_variants <- function(df_variants_init){
 #   - df_variants_ref:        dataframe with variants data
 #   - immunization_end_rate:  immunization end rate
 #   - global_final_date:      final date for the data
+#   - variants                    true if we are considering variants, false otherwise
 #   . new_data:               true if the files were not update, false otherwise
 #
 # Output:
@@ -164,7 +169,7 @@ filter_variants <- function(df_variants_init){
 #   - df_COVID19_ref:         dataframe with Covid-19 data (after preprocessing)
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, global_final_date, new_data=FALSE){
+compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization_end_rate, global_final_date, variants, new_data=FALSE){
   if(file.exists(paste0(dir_name, "/data/date.RData")) && !new_data){
     load(paste0(dir_name, "/data/date.RData"))
     new_data <- !(today == Sys.Date())
@@ -198,9 +203,6 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     
     df_COVID19_ref_weekly <- df_COVID19_ref_weekly[order(df_COVID19_ref_weekly$date),]
     
-    df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
-      filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
-    
     n <- nrow(df_COVID19_ref)
     
     # Build the SIRD model from the data
@@ -223,12 +225,19 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     # Extract the rates
     results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1))
     
-    df_variants_ref <- df_variants_ref %>%
-      filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
-      arrange(variant)
+    plot_rates(dir_name, results_all)
     
-    df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
-    
+    if(variants){
+      df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
+        filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
+      
+      df_variants_ref <- df_variants_ref %>%
+        filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
+        arrange(variant)
+      
+      df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))
+    }
+          
     today <- Sys.Date()
     save(df_variants_ref, df_COVID19_ref, S_local, I_local, R_local, D_local, SIRD_all, results_all, file=paste0(dir_name, "/data/data.RData"))
     save(today, file=paste0(dir_name, "/data/date.RData"))
@@ -254,6 +263,10 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
   fat_rates <- c(diff(SIRD$D), after_date_SIRD$D - SIRD$D[nrow(SIRD)]) / SIRD$I
   rec_rates <- (c(diff(SIRD$R), after_date_SIRD$R - SIRD$R[nrow(SIRD)]) + SIRD$R * immunization_end_rate) / SIRD$I
   infection_rates <- (c(diff(SIRD$I), after_date_SIRD$I - SIRD$I[nrow(SIRD)]) + SIRD$I * (rec_rates + fat_rates)) * (N / (SIRD$S * SIRD$I))
+  
+  fat_rates[fat_rates < 0] <- 0
+  rec_rates[rec_rates < 0] <- 0
+  infection_rates[infection_rates < 0] <- 0
   
   results_all <- data.frame(date=SIRD$date, infection_rates, rec_rates, fat_rates)
   
@@ -357,6 +370,8 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
 
   plot_I_variants(dir_name, SIRD_all_variants, variants_name, final_dates)
   
+  plot_infection_rates_variants(dir_name, df_all_variants)
+  
   return(list(SIRD_all_variants, df_all_variants))
 }
 
@@ -388,13 +403,7 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all
   SIRD_all <- SIRD_all %>%
     filter(date >= initial_date, date <= final_date_ref)
   
-  SIRD_all_variants <- SIRD_all_variants %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
   results_all <- results_all %>%
-    filter(date >= initial_date, date <= final_date_ref)
-  
-  results_all_variants <- results_all_variants %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   
@@ -405,13 +414,7 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all
   SIRD <- SIRD_all %>%
     filter(date <= final_date)
   
-  SIRD_variants <- SIRD_all_variants %>%
-    filter(date <= final_date)
-  
   results <- results_all %>%
-    filter(date <= final_date)
-  
-  results_variants <- results_all_variants %>%
     filter(date <= final_date)
   
   
@@ -424,6 +427,18 @@ filter_data <- function(df_COVID19_ref, SIRD_all, SIRD_all_variants, results_all
   results_used <- results
   
   if(variants){
+    SIRD_all_variants <- SIRD_all_variants %>%
+      filter(date >= initial_date, date <= final_date_ref)
+    
+    results_all_variants <- results_all_variants %>%
+      filter(date >= initial_date, date <= final_date_ref)
+    
+    SIRD_variants <- SIRD_all_variants %>%
+      filter(date <= final_date)
+    
+    results_variants <- results_all_variants %>%
+      filter(date <= final_date)
+    
     SIRD_ref_used <- SIRD_all_variants
     results_ref_used <- results_all_variants
     SIRD_used <- SIRD_variants
