@@ -27,8 +27,8 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 # Select the configuration (with or without variants, daily or daily-spline data)
 # If in a particular country data are weekly you have to use daily spline data.
-daily_spline <- TRUE
-variants <- FALSE
+daily_spline <- FALSE
+variants <- TRUE
 
 # Forecast or only extract the rates?
 forecast <- TRUE
