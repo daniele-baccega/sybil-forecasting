@@ -315,6 +315,10 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
   rec_rates <- (c(diff(SIRD$R), after_date_SIRD$R - SIRD$R[nrow(SIRD)]) + SIRD$R * immunization_end_rate) / SIRD$I
   infection_rates <- (c(diff(SIRD$I), after_date_SIRD$I - SIRD$I[nrow(SIRD)]) + SIRD$I * (rec_rates + fat_rates)) * (N / (SIRD$S * SIRD$I))
   
+  fat_rates[fat_rates < 0] <- 0
+  rec_rates[rec_rates < 0] <- 0
+  infection_rates[infection_rates < 0] <- 0
+  
   results_all <- data.frame(date=SIRD$date, infection_rates, rec_rates, fat_rates)
   
   return(results_all)
