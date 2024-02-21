@@ -141,7 +141,7 @@ Sybil <- function(variants = TRUE, daily_spline = FALSE, global_final_date = as.
         
         if(variants){
           variants_name <- unique(df_variants_processed$variant)
-          plot_I_variants(dir_name, SIRD_all_variants, variants_name)
+          plot_I_variants(dir_name, SIRD_all_variants, variants_name, final_dates)
           
           infection_rates <- data.frame()
           I <- data.frame()

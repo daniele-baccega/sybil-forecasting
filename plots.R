@@ -121,7 +121,27 @@ plot_variants_proportion <- function(dir_name, variants_global_df, variants_name
 #   - dir_name:       name of the directory in which put the results
 #   - SIRD_all:       evolution of the infection using a SIvRD model
 #   - variants_name:  names of the variants
-plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name){
+#   - final_dates:                final dates
+plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_dates){
+  png(paste0(dir_name, "/I_variants_all_scenarios.png"), units="in", width=34, height=15, res=300)
+  plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
+  for(i in 1:length(variants_name)){
+    plot <- plot + geom_line(linewidth=2)
+  }
+  plot <- plot +
+    geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=2) +
+    geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=2) +
+    geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=2) +
+    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    scale_colour_manual(values=hue_pal()(length(variants_name))) +
+    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
+    labs(x="Date", y="Population", col="Variants") +
+    scale_y_continuous(labels = label_scientific())
+  print(plot)
+  dev.off()
+  
   png(paste0(dir_name, "/I_variants.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
   for(i in 1:length(variants_name)){
