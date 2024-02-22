@@ -12,7 +12,6 @@ library(zoo)
 library(forecast)
 library(COVID19)
 library(prophet)
-library(stringr)
 library(scales)
 library(patchwork)
 
