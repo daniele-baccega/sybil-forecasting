@@ -439,10 +439,18 @@ final_plots <- function(dir_name, variants_name){
   p4 <- plot
   
   p <- (p1 + p2) / (p3 + p4) +
-    plot_layout(guides = "collect") &
+    plot_layout(guides = "collect", axis_titles = "collect") &
     theme(legend.position = "bottom", legend.box = "vertical")
   
   png(paste0(dir_name, "/forecast_plot/SIRD_forecast.png"), units="in", width=34, height=15, res=300)
+  print(p)
+  dev.off()
+  
+  p <- p1 / p2 / p3 / p4 +
+    plot_layout(guides = "collect", axis_titles = "collect") &
+    theme(legend.position = "bottom", legend.box = "vertical")
+  
+  png(paste0(dir_name, "/forecast_plot/SIRD_forecast_onexrow.png"), units="in", width=28, height=34, res=300)
   print(p)
   dev.off()
   
@@ -457,10 +465,18 @@ final_plots <- function(dir_name, variants_name){
   p4 <- plot 
   
   p <- (p1 + p2) / (p3 + p4) +
-    plot_layout(guides = "collect") &
+    plot_layout(guides = "collect", axis_titles = "collect") &
     theme(legend.position = "bottom", legend.box = "vertical")
   
   png(paste0(dir_name, "/forecast_plot/forecast_fatality_rates.png"), units="in", width=34, height=15, res=300)
+  print(p)
+  dev.off()
+  
+  p <- p1 / p2 / p3 / p4 +
+    plot_layout(guides = "collect", axis_titles = "collect") &
+    theme(legend.position = "bottom", legend.box = "vertical")
+  
+  png(paste0(dir_name, "/forecast_plot/forecast_fatality_rates_onexrow.png"), units="in", width=28, height=34, res=300)
   print(p)
   dev.off()
   
@@ -476,10 +492,18 @@ final_plots <- function(dir_name, variants_name){
     p4 <- plot
     
     p <- (p1 + p2) / (p3 + p4) +
-      plot_layout(guides = "collect") &
+      plot_layout(guides = "collect", axis_titles = "collect") &
       theme(legend.position = "bottom", legend.box = "vertical")
     
     png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates.png"), units="in", width=34, height=15, res=300)
+    print(p)
+    dev.off()
+    
+    p <- p1 / p2 / p3 / p4 +
+      plot_layout(guides = "collect", axis_titles = "collect") &
+      theme(legend.position = "bottom", legend.box = "vertical")
+    
+    png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates_onexrow.png"), units="in", width=28, height=34, res=300)
     print(p)
     dev.off()
     
@@ -495,10 +519,18 @@ final_plots <- function(dir_name, variants_name){
       p4 <- plot 
       
       p <- (p1 + p2) / (p3 + p4) +
-        plot_layout(guides = "collect") &
+        plot_layout(guides = "collect", axis_titles = "collect") &
         theme(legend.position = "bottom", legend.box = "vertical")
       
       png(paste0(dir_name, "/forecast_plot/I/forecast_I_", variants_name[k], ".png"), units="in", width=34, height=15, res=300)
+      print(p)
+      dev.off()
+      
+      p <- p1 / p2 / p3 / p4 +
+        plot_layout(guides = "collect", axis_titles = "collect") &
+        theme(legend.position = "bottom", legend.box = "vertical")
+      
+      png(paste0(dir_name, "/forecast_plot/I/forecast_I_", variants_name[k], "_onexrow.png"), units="in", width=28, height=34, res=300)
       print(p)
       dev.off()
       
@@ -513,10 +545,18 @@ final_plots <- function(dir_name, variants_name){
       p4 <- plot 
       
       p <- (p1 + p2) / (p3 + p4) +
-        plot_layout(guides = "collect") &
+        plot_layout(guides = "collect", axis_titles = "collect") &
         theme(legend.position = "bottom", legend.box = "vertical")
       
       png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates_", variants_name[k], ".png"), units="in", width=34, height=15, res=300)
+      print(p)
+      dev.off()
+      
+      p <- p1 / p2 / p3 / p4 +
+        plot_layout(guides = "collect", axis_titles = "collect") &
+        theme(legend.position = "bottom", legend.box = "vertical")
+      
+      png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates_", variants_name[k], "_onexrow.png"), units="in", width=28, height=34, res=300)
       print(p)
       dev.off()
       
@@ -531,10 +571,18 @@ final_plots <- function(dir_name, variants_name){
       p4 <- plot 
       
       p <- (p1 + p2) / (p3 + p4) +
-        plot_layout(guides = "collect") &
+        plot_layout(guides = "collect", axis_titles = "collect") &
         theme(legend.position = "bottom", legend.box = "vertical")
       
       png(paste0(dir_name, "/forecast_plot/comparison/I_", variants_name[k], "_compare.png"), units="in", width=34, height=15, res=300)
+      print(p)
+      dev.off()
+      
+      p <- p1 / p2 / p3 / p4 +
+        plot_layout(guides = "collect", axis_titles = "collect") &
+        theme(legend.position = "bottom", legend.box = "vertical")
+      
+      png(paste0(dir_name, "/forecast_plot/comparison/I_", variants_name[k], "_compare_onexrow.png"), units="in", width=28, height=34, res=300)
       print(p)
       dev.off()
     }
@@ -550,10 +598,18 @@ final_plots <- function(dir_name, variants_name){
     p4 <- plot 
     
     p <- (p1 + p2) / (p3 + p4) +
-      plot_layout(guides = "collect") &
+      plot_layout(guides = "collect", axis_titles = "collect") &
       theme(legend.position = "bottom", legend.box = "vertical")
     
     png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates.png"), units="in", width=34, height=15, res=300)
+    print(p)
+    dev.off()
+    
+    p <- p1 / p2 / p3 / p4 +
+      plot_layout(guides = "collect", axis_titles = "collect") &
+      theme(legend.position = "bottom", legend.box = "vertical")
+    
+    png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates_onexrow.png"), units="in", width=28, height=34, res=300)
     print(p)
     dev.off()
     
@@ -568,10 +624,18 @@ final_plots <- function(dir_name, variants_name){
     p4 <- plot 
     
     p <- (p1 + p2) / (p3 + p4) +
-      plot_layout(guides = "collect") &
+      plot_layout(guides = "collect", axis_titles = "collect") &
       theme(legend.position = "bottom", legend.box = "vertical")
     
     png(paste0(dir_name, "/forecast_plot/I/forecast_I.png"), units="in", width=34, height=15, res=300)
+    print(p)
+    dev.off()
+    
+    p <- p1 / p2 / p3 / p4 +
+      plot_layout(guides = "collect", axis_titles = "collect") &
+      theme(legend.position = "bottom", legend.box = "vertical")
+    
+    png(paste0(dir_name, "/forecast_plot/I/forecast_I_onexrow.png"), units="in", width=28, height=34, res=300)
     print(p)
     dev.off()
     
@@ -586,10 +650,18 @@ final_plots <- function(dir_name, variants_name){
     p4 <- plot 
     
     p <- (p1 + p2) / (p3 + p4) +
-      plot_layout(guides = "collect") &
+      plot_layout(guides = "collect", axis_titles = "collect") &
       theme(legend.position = "bottom", legend.box = "vertical")
     
     png(paste0(dir_name, "/forecast_plot/comparison/I_compare.png"), units="in", width=34, height=15, res=300)
+    print(p)
+    dev.off()
+    
+    p <- p1 / p2 / p3 / p4 +
+      plot_layout(guides = "collect", axis_titles = "collect") &
+      theme(legend.position = "bottom", legend.box = "vertical")
+    
+    png(paste0(dir_name, "/forecast_plot/comparison/I_compare_onexrow.png"), units="in", width=28, height=34, res=300)
     print(p)
     dev.off()
   }
