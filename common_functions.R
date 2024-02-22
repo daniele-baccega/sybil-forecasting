@@ -81,7 +81,7 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
       filter(!(year == 2020 & week %in% seq(1, 8)))
   
     df_variants_init <- df_variants_init %>%
-      mutate(variant = str_replace(variant, "/", "-"))
+      mutate(variant = gsub("/", "-", variant))
     df_variants_init$percent_variant[is.na(df_variants_init$percent_variant)] <- 0
     
     # Aggregate variants
