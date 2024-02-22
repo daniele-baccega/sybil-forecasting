@@ -27,7 +27,7 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 # Select the configuration (with or without variants)
 # To reproduce the results set the variable to TRUE
-variants <- TRUE
+variants <- FALSE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
@@ -176,7 +176,7 @@ Sybil(variants, global_final_date, country, external_dir_names, immunization_end
 plots_second_ascending_scenario(external_dir_names, country, variants)
 
 
-# Scenarios with Austria (V=11)
+# Scenarios with Italy (V=11)
 # Select the variants to disregard and to aggregate
 variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.427/B.1.429", "B.1.616", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "C.37", "P.3", "SGTF", "UNK")
 variants_aggregated <- list(B_1 = c("B.1.1.7", "B.1.351", "B.1.525"),
