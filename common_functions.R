@@ -278,6 +278,9 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
     results_all_weekly <- get_rates(SIRD_all_weekly[-nrow(SIRD_all_weekly),], SIRD_all_weekly[nrow(SIRD_all_weekly),], immunization_end_rate, rep(N, nrow(SIRD_all_weekly)-1))
     results_all_spline <- get_rates(SIRD_all_spline[-nrow(SIRD_all_spline),], SIRD_all_spline[nrow(SIRD_all_spline),], immunization_end_rate, rep(N, nrow(SIRD_all_spline)-1))
     
+    plot_rates(dir_name, results_all)
+    plot_rates(dir_name, results_all_spline, "_Spline")
+    
     if(variants){
       df_COVID19_ref_weekly_variants <- df_COVID19_ref_weekly %>%
         filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
@@ -413,9 +416,11 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, SIRD_all_spline, resu
   
   SIRD_all_used <- SIRD_all
   results_all_used <- results_all
+  type <- ""
   if(daily_spline){
     SIRD_all_used <- SIRD_all_spline
     results_all_used <- results_all_spline
+    type = "_Spline"
   }
   
   # Generate the SIvRD model and compute the infection rates for each variant
@@ -440,6 +445,8 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, SIRD_all_spline, resu
     filter(date != SIRD_all_used$date[nrow(SIRD_all_used)])
   
   df_all_variants <- data.frame(date=rep(SIRD_all_used$date[-nrow(SIRD_all_used)], length(variants_name)), infection_rates=infection_rates_all_variants, rec_rates=rep(results_all_used$rec_rates[-nrow(SIRD_variant)], length(variants_name)), fat_rates=rep(results_all_used$fat_rates[-nrow(SIRD_variant)], length(variants_name)), variant=df_variants_names$variant)
+  
+  plot_infection_rates_variants(dir_name, df_all_variants, type)
   
   return(list(SIRD_all_variants, df_all_variants))
 }
