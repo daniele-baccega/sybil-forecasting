@@ -34,7 +34,7 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
   
   ref_data_flag <- rep(FALSE, 4)
   time_steps <- c(7, 14, 21, 28)
-  internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", "_MCMC", mcmc_samples, "/")
+  internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", "/")
   
   relative_errors_df <- data.frame()
   # Loop on different 'training' windows
