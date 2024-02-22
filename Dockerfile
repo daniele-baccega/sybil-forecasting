@@ -3,9 +3,12 @@ FROM danielebaccega/prophet
 LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 
 ## Copy files
-COPY Italy.R .
+COPY reproduce.R .
 COPY Sybil.R .
 COPY common_functions.R .
+COPY plots.R .
+COPY plots_ascending_scenarios.R .
+COPY datasets .
 
 ## Run the script
-CMD Rscript Italy.R
+CMD Rscript reproduce.R
