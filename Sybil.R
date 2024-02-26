@@ -35,7 +35,7 @@ Sybil <- function(variants = TRUE, daily_spline = FALSE, global_final_date = as.
   
   ref_data_flag <- rep(FALSE, 4)
   time_steps <- c(7, 14, 21, 28)
-  internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", if(daily_spline) "_DailySpline" else "", "/")
+  internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", if(daily_spline) "_DailySpline" else "", "_FixedRecoveryRate/")
   
   relative_errors_df <- data.frame()
   # Loop on different 'training' windows

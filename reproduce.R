@@ -25,7 +25,9 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 
 # Select the configuration (with or without variants, daily or daily-spline data)
-# If in a particular country data are weekly you have to use daily spline data.
+# If in a particular country data are weekly you have to use daily-spline data.
+# To reproduce the results in the paper (supplementary material, section "Fixed recovery rate")
+# set the variable daily_spline to FALSE and variants to TRUE
 daily_spline <- FALSE
 variants <- TRUE
 
@@ -39,7 +41,7 @@ recovery_rate <- 1 / 14
 # Global final date
 global_final_date <- Sys.Date()
 
-# Reproduce the results in the paper set the variable to TRUE
+# To reproduce the results in the paper set the variable to TRUE
 reproduce <- TRUE
 
 if(reproduce){
@@ -180,7 +182,7 @@ Sybil(variants, daily_spline, global_final_date, country, external_dir_names, im
 plots_second_ascending_scenario(external_dir_names, country, daily_spline, variants)
 
 
-# Scenarios with Austria (V=11)
+# Scenarios with Italy (V=11)
 # Select the variants to disregard and to aggregate
 variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.427/B.1.429", "B.1.616", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "C.37", "P.3", "SGTF", "UNK")
 variants_aggregated <- list(B_1 = c("B.1.1.7", "B.1.351", "B.1.525"),

@@ -67,22 +67,13 @@ SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, im
 #
 # Inputs:
 #   - dir_name:     name of the directory in which put the results
-#   - results_all:  infection, recovery and fatality rates extracted from the SIRD model
+#   - results_all:  infection and fatality rates extracted from the SIRD model
 plot_rates <- function(dir_name, results_all, type = ""){
   png(paste0(dir_name, "/infection_rates", type, ".png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(results_all) +
     geom_line(aes(x=date, y=infection_rates), linewidth=2) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     labs(x="Date", y="Infection rates") +
-    scale_y_continuous(labels = label_scientific())
-  print(plot)
-  dev.off()
-  
-  png(paste0(dir_name, "/recovery_rates", type, ".png"), units="in", width=34, height=15, res=300)
-  plot <- ggplot(results_all) +
-    geom_line(aes(x=date, y=rec_rates), linewidth=2) +
-    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(x="Date", y="Recovery rates") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
