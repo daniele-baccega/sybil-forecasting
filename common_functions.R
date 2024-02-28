@@ -461,7 +461,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, SIRD_all_spline, resu
 save_rates <- function(dir_name, results_all, type, results_all_spline = NA){
   write.csv(results_all, paste0(dir_name, "/", type, ".csv"))
   
-  if(!is.na(results_all_spline))
+  if(!is.data.frame(results_all_spline))
     write.csv(results_all_spline, paste0(dir_name, "/", type, "_spline.csv"))
 }
 
@@ -475,7 +475,7 @@ save_rates <- function(dir_name, results_all, type, results_all_spline = NA){
 save_evolution <- function(dir_name, SIRD_all, type, SIRD_all_all_spline = NA){
   write.csv(SIRD_all, paste0(dir_name, "/", type, ".csv"))
   
-  if(!is.na(SIRD_all_spline))
+  if(is.data.frame(SIRD_all_spline))
     write.csv(SIRD_all_spline, paste0(dir_name, "/", type, "_spline.csv"))
 }
 
