@@ -472,7 +472,7 @@ save_rates <- function(dir_name, results_all, type, results_all_spline = NA){
 #   - SIRD_all:         evolution of the infection using a SIRD model
 #   - type:             file name
 #   - SIRD_all_spline:  evolution of the infection using a SIRD model (daily spline)
-save_evolution <- function(dir_name, SIRD_all, type, SIRD_all_all_spline = NA){
+save_evolution <- function(dir_name, SIRD_all, type, SIRD_all_spline = NA){
   write.csv(SIRD_all, paste0(dir_name, "/", type, ".csv"))
   
   if(is.data.frame(SIRD_all_spline))
