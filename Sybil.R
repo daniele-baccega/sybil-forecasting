@@ -95,6 +95,7 @@ Sybil <- function(variants = TRUE, daily_spline = FALSE, global_final_date = as.
     
     save_rates(dir_name, results_all, "rates", results_all_spline)
     save_evolution(dir_name, SIRD_all, "evolution", SIRD_all_spline)
+    save_data(dir_name, df_COVID19_all, "data")
     
     if(forecast){
       if(final_dates[j] > SIRD_all$date[nrow(SIRD_all)]){
