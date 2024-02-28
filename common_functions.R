@@ -479,6 +479,16 @@ save_evolution <- function(dir_name, SIRD_all, type, SIRD_all_spline = NA){
     write.csv(SIRD_all_spline, paste0(dir_name, "/", type, "_spline.csv"))
 }
 
+# Save the model's evolution in a csv file.
+#
+# Inputs:
+#   - dir_name:         name of the directory in which put the results
+#   - df_COVID19_all:   dataframe with Covid-19 data
+#   - type:             file name
+save_data <- function(dir_name, df_COVID19_all, type){
+  write.csv(df_COVID19_all, paste0(dir_name, "/", type, ".csv"))
+}
+
 # Gets the data frames.
 #
 # Inputs:
