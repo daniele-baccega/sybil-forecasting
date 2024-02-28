@@ -306,6 +306,8 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       
       place <- c(place, rep("S", n_ref+2+(n_ref-n)), rep("R", n_ref+2+(n_ref-n)), rep("D", n_ref+2+(n_ref-n)))
       variant <- c(variant, rep("-", n_ref+2+(n_ref-n)), rep("-", n_ref+2+(n_ref-n)), rep("-", n_ref+2+(n_ref-n)))
+
+      line_types <- c("dashed", "dotted", "solid")
     }
     else{
       type <- rep(NA, n_ref + 1)
@@ -337,6 +339,8 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       
       place <- c(place, rep("S", n_ref+1), rep("R", n_ref+1), rep("D", n_ref+1))
       variant <- c(variant, rep("-", n_ref+1), rep("-", n_ref+1), rep("-", n_ref+1))
+
+      line_types <- c("dashed", "solid")
     }
     
     df_plot <- data.frame(date, value, place, type, variant)
@@ -350,6 +354,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       geom_line(aes(date, value, col=variant, linetype=type), linewidth=1.5) +
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c(hue_pal()(length(variants_name)), "#808080")) +
+      scale_linetype_manual(values=line_types) +
       theme(panel.spacing = unit(1, "cm"), legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38), strip.text.x = element_blank()) +
       labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
