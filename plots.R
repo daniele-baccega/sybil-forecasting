@@ -454,7 +454,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       place <- c(place, rep("S", n_ref+1), rep("R", n_ref+1), rep("D", n_ref+1))
       variant <- c(variant, rep("-", n_ref+1), rep("-", n_ref+1), rep("-", n_ref+1))
       
-      line_types <- c("dotdash", "solid")
+      line_types <- c("dashed", "solid")
     }
     
     df_plot <- data.frame(date, value, place, type, variant)
