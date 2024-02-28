@@ -22,7 +22,7 @@
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-Sybil <- function(variants = TRUE, daily_spline = FALSE, global_final_date = as.Date("2023-06-04"), country = "Italy", external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 10, reproduce = FALSE, forecast = FALSE, initial_dates = c(), final_dates = c(), variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+Sybil <- function(variants = TRUE, daily_spline = FALSE, global_final_date = as.Date("2023-06-04"), country = "Italy", external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, reproduce = FALSE, forecast = FALSE, initial_dates = c(), final_dates = c(), variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(forecast && (length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names)))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   
