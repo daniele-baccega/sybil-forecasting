@@ -454,11 +454,29 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, SIRD_all_spline, resu
 # Save the rates in a csv file.
 #
 # Inputs:
-#   - dir_name:     name of the directory in which put the results
-#   - results_all:  infection, recovery and fatality rates extracted from the SIRD model
-#   - type:         file name
-save_rates <- function(dir_name, results_all, type){
+#   - dir_name:            name of the directory in which put the results
+#   - results_all:         infection, recovery and fatality rates extracted from the SIRD model
+#   - type:                file name
+#   - results_all_spline:  infection, recovery and fatality rates extracted from the SIRD model (daily spline)
+save_rates <- function(dir_name, results_all, type, results_all_spline = NA){
   write.csv(results_all, paste0(dir_name, "/", type, ".csv"))
+  
+  if(!is.na(results_all_spline))
+    write.csv(results_all_spline, paste0(dir_name, "/", type, "_spline.csv"))
+}
+
+# Save the model's evolution in a csv file.
+#
+# Inputs:
+#   - dir_name:         name of the directory in which put the results
+#   - SIRD_all:         evolution of the infection using a SIRD model
+#   - type:             file name
+#   - SIRD_all_spline:  evolution of the infection using a SIRD model (daily spline)
+save_rates <- function(dir_name, SIRD_all, type, SIRD_all_all_spline = NA){
+  write.csv(SIRD_all, paste0(dir_name, "/", type, ".csv"))
+  
+  if(!is.na(SIRD_all_spline))
+    write.csv(SIRD_all_spline, paste0(dir_name, "/", type, "_spline.csv"))
 }
 
 # Gets the data frames.

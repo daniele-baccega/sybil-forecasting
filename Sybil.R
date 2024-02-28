@@ -90,9 +90,11 @@ Sybil <- function(variants = TRUE, daily_spline = FALSE, global_final_date = as.
       results_all_variants <- variants_data[[2]]
       
       save_rates(dir_name, results_all_variants, "rates_variants")
+      save_evolution(dir_name, SIRD_all_variants, "evolution_variants")
     }
     
-    save_rates(dir_name, results_all, "rates")
+    save_rates(dir_name, results_all, "rates", results_all_spline)
+    save_evolution(dir_name, SIRD_all, "evolution", SIRD_all_spline)
     
     if(forecast){
       if(final_dates[j] > SIRD_all$date[nrow(SIRD_all)]){
