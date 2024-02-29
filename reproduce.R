@@ -27,7 +27,7 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 # Select the configuration (with or without variants)
 # To reproduce the results set the variable to TRUE
-variants <- FALSE
+variants <- TRUE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
