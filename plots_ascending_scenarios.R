@@ -225,7 +225,7 @@ plots_v11_scenario <- function(external_dir_names, country, daily_spline, varian
   
   for(i in 1:4){
     load(paste0(external_dir_names[1], "SIRD", type_variants, "_Reinfection", type, "_FixedRecoveryRate/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expressio\n("January 10"^"th")) + theme(plot.title=element_text(size=34))
+    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34))
     load(paste0(external_dir_names[2], "SIRD", type_variants, "_Reinfection", type, "_FixedRecoveryRate/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
     p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34))
     load(paste0(external_dir_names[3], "SIRD", type_variants, "_Reinfection", type, "_FixedRecoveryRate/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
