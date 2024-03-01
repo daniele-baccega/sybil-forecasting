@@ -333,7 +333,6 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
 #   - dir_name:               name of the directory in which put the results
 #   - df_variants:            dataframe with variants data
 #   - df_COVID19_all:         dataframe with Covid-19 data
-#   - df_COVID19_all_spline:  dataframe with Covid-19 data (daily spline)
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
@@ -343,7 +342,6 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
 # Output:
 #   - variants_global_df:     infection, recovery and fatality rates extracted from the SIRD model
 #   - df_COVID19_all:         dataframe with Covid-19 data
-#   - df_COVID19_all_spline:  dataframe with Covid-19 data (daily spline)
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - SIRD_all_spline:        evolution of the infection using a SIRD model (daily spline)
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
@@ -403,7 +401,7 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_COVID19_al
 #   - SIRD_all:                   evolution of the infection using a SIRD model
 #   - SIRD_all_spline:            evolution of the infection using a SIRD model (daily spline)
 #   - results_all:                infection, recovery and fatality rates extracted from the SIRD model
-#   - results_all (daily spline): infection, recovery and fatality rates extracted from the SIRD model (daily spline)
+#   - results_all_spline:         infection, recovery and fatality rates extracted from the SIRD model (daily spline)
 #   - immunization_end_rate:      immunization end rate
 #   - N:                          total population
 #   - daily_spline            true if we approximate daily data with a spline, false otherwise
