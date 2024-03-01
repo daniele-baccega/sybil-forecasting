@@ -1,7 +1,6 @@
 # Sybil
 #
 # Author: Daniele Baccega
-# Data: COVID19 R library
 # Prophet: https://facebook.github.io/prophet/docs/quick_start.html
 
 # Checks if we can re-obtain the real data starting from the previously computed
@@ -93,10 +92,10 @@ plot_rates <- function(dir_name, results_all, type = ""){
 # Inputs:
 #   - dir_name:     name of the directory in which put the results
 #   - results_all:  infection rates extracted from the SIvRD model
-plot_infection_rates_variants <- function(dir_name, results_all, type = ""){
+plot_infection_rates_variants <- function(dir_name, results_all){
   variants_name <- unique((results_all$variant))
   
-  png(paste0(dir_name, "/infection_rates_variants", type, ".png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/infection_rates_variants.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(results_all) +
     geom_line(aes(x=date, y=infection_rates, color=variant), linewidth=2) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +

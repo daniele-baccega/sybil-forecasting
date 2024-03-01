@@ -1,6 +1,5 @@
-## WHAT'S NEW IN VERSION 2.0
-- We now use a fixed recovery rate (same for each variant for now) to dispense with data on recoveries which are ofter not available. Now we only need data on cases and deaths.
-- We included a pre-processing step using splines to fill missing data and to move from a weekly to a daily step in case of availability of data with a weekly step (without alter too much the information present in the time series).
+## WHAT'S NEW IN VERSION 2.5
+...
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century. The rapid global spread of the virus has affected nearly every part of the world. Consequently, healthcare systems worldwide are grappling with the significant challenge posed by COVID-19, requiring robust surveillance, widespread testing, contact tracing, and stringent infection control measures. Forecasting the trajectory and impact of epidemics is crucial for efficient planning, resource allocation, and decision-making within public health authorities. Epidemic forecasting involves a multidisciplinary approach, integrating epidemiology, mathematical modeling, data analysis, and computational methods to gain insights into the future progression of outbreaks. Accurate epidemic forecasting is pivotal in early detection, prevention, and control of infectious diseases. By providing timely information on disease transmission dynamics, identifying potential high-risk areas, and evaluating the effectiveness of interventions, forecasting empowers public health agencies to implement targeted strategies, allocate resources efficiently, and alleviate strain on healthcare systems.
