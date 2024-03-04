@@ -2,6 +2,7 @@
 *.csv
 *.png
 .Rhistory
+aggregatesUMD/
 
 !datasets/Austria_2023-11-22.csv
 !datasets/Italy_2023-11-22.csv

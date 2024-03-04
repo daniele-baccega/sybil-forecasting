@@ -14,6 +14,7 @@ library(COVID19)
 library(prophet)
 library(scales)
 library(patchwork)
+library(countrycode)
 
 # Include the Sybil function and the common functions
 source("Sybil.R")
@@ -37,7 +38,7 @@ forecast <- TRUE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
-recovery_rate <- 1 / 14
+recovery_rate <- 1 / 10
 
 # Global final date
 global_final_date <- Sys.Date()

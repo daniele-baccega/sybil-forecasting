@@ -173,15 +173,45 @@ filter_variants <- function(df_variants_init){
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, global_final_date, variants, daily_spline){
+compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, global_final_date, variants, daily_spline, country){
   # Preprocess data
   N <- df_disease_ref$population[1]
   
   df_disease_ref <- df_disease_ref %>%
-    mutate(total_cases = confirmed, total_deaths = deaths) %>%
-    select(date, total_cases, total_deaths, population) %>%
-    mutate(new_cases = diff(c(0, total_cases)), new_deaths = diff(c(0, total_deaths))) %>%
-    filter(!is.na(new_cases), date >= "2020-02-24")
+    mutate(total_deaths = deaths) %>%
+    select(date, total_deaths, population) %>%
+    mutate(new_deaths = diff(c(0, total_deaths))) %>%
+    filter(date >= "2020-02-24")
+  
+  dirs <- list.dirs("aggregatesUMD", recursive = FALSE)
+  coronasurveys_data <- NA
+  for(i in 2:length(dirs)){
+    coronasurveys_data_local <- read.csv(paste0(dirs[[i]], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv"))
+    coronasurveys_data_local <- coronasurveys_data_local %>%
+      select(date, p_XGB)
+    
+    if(!is.data.frame(coronasurveys_data)){
+      coronasurveys_data <- coronasurveys_data_local
+    }
+    else{
+      coronasurveys_data <- rbind(coronasurveys_data, coronasurveys_data_local)
+    }
+  }
+  
+  coronasurveys_data$p_XGB <- rollmean(coronasurveys_data$p_XGB * N, 7, align = "left", fill = NA)
+  coronasurveys_data <- coronasurveys_data %>%
+    filter(!is.na(p_XGB))
+  
+  
+  
+  df_disease_ref <- df_disease_ref %>%
+    filter(date >= min(coronasurveys_data$date), date <= max(coronasurveys_data$date))
+  df_disease_ref <- df_disease_ref %>%
+    mutate(new_cases = c(0, diff(coronasurveys_data$p_XGB) + recovery_rate * coronasurveys_data$p_XGB[1:(nrow(coronasurveys_data)-1)] + new_deaths[2:length(new_deaths)]))
+  df_disease_ref <- df_disease_ref %>%
+    filter(date > min(coronasurveys_data$date))
+  
+  df_disease_ref$new_cases[which(df_disease_ref$new_cases < 0)] <- 0
   
   df_disease_ref$date <- as.Date(df_disease_ref$date)
   
@@ -208,16 +238,11 @@ compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate,
     df_disease_ref <- df_disease_ref[order(df_disease_ref$date),]
 
     df_disease_ref$population <- rep(N, nrow(df_disease_ref))
-    df_disease_ref$total_cases <- cumsum(df_disease_ref$new_cases)
-    df_disease_ref$total_deaths <- cumsum(df_disease_ref$new_deaths)
   }
   
   if(variants){
-    df_disease_ref_variants <- df_disease_ref %>%
-      filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
-    
     df_variants_ref <- df_variants_ref %>%
-      filter(!(year == df_disease_ref_variants$year[nrow(df_disease_ref_variants)] & week > df_disease_ref_variants$week[nrow(df_disease_ref_variants)])) %>%
+      filter(!(year == df_disease_ref$year[nrow(df_disease_ref)] & week > df_disease_ref$week[nrow(df_disease_ref)]), !(year > df_disease_ref$year[nrow(df_disease_ref)]), !(year == df_disease_ref$year[1] & week < df_disease_ref$week[1]), !(year < df_disease_ref$year[1])) %>%
       arrange(variant)
     
     df_variants_ref$date <- rep(variants_date, length(unique(df_variants_ref$variant)))
@@ -247,7 +272,7 @@ prepare_data <- function(country, global_final_date, immunization_end_rate, reco
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
-  data <- compute_data(df_disease_init, df_variants_init, immunization_end_rate, recovery_rate, global_final_date, variants, daily_spline)
+  data <- compute_data(df_disease_init, df_variants_init, immunization_end_rate, recovery_rate, global_final_date, variants, daily_spline, country)
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
   

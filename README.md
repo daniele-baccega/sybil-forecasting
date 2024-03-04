@@ -1,5 +1,10 @@
 ## WHAT'S NEW IN VERSION 2.5
-...
+- Separated the data pre-processing from Sybil. Now you have to feed Sybil with two dataframes:
+  * One with four columns named _date_, _new_cases_, _new_deaths_ and _population_ using a daily or weekly step (if you are using a weekly step set the flag _daily_spline_ to TRUE when calling the *Sybil* function). The column _population_ has all equal values.
+  * One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
+  
+## NEWS ON COVID-19 FORECASTING
+- We tried to use estimates of real cases (https://coronasurveys.org/) with Sybil instead of working with data on confirmed cases.
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century. The rapid global spread of the virus has affected nearly every part of the world. Consequently, healthcare systems worldwide are grappling with the significant challenge posed by COVID-19, requiring robust surveillance, widespread testing, contact tracing, and stringent infection control measures. Forecasting the trajectory and impact of epidemics is crucial for efficient planning, resource allocation, and decision-making within public health authorities. Epidemic forecasting involves a multidisciplinary approach, integrating epidemiology, mathematical modeling, data analysis, and computational methods to gain insights into the future progression of outbreaks. Accurate epidemic forecasting is pivotal in early detection, prevention, and control of infectious diseases. By providing timely information on disease transmission dynamics, identifying potential high-risk areas, and evaluating the effectiveness of interventions, forecasting empowers public health agencies to implement targeted strategies, allocate resources efficiently, and alleviate strain on healthcare systems.
