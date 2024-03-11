@@ -13,7 +13,7 @@
 #   - global_initial_date:        initial date for the data
 #   - global_final_date:          final date for the data
 #   - reproduce:                  reproduce the results of the paper
-#   - variants                    true if we are considering variants, false otherwise
+#   - variants:                   true if we are considering variants, false otherwise
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
@@ -161,21 +161,23 @@ filter_variants <- function(df_variants_init){
   return(df_variants)
 }
 
-# Generate the SIRD model.
+# Prepare data.
 #
 # Inputs:
 #   - df_disease_ref:         dataframe with disease data
 #   - df_variants_ref:        dataframe with variants data
+#   - global_initial_date:    initial date for the data
+#   - global_final_date:          final date for the data
 #   - immunization_end_rate:  immunization end rate
 #   - recovery_rate:          recovery rate
-#   - global_initial_date:        initial date for the data
-#   - global_final_date:      final date for the data
 #   - variants                true if we are considering variants, false otherwise
+#   - daily_spline            true if we approximate daily data with a spline, false otherwise
+#   - country:                country name
 #
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, variants, daily_spline, country){
+compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country){
   # Preprocess data
   N <- df_disease_ref$population[1]
   
@@ -183,12 +185,26 @@ compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate,
     mutate(total_deaths = deaths) %>%
     select(date, total_deaths, population) %>%
     mutate(new_deaths = diff(c(0, total_deaths))) %>%
-    filter(date >= "2020-02-24")
+    filter(date >= global_initial_date)
   
-  dirs <- list.dirs("aggregatesUMD", recursive = FALSE)
+  initial_month <- as.numeric(format(global_initial_date, "%m"))
+  initial_year <- as.numeric(format(global_initial_date, "%Y"))
+  final_month <- as.numeric(format(global_final_date, "%m"))
+  final_year <- as.numeric(format(global_final_date, "%Y"))
+  
+  initial_quarter_number <- ceiling(initial_month / 3)
+  final_quarter_number <- ceiling(final_month / 3)
+  
+  dirs <- data.frame(directory=list.dirs("aggregatesUMD", recursive = FALSE)) %>%
+    filter(directory >= paste0("aggregatesUMD/", initial_year, "-", initial_month), directory <= paste0("aggregatesUMD/", final_year, "-", final_month))
+  
   coronasurveys_data <- NA
-  for(i in 2:length(dirs)){
-    coronasurveys_data_local <- read.csv(paste0(dirs[[i]], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv"))
+  for(i in nrow(dirs)){
+    if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv")))
+      stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country"))
+      
+    
+    coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv"))
     coronasurveys_data_local <- coronasurveys_data_local %>%
       select(date, p_XGB)
     
@@ -258,13 +274,17 @@ compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate,
 # Prepare the data for Sybil.
 #
 # Inputs:
-#   - df_disease_ref:         dataframe with disease data
-#   - df_variants_ref:        dataframe with variants data
-#   - immunization_end_rate:  immunization end rate
-#   - recovery_rate:          recovery rate
+#   - country:                country name
 #   - global_initial_date:    initial date for the data
 #   - global_final_date:      final date for the data
+#   - immunization_end_rate:  immunization end rate
+#   - recovery_rate:          recovery rate
+#   - reproduce:              reproduce paper's results
 #   - variants                true if we are considering variants, false otherwise
+#   - variants_to_disregard:      variants not to be considered
+#   - variants_aggregated:        aggregation of variants (must be a list)
+#   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
+#   - daily_spline            true if we approximate daily data with a spline, false otherwise
 #
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
@@ -275,7 +295,7 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
-  data <- compute_data(df_disease_init, df_variants_init, immunization_end_rate, recovery_rate, variants, daily_spline, country)
+  data <- compute_data(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
   
