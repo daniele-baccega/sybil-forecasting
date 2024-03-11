@@ -45,14 +45,14 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   
   if(!updated_file){
     # Download the updated data
-    disease(country = gsub("_", " ", country_long), level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
+    covid19(country = gsub("_", " ", country_long), level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
     system(paste0("rm ", Sys.Date(), "/country/index.csv"))
     if(length(list.files(paste0(Sys.Date(), "/country/"))) == 0)
-      stop(paste0("Country ", gsub("_", " ", country_long), " not found in disease library data"))
+      stop(paste0("Country ", gsub("_", " ", country_long), " not found in covid19 library data"))
     system(paste0("mv ", Sys.Date(), "/country/*.csv ", disease_data))
     system(paste0("rm -r ", Sys.Date()))
     
-    download.file("https://opendata.ecdc.europa.eu/disease/virusvariant/csv/data.csv", disease_variants_data)
+    download.file("https://opendata.ecdc.europa.eu/covid19/virusvariant/csv/data.csv", disease_variants_data)
   }
   
   # Read and preprocess the data
