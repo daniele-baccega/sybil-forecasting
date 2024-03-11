@@ -33,12 +33,6 @@ Add your user to the docker group.
 
 Log out and log back in so that your group membership is re-evaluated.
 
-## HOW TO REPRODUCE THE RESULTS
-To reproduce the results presented in the paper run:
-```
-./reproduce.sh
-```
-
 ## REFERENCES
 [1] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018) https://doi.org/0.7287/peerj.preprints.3190v2
 
