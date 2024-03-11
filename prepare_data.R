@@ -10,6 +10,7 @@
 #
 # Inputs:
 #   - country_long:               name of the interested country (e.g. Italy, Austria)
+#   - global_initial_date:        initial date for the data
 #   - global_final_date:          final date for the data
 #   - reproduce:                  reproduce the results of the paper
 #   - variants                    true if we are considering variants, false otherwise
@@ -20,7 +21,7 @@
 # Output:
 #   - df_disease_ref_init:        dataframe with disease data
 #   - df_variants_init:           dataframe with variants data
-download_files_and_load_data <- function(country_long, global_final_date, reproduce, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, reproduce, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -45,7 +46,7 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   
   if(!updated_file){
     # Download the updated data
-    covid19(country = gsub("_", " ", country_long), level = 3, start = "2020-01-01", end = global_final_date, dir = '.')
+    covid19(country = gsub("_", " ", country_long), level = 3, start = global_initial_date, end = global_final_date, dir = '.')
     system(paste0("rm ", Sys.Date(), "/country/index.csv"))
     if(length(list.files(paste0(Sys.Date(), "/country/"))) == 0)
       stop(paste0("Country ", gsub("_", " ", country_long), " not found in covid19 library data"))
@@ -68,7 +69,7 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
     mutate(confirmed = na.approx(confirmed, na.rm = FALSE), deaths = na.approx(deaths, na.rm = FALSE))
   
   df_disease_ref_init <- df_disease_ref_init %>%
-    filter(!is.na(confirmed), !is.na(deaths), date <= global_final_date)
+    filter(!is.na(confirmed), !is.na(deaths), date <= global_final_date, date >= global_initial_date)
   
   df_variants_init <- data.frame()
   if(variants){
@@ -79,7 +80,7 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
       stop(paste0("Country ", gsub("_", " ", country_long), " not found in variants data"))
     
     df_variants_init <- df_variants_init %>%
-      filter(country == gsub("_", " ", country_long), !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), source == "GISAID", ! variant %in% variants_to_disregard) %>%
+      filter(country == gsub("_", " ", country_long), !is.na(new_cases), year_week <= format(as.Date(global_final_date), format="%Y-%U"), year_week >= format(as.Date(global_initial_date), format="%Y-%U"), source == "GISAID", ! variant %in% variants_to_disregard) %>%
       mutate(year = as.integer(substr(year_week, 1, 4)),
              week = as.integer(substr(year_week, 6, 7)),
              number_detections_variant = as.integer(number_detections_variant),
@@ -167,13 +168,14 @@ filter_variants <- function(df_variants_init){
 #   - df_variants_ref:        dataframe with variants data
 #   - immunization_end_rate:  immunization end rate
 #   - recovery_rate:          recovery rate
+#   - global_initial_date:        initial date for the data
 #   - global_final_date:      final date for the data
 #   - variants                true if we are considering variants, false otherwise
 #
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, global_final_date, variants, daily_spline, country){
+compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, variants, daily_spline, country){
   # Preprocess data
   N <- df_disease_ref$population[1]
   
@@ -260,19 +262,20 @@ compute_data <- function(df_disease_ref, df_variants_ref, immunization_end_rate,
 #   - df_variants_ref:        dataframe with variants data
 #   - immunization_end_rate:  immunization end rate
 #   - recovery_rate:          recovery rate
+#   - global_initial_date:    initial date for the data
 #   - global_final_date:      final date for the data
 #   - variants                true if we are considering variants, false otherwise
 #
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-prepare_data <- function(country, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
+prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
   # Download file and load data
-  data <- download_files_and_load_data(country, global_final_date, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_initial_date, global_final_date, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
-  data <- compute_data(df_disease_init, df_variants_init, immunization_end_rate, recovery_rate, global_final_date, variants, daily_spline, country)
+  data <- compute_data(df_disease_init, df_variants_init, immunization_end_rate, recovery_rate, variants, daily_spline, country)
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
   

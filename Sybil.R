@@ -11,8 +11,6 @@
 #   - df_variants_all             dataframe with variants data (after preprocessing)
 #   - variants                    true if we are considering variants, false otherwise
 #   - daily_spline                true if we approximate daily data with a spline, false otherwise
-#   - global_final_date:          final date for the data
-#   - country:                    name of the interested country (e.g. Italy, Austria)
 #   - external_dir_names:         names of the external directories
 #   - immunization_end_rate:      immunization end rate
 #   - recovery_rate:              recovery rate
@@ -20,10 +18,7 @@
 #   - forecast:                   true if you want to do the forecasts, false if you only want to extract the rates
 #   - initial_dates:              initial dates
 #   - final_dates:                final dates
-#   - variants_to_disregard:      variants not to be considered
-#   - variants_aggregated:        aggregation of variants (must be a list)
-#   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_spline = FALSE, global_final_date = as.Date("2023-06-04"), country = "Italy", external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, reproduce = FALSE, forecast = FALSE, initial_dates = c(), final_dates = c(), variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, reproduce = FALSE, forecast = FALSE, initial_dates = c(), final_dates = c()){
   if(forecast && (length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names)))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   

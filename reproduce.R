@@ -40,7 +40,8 @@ forecast <- TRUE
 immunization_end_rate <- 1 / 180
 recovery_rate <- 1 / 10
 
-# Global final date
+# Global initial and final dates
+global_initial_date <- as.Date("2020-02-24")
 global_final_date <- Sys.Date()
 
 # To reproduce the results in the paper set the variable to TRUE
@@ -74,8 +75,8 @@ initial_dates <- c(as.Date("2021-12-13"))
 
 final_dates <- c(as.Date("2022-01-13"))
 
-data <- prepare_data(country, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_spline, global_final_date, country, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+Sybil(df_disease_all, df_variants_all, variants, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates)
