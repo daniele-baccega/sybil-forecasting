@@ -199,7 +199,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     filter(directory >= paste0("aggregatesUMD/", initial_year, "-", initial_month), directory <= paste0("aggregatesUMD/", final_year, "-", final_month))
   
   coronasurveys_data <- NA
-  for(i in nrow(dirs)){
+  for(i in 1:nrow(dirs)){
     if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv")))
       stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country"))
       
@@ -299,8 +299,10 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
   
-  df_variants_all <- df_variants_all %>%
-    select(date, variant, percent_variant)
+  if(nrow(df_variants_all) > 0){
+    df_variants_all <- df_variants_all %>%
+      select(date, variant, percent_variant)
+  }
   
   df_disease_all <- df_disease_all %>%
     select(date, new_cases, new_deaths, population)
