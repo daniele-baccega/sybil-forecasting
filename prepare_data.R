@@ -216,7 +216,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     }
   }
   
-  coronasurveys_data$p_XGB <- rollmean(coronasurveys_data$p_XGB * N, 7, align = "left", fill = NA)
+  coronasurveys_data$p_XGB <- rollmean(coronasurveys_data$p_XGB * N, 7, align = "right", fill = NA)
   coronasurveys_data <- coronasurveys_data %>%
     filter(!is.na(p_XGB))
   
