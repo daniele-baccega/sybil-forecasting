@@ -1,5 +1,5 @@
 # Base image https://hub.docker.com/u/danielebaccega
-FROM danielebaccega/prophet
+FROM danielebaccega/sybil
 LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 
 ## Copy files
