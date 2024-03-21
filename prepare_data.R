@@ -206,7 +206,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     
     coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv"))
     coronasurveys_data_local <- coronasurveys_data_local %>%
-      select(date, p_XGB)
+      select(date, p_cli)
     
     if(!is.data.frame(coronasurveys_data)){
       coronasurveys_data <- coronasurveys_data_local
@@ -216,16 +216,16 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     }
   }
   
-  coronasurveys_data$p_XGB <- rollmean(coronasurveys_data$p_XGB * N, 7, align = "right", fill = NA)
+  coronasurveys_data$p_cli <- rollmean(coronasurveys_data$p_cli * N, 7, align = "right", fill = NA)
   coronasurveys_data <- coronasurveys_data %>%
-    filter(!is.na(p_XGB))
+    filter(!is.na(p_cli))
   
   
   
   df_disease_ref <- df_disease_ref %>%
     filter(date >= min(coronasurveys_data$date), date <= max(coronasurveys_data$date))
   df_disease_ref <- df_disease_ref %>%
-    mutate(new_cases = c(0, diff(coronasurveys_data$p_XGB) + recovery_rate * coronasurveys_data$p_XGB[1:(nrow(coronasurveys_data)-1)] + new_deaths[2:length(new_deaths)]))
+    mutate(new_cases = c(0, diff(coronasurveys_data$p_cli) + recovery_rate * coronasurveys_data$p_cli[1:(nrow(coronasurveys_data)-1)] + new_deaths[2:length(new_deaths)]))
   df_disease_ref <- df_disease_ref %>%
     filter(date > min(coronasurveys_data$date))
   
