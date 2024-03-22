@@ -18,7 +18,7 @@
 #   - forecast:                   true if you want to do the forecasts, false if you only want to extract the rates
 #   - initial_dates:              initial dates
 #   - final_dates:                final dates
-Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, reproduce = FALSE, forecast = FALSE, initial_dates = c(), final_dates = c()){
+Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_variants_data = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, reproduce = FALSE, forecast = FALSE, initial_dates = c(), final_dates = c()){
   if(forecast && (length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names)))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   
@@ -63,13 +63,13 @@ Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_spline
     results_all_variants <- data.frame()
     # Plot variants info
     if(variants){
-      data <- generate_and_plot_variants_info(paste0(external_dir_names[j], internal_dir_name), df_variants_all, df_disease_all, SIRD_all, results_all, daily_spline)
+      data <- generate_and_plot_variants_info(paste0(external_dir_names[j], internal_dir_name), df_variants_all, df_disease_all, SIRD_all, results_all, daily_variants_data)
       df_variants_processed <- data[[1]]
       df_disease_all <- data[[2]]
       SIRD_all <- data[[3]]
       results_all <- data[[4]]
 
-      variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_disease_all$population[1], daily_spline)
+      variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_disease_all$population[1])
       SIRD_all_variants <- variants_data[[1]]
       results_all_variants <- variants_data[[2]]
       

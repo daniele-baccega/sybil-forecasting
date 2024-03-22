@@ -131,14 +131,14 @@ get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
 #   - df_disease_all:         dataframe with disease data
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-#   - daily_spline            true if we approximate daily data with a spline, false otherwise
+#   - daily_variants_data:    true if data related to variants are daily, false if thery are weekly
 #
 # Output:
 #   - variants_global_df:     infection, recovery and fatality rates extracted from the SIRD model
 #   - df_disease_all:         dataframe with disease data
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_all, SIRD_all, results_all, daily_spline){
+generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_all, SIRD_all, results_all, daily_variants_data){
   variants_name <- unique(df_variants$variant)
   
   # Preprocess variants data
@@ -150,12 +150,16 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
     
     n <- nrow(df_variants_local)
     
-    df_variants_local$percent_variant <- rollapplyr(df_variants_local$percent_variant, 3, (mean), fill = if(v == "Other") 1 else 0)
+    df_variants_local$percent_variant <- c(rep(df_variants_local$percent_variant[1], 2), rollapplyr(df_variants_local$percent_variant, 3, (mean), align = "right"))
     
-    variants_spline <- splinefun(seq(1, n*7, 7), df_variants_local$percent_variant, method = "monoH.FC")
-    variants_data_spline <- variants_spline(seq(1, length(seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1))))
+    variants_data_spline <- df_variants_local
+    if(!daily_variants_data){
+      variants_spline <- splinefun(seq(1, n*7, 7), df_variants_local$percent_variant, method = "monoH.FC")
+      variants_data_spline <- variants_spline(seq(1, length(seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1))))
+    }
+    
     variants_data_spline[variants_data_spline < 0] <- 0
-    
+      
     variants_spline_df <- data.frame(date=seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1), y=variants_data_spline, variant=rep(v, length(variants_data_spline)))
     
     variants_global_df <- rbind(variants_global_df, variants_spline_df)
@@ -188,12 +192,11 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
 #   - results_all:                infection, recovery and fatality rates extracted from the SIRD model
 #   - immunization_end_rate:      immunization end rate
 #   - N:                          total population
-#   - daily_spline            true if we approximate daily data with a spline, false otherwise
 #
 # Output:
 #   - SIRD_all_variants:      evolution of the infection using a SIvRD model
 #   - df_all_variants:        infection, recovery and fatality rates extracted from the SIvRD model for each variant
-SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N, daily_spline){
+SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N){
   variants_name <- unique(df_variants$variant)
   
   SIRD_all_used <- SIRD_all

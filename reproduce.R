@@ -33,6 +33,9 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 daily_spline <- FALSE
 variants <- TRUE
 
+# Set this flag to true if data related to variants are daily, false if thery are weekly
+daily_variants_data <- FALSE
+
 # Forecast or only extract the rates?
 forecast <- TRUE
 
@@ -79,4 +82,4 @@ data <- prepare_data(country, global_initial_date, global_final_date, immunizati
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates)
+Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates)
