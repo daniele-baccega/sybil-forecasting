@@ -196,7 +196,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   final_quarter_number <- ceiling(final_month / 3)
   
   dirs <- data.frame(directory=list.dirs("aggregatesUMD", recursive = FALSE)) %>%
-    filter(directory >= paste0("aggregatesUMD/", initial_year, "-", initial_month), directory <= paste0("aggregatesUMD/", final_year, "-", final_month))
+    filter(directory >= paste0("aggregatesUMD/", initial_year, "-Q", initial_quarter_number), directory <= paste0("aggregatesUMD/", final_year, "-Q", final_quarter_number))
   
   coronasurveys_data <- NA
   for(i in 1:nrow(dirs)){
@@ -216,12 +216,12 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     }
   }
   
-  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.35)$y
+  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.5)$y
   #coronasurveys_data$p_cli <- rollmean(coronasurveys_data$p_cli, 7, align = "right", fill = NA)
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
   
   p <- ggplot(coronasurveys_data) +
-    geom_line(aes(x=as.Date(date), y=p_cli))
+   geom_line(aes(x=as.Date(date), y=p_cli))
   p
   coronasurveys_data <- coronasurveys_data %>%
     filter(!is.na(p_cli))
@@ -231,7 +231,8 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   df_disease_ref <- df_disease_ref %>%
     filter(date >= min(coronasurveys_data$date), date <= max(coronasurveys_data$date))
   df_disease_ref <- df_disease_ref %>%
-    mutate(new_cases = c(0, diff(coronasurveys_data$p_cli) + recovery_rate * coronasurveys_data$p_cli[1:(nrow(coronasurveys_data)-1)] + new_deaths[2:length(new_deaths)]))
+    mutate(new_cases = c(diff(coronasurveys_data$p_cli) + recovery_rate * coronasurveys_data$p_cli[1:(nrow(coronasurveys_data)-1)] + new_deaths[1:(nrow(coronasurveys_data)-1)], 0))
+  df_disease_ref <- df_disease_ref[1:(nrow(df_disease_ref)-1),]
   df_disease_ref <- df_disease_ref %>%
     filter(date > min(coronasurveys_data$date))
   

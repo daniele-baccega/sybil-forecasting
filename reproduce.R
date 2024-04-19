@@ -46,10 +46,10 @@ recovery_rate <- 1 / 10
 
 # Global initial and final dates
 global_initial_date <- as.Date("2020-02-24")
-global_final_date <- Sys.Date()
+global_final_date <- as.Date("2020-12-31") #Sys.Date()
 
 # To reproduce the results in the paper set the variable to TRUE
-reproduce <- TRUE
+reproduce <- FALSE
 
 if(reproduce){
   global_final_date <- as.Date("2023-06-04")
