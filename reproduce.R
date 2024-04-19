@@ -15,6 +15,7 @@ library(prophet)
 library(scales)
 library(patchwork)
 library(countrycode)
+library(xts)
 
 # Include the Sybil function and the common functions
 source("Sybil.R")

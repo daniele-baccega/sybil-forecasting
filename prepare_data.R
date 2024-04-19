@@ -216,7 +216,13 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     }
   }
   
-  coronasurveys_data$p_cli <- rollmean(coronasurveys_data$p_cli * N, 7, align = "right", fill = NA)
+  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.35)$y
+  #coronasurveys_data$p_cli <- rollmean(coronasurveys_data$p_cli, 7, align = "right", fill = NA)
+  coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
+  
+  p <- ggplot(coronasurveys_data) +
+    geom_line(aes(x=as.Date(date), y=p_cli))
+  p
   coronasurveys_data <- coronasurveys_data %>%
     filter(!is.na(p_cli))
   
