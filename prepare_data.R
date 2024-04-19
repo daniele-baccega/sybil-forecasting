@@ -200,11 +200,11 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   
   coronasurveys_data <- NA
   for(i in 1:nrow(dirs)){
-    if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv")))
-      stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country"))
+    if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
+      stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
       
     
-    coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == country)], ".csv"))
+    coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
     coronasurveys_data_local <- coronasurveys_data_local %>%
       select(date, p_cli)
     
