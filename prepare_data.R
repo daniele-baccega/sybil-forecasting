@@ -201,7 +201,8 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   coronasurveys_data <- NA
   for(i in 1:nrow(dirs)){
     if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
-      stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
+      return(NULL)
+      #stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
       
     
     coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
@@ -216,13 +217,9 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     }
   }
   
-  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.5)$y
-  #coronasurveys_data$p_cli <- rollmean(coronasurveys_data$p_cli, 7, align = "right", fill = NA)
+  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.6)$y
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
   
-  p <- ggplot(coronasurveys_data) +
-   geom_line(aes(x=as.Date(date), y=p_cli))
-  p
   coronasurveys_data <- coronasurveys_data %>%
     filter(!is.na(p_cli))
   
@@ -233,10 +230,13 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   df_disease_ref <- df_disease_ref %>%
     mutate(new_cases = c(diff(coronasurveys_data$p_cli) + recovery_rate * coronasurveys_data$p_cli[1:(nrow(coronasurveys_data)-1)] + new_deaths[1:(nrow(coronasurveys_data)-1)], 0))
   df_disease_ref <- df_disease_ref[1:(nrow(df_disease_ref)-1),]
-  df_disease_ref <- df_disease_ref %>%
-    filter(date > min(coronasurveys_data$date))
-  
+
   df_disease_ref$new_cases[which(df_disease_ref$new_cases < 0)] <- 0
+  
+  df_disease_ref <- df_disease_ref %>%
+    mutate(total_cases = coronasurveys_data$p_cli[1] + cumsum(new_cases))
+  
+  df_disease_ref <- rbind(data.frame(date=as.Date(df_disease_ref$date[1])-1, total_deaths=df_disease_ref$total_deaths[1]-df_disease_ref$new_deaths[1], population= df_disease_ref$population[1], new_deaths=0, new_cases=0, total_cases=coronasurveys_data$p_cli[1]), df_disease_ref)
   
   df_disease_ref$date <- as.Date(df_disease_ref$date)
   
@@ -303,6 +303,9 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   df_variants_init <- data[[2]]
 
   data <- compute_data(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
+  if(is.null(data))
+    return(NULL)
+  
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
   
@@ -312,7 +315,7 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   }
   
   df_disease_all <- df_disease_all %>%
-    select(date, new_cases, new_deaths, population)
+    select(date, new_cases, total_cases, new_deaths, total_deaths, population)
   
   return(list(df_variants_all, df_disease_all))
 }
