@@ -1,5 +1,5 @@
 ## WHAT'S NEW IN VERSION 2.0
-- We now use a fixed recovery rate (same for each variant for now) to dispense with data on recoveries which are ofter not available. Now we only need data on cases and fatalities.
+- We now use a fixed recovery rate (same for each variant for now) to dispense with data on recoveries which are often bad or not available. Now we only need data on cases and fatalities.
 - We included a pre-processing step using splines to fill missing data and to move from a weekly to a daily step in case of availability of data with a weekly step (without alter too much the information present in the time series).
 
 ## INTRODUCTION
