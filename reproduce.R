@@ -46,10 +46,10 @@ recovery_rate <- 1 / 10
 
 # Global initial and final dates
 global_initial_date <- as.Date("2020-02-24")
-global_final_date <- as.Date("2020-12-31") #Sys.Date()
+global_final_date <- Sys.Date()
 
 # To reproduce the results in the paper set the variable to TRUE
-reproduce <- FALSE
+reproduce <- TRUE
 
 if(reproduce){
   global_final_date <- as.Date("2023-06-04")
@@ -75,9 +75,9 @@ variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
 # Five scenarios on Italy
 external_dir_names <- c(paste0(country, "/V4/Test/"))
 
-initial_dates <- c(as.Date("2021-12-13"))
+initial_dates <- c(as.Date("2021-12-20"))
 
-final_dates <- c(as.Date("2022-01-13"))
+final_dates <- c(as.Date("2022-01-20"))
 
 data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]

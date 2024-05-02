@@ -216,7 +216,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     }
   }
   
-  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.5)$y
+  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.6)$y
   #coronasurveys_data$p_cli <- rollmean(coronasurveys_data$p_cli, 7, align = "right", fill = NA)
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
   
