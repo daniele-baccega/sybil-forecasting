@@ -39,6 +39,8 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   if(reproduce){
     updated_file <- TRUE
     covid19_data <- paste0("datasets/", country_long, "_2023-11-22.csv")
+    if(country_long %in% c("France", "Belgium"))
+      covid19_data <- paste0("datasets/", country_long, "_2024-05-02.csv")
     covid19_variants_data <- "datasets/variants_data_2023-07-25.csv"
   }
   
@@ -56,12 +58,18 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   
   # Read and preprocess the data
   df_COVID19_ref_init <- read.csv(covid19_data)
-  df_COVID19_ref_init$confirmed[is.na(df_COVID19_ref_init$confirmed)] <- 0
-  df_COVID19_ref_init$deaths[is.na(df_COVID19_ref_init$deaths)] <- 0
-  df_COVID19_ref_init$recovered[is.na(df_COVID19_ref_init$recovered)] <- 0
   df_COVID19_ref_init[df_COVID19_ref_init == ""] <- NA
+  df_COVID19_ref_init$confirmed[is.na(df_COVID19_ref_init$confirmed) & df_COVID19_ref_init$date <= "2020-04-01"] <- 0
+  df_COVID19_ref_init$deaths[is.na(df_COVID19_ref_init$deaths) & df_COVID19_ref_init$date <= "2020-04-01"] <- 0
+  
   df_COVID19_ref_init <- df_COVID19_ref_init %>%
-    filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3), !is.na(confirmed), date <= global_final_date)
+    filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3))
+  
+  df_COVID19_ref_init <- df_COVID19_ref_init %>%
+    mutate(confirmed = na.approx(confirmed, na.rm = FALSE), deaths = na.approx(deaths, na.rm = FALSE), recovered = na.approx(recovered, na.rm = FALSE))
+  
+  df_COVID19_ref_init <- df_COVID19_ref_init %>%
+    filter(!is.na(confirmed), !is.na(deaths), !is.na(recovered), date <= global_final_date)
   
   df_variants_init <- data.frame()
   if(variants){
@@ -232,7 +240,7 @@ compute_data <- function(dir_name, df_COVID19_ref, df_variants_ref, immunization
         filter(!(year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]))
       
       df_variants_ref <- df_variants_ref %>%
-        filter(!(year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)])) %>%
+        filter(!((year == df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)] & week > df_COVID19_ref_weekly_variants$week[nrow(df_COVID19_ref_weekly_variants)]) | (year == df_COVID19_ref_weekly_variants$year[1] & week < df_COVID19_ref_weekly_variants$week[1]) | year > df_COVID19_ref_weekly_variants$year[nrow(df_COVID19_ref_weekly_variants)])) %>%
         arrange(variant)
       
       df_variants_ref$date <- rep(df_COVID19_ref_weekly_variants$date, length(unique(df_variants_ref$variant)))

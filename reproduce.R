@@ -245,3 +245,53 @@ final_dates <- c(as.Date("2022-02-01"),
                  as.Date("2020-06-10"))
 
 Sybil(variants, global_final_date, country, external_dir_names, immunization_end_rate, reproduce, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+
+
+
+# Scenarios with France (V=4)
+country <- "France"
+
+if(!file.exists(country)){
+  system(paste0("mkdir -p ", country))
+  system(paste0("mkdir -p ", country, "/V4"))
+}
+
+variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "SGTF", "UNK")
+variants_aggregated <- list(Alpha = c("B.1.1.7"),
+                            Delta = c("B.1.617.2"),
+                            Omicron = c("BA.1", "BA.2", "BA.2.75", "BA.2.86", "BA.4", "BA.5", "BQ.1", "XBB", "XBB.1.5", "XBB.1.5-like", "XBB.1.5+F456L", "XBB.1.5-like+F456L"),
+                            Other = c("B.1.351", "B.1.427/B.1.429", "B.1.525", "B.1.616", "B.1.617.1", "B.1.620", "B.1.621", "C.37", "P.1", "P.3", "B.1.427-B.1.429", "Other"))
+variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
+
+external_dir_names <- c(paste0(country, "/V4/FirstScenario/"))
+
+initial_dates <- c(as.Date("2020-07-01"))
+
+final_dates <- c(as.Date("2020-08-01"))
+
+Sybil(variants, global_final_date, country, external_dir_names, immunization_end_rate, reproduce, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+
+
+
+# Scenarios with Belgium (V=4)
+country <- "Belgium"
+
+if(!file.exists(country)){
+  system(paste0("mkdir -p ", country))
+  system(paste0("mkdir -p ", country, "/V4"))
+}
+
+variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "SGTF", "UNK")
+variants_aggregated <- list(Alpha = c("B.1.1.7"),
+                            Delta = c("B.1.617.2"),
+                            Omicron = c("BA.1", "BA.2", "BA.2.75", "BA.2.86", "BA.4", "BA.5", "BQ.1", "XBB", "XBB.1.5", "XBB.1.5-like", "XBB.1.5+F456L", "XBB.1.5-like+F456L"),
+                            Other = c("B.1.351", "B.1.427/B.1.429", "B.1.525", "B.1.616", "B.1.617.1", "B.1.620", "B.1.621", "C.37", "P.1", "P.3", "B.1.427-B.1.429", "Other"))
+variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
+
+external_dir_names <- c(paste0(country, "/V4/FirstScenario/"))
+
+initial_dates <- c(as.Date("2020-08-31"))
+
+final_dates <- c(as.Date("2020-09-30"))
+
+Sybil(variants, global_final_date, country, external_dir_names, immunization_end_rate, reproduce, initial_dates, final_dates, variants_to_disregard, variants_aggregated, variants_aggregated_names)
