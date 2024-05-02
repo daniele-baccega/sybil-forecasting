@@ -1,0 +1,21 @@
+{
+    "debugBreakpointsState": {
+        "breakpoints": [
+            {
+                "id": 12,
+                "path": "~/Desktop/PhD/sybil-forecasting/prepare_data.R",
+                "line_number": 219,
+                "function_steps": "13",
+                "function_name": "compute_data",
+                "state": 1,
+                "editor_state": 1,
+                "editor_line_number": 219,
+                "is_pending_debug_completion": false,
+                "needs_updated_steps": false,
+                "type": 0,
+                "is_package_breakpoint": false,
+                "package_name": ""
+            }
+        ]
+    }
+}
