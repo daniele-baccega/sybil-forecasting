@@ -30,9 +30,6 @@ compartmental_models <- function(dir_name, df_disease_ref, df_variants_ref, immu
     N <- df_disease_ref$population[1]
     n <- nrow(df_disease_ref)
     
-    df_disease_ref <- df_disease_ref %>%
-      mutate(total_cases = cumsum(new_cases), total_deaths = cumsum(new_deaths))
-    
     if(!daily_spline){
       # Build the SIRD model from the data
       S_local <- I_local <- R_local <- D_local <- rep(0, n)
