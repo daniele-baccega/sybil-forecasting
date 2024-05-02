@@ -11,7 +11,7 @@ Establishing a continuous monitoring system aids policymakers in effectively man
 This proactive approach enhances preparedness and is critical in curbing the spread of infectious diseases and mitigating their impact on communities worldwide.
 
 ## WHAT IS THIS?
-we propose **Sybil**, an integrated machine learning and variant-aware compartmental model framework capable of providing improved prediction accuracy and explainability.
+We propose **Sybil**, an integrated machine learning and variant-aware compartmental model framework capable of providing improved prediction accuracy and explainability.
 Sybil exploits the relative stability of disease characteristics indices to project in the future and employs a simple and widely recognized analytical model to draw the infection dynamic.
 Sybil’s strengths mark the difference with approaches present in the literature thanks to _i)_ its capability of providing accurate forecasts, even when there are relevant changes in the diffusion process, and _ii)_ reduced need for training data. 
 Furthermore, the approach offers _iii)_ the possibility to study the evolution of the infection of several variants and _iv)_ the replicability of the results. Additionally, _v)_ the open-source code is available online.
