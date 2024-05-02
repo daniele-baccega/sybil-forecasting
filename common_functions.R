@@ -39,6 +39,8 @@ download_files_and_load_data <- function(country_long, global_final_date, reprod
   if(reproduce){
     updated_file <- TRUE
     covid19_data <- paste0("datasets/", country_long, "_2023-11-22.csv")
+    if(country_long %in% c("France", "Germany", "Sweden", "Belgium"))
+      covid19_data <- paste0("datasets/", country_long, "_2024-05-02.csv")
     covid19_variants_data <- "datasets/variants_data_2023-07-25.csv"
   }
   
