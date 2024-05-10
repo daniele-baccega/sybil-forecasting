@@ -487,6 +487,155 @@ apply_Prophet <- function(dir_name, date, values, time_step, file_name, mcmc_sam
   return(forecast)
 }
 
+# Applies Neural Prophet.
+#
+# Inputs:
+#   - dir_name:                 name of the directory in which put the results
+#   - date:                     training dates
+#   - values:                   training values
+#   - time_step:                time window to forecast
+#   - variant:                  variant
+#
+# Output:
+#   - forecast:                 forecast
+apply_NeuralProphet <- function(dir_name, date, values, time_step, variant){
+  prophet_df <- data.frame(ds=date, y=values)
+
+  write.csv(prophet_df, paste0(dir_name, "neural_prophet_models/neural_prophet_data_", variant, ".csv"), row.names = FALSE)
+  
+  system(paste0("bash neural_prophet.sh ", dir_name, "neural_prophet_models/ ", variant))
+}
+
+# Applies ARIMA.
+#
+# Inputs:
+#   - dir_name:                 name of the directory in which put the results
+#   - date:                     training dates
+#   - values:                   training values
+#   - time_step:                time window to forecast
+#   - file_name:                path in which to save/load the forecast
+#
+# Output:
+#   - forecast:                 forecast
+apply_Arima<- function(dir_name, date, values, time_step, file_name){
+  path <- paste0(dir_name, "/arima_models/model_", file_name, ".RData")
+  
+  if(file.exists(path)){
+    load(path)
+  }
+  else{
+    m <- auto.arima(values, seasonal = FALSE)
+    save(m, file=path)
+  }
+  
+  forecast <- forecast(m, h = time_step)
+  
+  return(forecast)
+}
+
+# Applies SARIMA.
+#
+# Inputs:
+#   - dir_name:                 name of the directory in which put the results
+#   - date:                     training dates
+#   - values:                   training values
+#   - time_step:                time window to forecast
+#   - file_name:                path in which to save/load the forecast
+#
+# Output:
+#   - forecast:                 forecast
+apply_seasonal_Arima <- function(dir_name, date, values, time_step, file_name){
+  path <- paste0(dir_name, "/sarima_models/model_", file_name, ".RData")
+  
+  if(file.exists(path)){
+    load(path)
+  }
+  else{
+    m <- auto.arima(values, seasonal = TRUE)
+    save(m, file=path)
+  }
+  
+  forecast <- forecast(m, h = time_step)
+  
+  return(forecast)
+}
+
+# Applies LSTM (python)
+#
+# Inputs:
+#   - dir_name:                 name of the directory in which put the results
+#   - date:                     training dates
+#   - values:                   training values
+#   - time_step:                time window to forecast
+#   - variant:                  variant
+#
+# Output:
+#   - forecast:                 forecast
+apply_LSTM <- function(dir_name, date, values, time_step, variant){
+  lstm_df <- data.frame(ds=date, y=values)
+  
+  write.csv(lstm_df, paste0(dir_name, "lstm_models/lstm_data_", variant, ".csv"), row.names = FALSE)
+  
+  system(paste0("bash lstm.sh ", dir_name, "lstm_models/ ", variant))
+}
+
+# Applies GRU (python)
+#
+# Inputs:
+#   - dir_name:                 name of the directory in which put the results
+#   - date:                     training dates
+#   - values:                   training values
+#   - time_step:                time window to forecast
+#   - variant:                  variant
+#
+# Output:
+#   - forecast:                 forecast
+apply_GRU <- function(dir_name, date, values, time_step, variant){
+  gru_df <- data.frame(ds=date, y=values)
+  
+  write.csv(gru_df, paste0(dir_name, "gru_models/gru_data_", variant, ".csv"), row.names = FALSE)
+
+  system(paste0("bash gru.sh ", dir_name, "gru_models/ ", variant))
+}
+
+# Applies EpiNow.
+#
+# Inputs:
+#   - date:                     training dates
+#   - values:                   training values
+#
+# Output:
+#   - forecast:                 forecast
+apply_EpiNow <- function(date, values){
+  epinow_df <- data.frame(date=as.Date(as.numeric(date)), confirm=as.integer(exp(values)))
+  
+  generation_time <- get_generation_time(
+    disease = "SARS-CoV-2", source = "ganyani", max = 10, fixed = TRUE
+  )
+  
+  incubation_period <- get_incubation_period(
+    disease = "SARS-CoV-2", source = "lauer", max = 10, fixed = TRUE
+  )
+  
+  reporting_delay <- dist_spec(
+    mean = convert_to_logmean(2, 1), sd = convert_to_logsd(2, 1), max = 10,
+    dist = "lognormal"
+  )
+  
+  estimates <- epinow(
+    reported_cases = epinow_df,
+    generation_time = generation_time_opts(generation_time),
+    delays = delay_opts(incubation_period + reporting_delay),
+    rt = rt_opts(prior = list(mean = 2, sd = 0.2)),
+    stan = stan_opts(cores = 4, control = list(adapt_delta = 0.99)),
+    horizon = 28,
+    verbose = TRUE)
+  
+  forecast <- estimates$estimated_reported_cases$summarised$mean[(length(date)+1):length(estimates$estimated_reported_cases$summarised$mean)]
+
+  return(forecast)
+}
+
 # Evolution of the deterministic SIRD model.
 #
 # Inputs:
@@ -601,6 +750,20 @@ SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infec
   return(SIRD_ev)
 }
 
+# Compute Root Mean Squared Error
+#
+# Input:
+#   - actual:    ground-truth
+#   - predicted: predictions
+#
+# Output:
+#   - error:     rmse between actual and predicted
+rmse <- function(actual, predicted) {
+  error <- sqrt(mean((actual - predicted)^2))
+  
+  return(error)
+}
+
 # Compute the forecast error between the two considered approaches.
 #
 # Input:
@@ -611,20 +774,24 @@ SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infec
 #   - time_step:      time window to forecast
 #   - dir_name:       name of the directory in which put the results
 #   - variants:       true if we are considering variants, false otherwise
-compute_error <- function(real, computed_I, computed_rates, final_date, time_step, dir_name, variants){
+compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasonal_Arima, computed_I_EpiNow, computed_rates, final_date, time_step, dir_name, variants){
   if(!file.exists(paste0(dir_name, "/errors"))){
     system(paste0("mkdir ", dir_name, "/errors"))
   }
-  
-  absolute_error_I <- rep(0, time_step)
-  relative_error_I <- rep(0, time_step)
-  absolute_error_rates <- rep(0, time_step)
-  relative_error_rates <- rep(0, time_step)
   
   real <- real %>%
     filter(date > final_date - time_step)
   
   computed_I <- computed_I %>%
+    filter(date > final_date - time_step)
+  
+  computed_I_Arima <- computed_I_Arima %>%
+    filter(date > final_date - time_step)
+  
+  computed_I_seasonal_Arima <- computed_I_seasonal_Arima %>%
+    filter(date > final_date - time_step)
+  
+  computed_I_EpiNow <- computed_I_EpiNow %>%
     filter(date > final_date - time_step)
   
   computed_rates <- computed_rates %>%
@@ -633,51 +800,69 @@ compute_error <- function(real, computed_I, computed_rates, final_date, time_ste
   if(variants){
     variants_name <- unique(computed_rates$variant)
     for(v in variants_name){
+      computed_I_neural_prophet_local <- rep(0, time_step)
+      computed_I_lstm_local <- rep(0, time_step)
+      computed_I_gru_local <- rep(0, time_step)
+      if(file.exists(paste0(dir_name, "neural_prophet_models/forecast_", time_step, "_", v, ".csv"))){
+        computed_I_neural_prophet_local <- read.csv(paste0(dir_name, "neural_prophet_models/forecast_", time_step, "_", v, ".csv"), col.names = c("time", "value"))$value
+      }
+      
+      if(file.exists(paste0(dir_name, "lstm_models/forecast_", time_step, "_", v, ".csv"))){
+        computed_I_lstm_local <- read.csv(paste0(dir_name, "lstm_models/forecast_", time_step, "_", v, ".csv"), col.names = c("time", "value"))$value
+      }
+
+      if(file.exists(paste0(dir_name, "gru_models/forecast_", time_step, "_", v, ".csv"))){
+        computed_I_gru_local <- read.csv(paste0(dir_name, "gru_models/forecast_", time_step, "_", v, ".csv"), col.names = c("time", "value"))$value
+      }
+            
       real_local <- real %>%
         filter(variant == v)
       
       computed_I_local <- computed_I %>%
         filter(variant == v)
       
-      absolute_error_I_local <- abs(real_local$I - computed_I_local$mean)
-      relative_error_I_local <- absolute_error_I_local / real_local$I
-      relative_error_I_local[which(is.na(relative_error_I_local))] <- 0
+      computed_I_Arima_local <- computed_I_Arima %>%
+        filter(variant == v)
       
-      relative_error_I <- relative_error_I + relative_error_I_local
+      computed_I_seasonal_Arima_local <- computed_I_seasonal_Arima %>%
+        filter(variant == v)
       
+      computed_I_EpiNow_local <- computed_I_EpiNow %>%
+        filter(variant == v)
       
       computed_rates_local <- computed_rates %>%
         filter(variant == v)
       
-      absolute_error_rates_local <- abs(real_local$I - computed_rates_local$I)
-      relative_error_rates_local <- absolute_error_rates_local / real_local$I
-      relative_error_rates_local[which(is.na(relative_error_rates_local))] <- 0
       
-      relative_errors_df_local <- data.frame(min=c(min(relative_error_I_local), min(relative_error_rates_local)), max=c(max(relative_error_I_local), max(relative_error_rates_local)), mean=c(mean(relative_error_I_local), mean(relative_error_rates_local)), var=c(var(relative_error_I_local), var(relative_error_rates_local)), sd=c(sd(relative_error_I_local), sd(relative_error_rates_local)))
-      write.csv(file = paste0(dir_name, "/errors/errors_", v, "_", time_step, ".csv"), x = relative_errors_df_local)
+      rmse_I_local <- rmse(real_local$I, computed_I_local$mean)
+      rmse_I_Arima_local <- rmse(real_local$I, computed_I_Arima_local$mean)
+      rmse_I_seasonal_Arima_local <- rmse(real_local$I, computed_I_seasonal_Arima_local$mean)
+      rmse_I_neural_prophet_local <- rmse(real_local$I, computed_I_neural_prophet_local)
+      rmse_I_lstm_local <- rmse(real_local$I, computed_I_lstm_local)
+      rmse_I_gru_local <- rmse(real_local$I, computed_I_gru_local)
+      rmse_I_EpiNow_local <- rmse(real_local$I, computed_I_EpiNow_local)
+      rmse_rates_local <- rmse(real_local$I, computed_rates_local$I)
       
-      relative_error_rates <- relative_error_rates + relative_error_rates_local
+      rmse_df_local <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), value=c(rmse_I_local, rmse_I_Arima_local, rmse_I_seasonal_Arima_local, rmse_I_neural_prophet_local, rmse_I_lstm_local, rmse_I_gru_local, rmse_I_EpiNow_local, rmse_rates_local))
+      write.csv(file = paste0(dir_name, "/errors/rmse_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
     }
-    
-    relative_error_I <- relative_error_I / length(variants_name)
-    relative_error_rates <- relative_error_rates / length(variants_name)
   }
   else{
-    absolute_error_I_local <- abs(real$I - computed_I$mean)
-    relative_error_I_local <- absolute_error_I_local / real$I
-    relative_error_I_local[which(is.na(relative_error_I_local))] <- 0
+    computed_I_neural_prophet <- read_csv(paste0(dir_name, "neural_prophet_models/forecast_", time_step, "_all.csv"), col_names = c("time", "value"))
+    computed_I_lstm <- read_csv(paste0(dir_name, "lstm_models/forecast_", time_step, "_all.csv"), col_names = c("time", "value"))
+    computed_I_gru <- read_csv(paste0(dir_name, "gru_models/forecast_", time_step, "_all.csv"), col_names = c("time", "value"))
     
-    relative_error_I <- relative_error_I + relative_error_I_local
+    rmse_I <- rmse(real$I, computed_I$mean)
+    rmse_I_Arima <- rmse(real$I, computed_I_Arima$mean)
+    rmse_I_seasonal_Arima <- rmse(real$I, computed_I_seasonal_Arima$mean)
+    rmse_I_neural_prophet <- rmse(real$I, computed_I_neural_prophet$mean)
+    rmse_I_lstm <- rmse(real$I, computed_I_lstm)
+    rmse_I_gru <- rmse(real$I, computed_I_gru)
+    rmse_I_EpiNow <- rmse(real$I, computed_I_EpiNow)
+    rmse_rates <- rmse(real$I, computed_rates$I)
+  
     
-    
-    absolute_error_rates_local <- abs(real$I - computed_rates$I)
-    relative_error_rates_local <- absolute_error_rates_local / real$I
-    relative_error_rates_local[which(is.na(relative_error_rates_local))] <- 0
-    
-    relative_error_rates <- relative_error_rates + relative_error_rates_local
+    rmse_df <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), value=c(rmse_I, rmse_I_Arima, rmse_I_seasonal_Arima, rmse_I_neural_prophet, rmse_I_lstm, rmse_I_gru, rmse_I_EpiNow, rmse_rates))
+    write.csv(file = paste0(dir_name, "/errors/rmse_", time_step, ".csv"), x = rmse_df, row.names = FALSE, col.names = FALSE)  
   }
-  
-  relative_errors_df <- data.frame(min=c(min(relative_error_I), min(relative_error_rates)), max=c(max(relative_error_I), max(relative_error_rates)), mean=c(mean(relative_error_I), mean(relative_error_rates)), var=c(var(relative_error_I), var(relative_error_rates)), sd=c(sd(relative_error_I), sd(relative_error_rates)))
-  
-  write.csv(file = paste0(dir_name, "/errors/errors_", time_step, ".csv"), x = relative_errors_df)
 }

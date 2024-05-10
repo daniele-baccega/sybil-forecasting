@@ -50,6 +50,11 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
     if(!file.exists(dir_name)){
       system(paste0("mkdir -p ", dir_name))
       system(paste0("mkdir -p ", dir_name, "/prophet_models"))
+      system(paste0("mkdir -p ", dir_name, "/neural_prophet_models"))
+      system(paste0("mkdir -p ", dir_name, "/arima_models"))
+      system(paste0("mkdir -p ", dir_name, "/sarima_models"))
+      system(paste0("mkdir -p ", dir_name, "/lstm_models"))
+      system(paste0("mkdir -p ", dir_name, "/gru_models"))
       system(paste0("mkdir -p ", dir_name, "/data"))
       system(paste0("mkdir -p ", dir_name, "/forecast_plot"))
       
@@ -120,8 +125,6 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
       rec_rates_log <- log(unique(results_used$rec_rates))
       fc_rec_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(rec_rates_log)+1):nrow(df_COVID19_used)], rec_rates_log, time_steps[i], "rec_rate", mcmc_samples)
       fc_rec_rate$yhat <- exp(fc_rec_rate$yhat)
-      fc_rec_rate$yhat_lower <- exp(fc_rec_rate$yhat_lower)
-      fc_rec_rate$yhat_upper <- exp(fc_rec_rate$yhat_upper)
       forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, results_ref_used$rec_rates, fc_rec_rate, time_steps[i], "recovery_rates")
       
       
@@ -130,18 +133,18 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
       fat_rates_log <- log(unique(results_used$fat_rates))
       fc_fat_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(fat_rates_log)+1):nrow(df_COVID19_used)], fat_rates_log, time_steps[i], "fat_rate", mcmc_samples)
       fc_fat_rate$yhat <- exp(fc_fat_rate$yhat)
-      fc_fat_rate$yhat_lower <- exp(fc_fat_rate$yhat_lower)
-      fc_fat_rate$yhat_upper <- exp(fc_fat_rate$yhat_upper)
       forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, results_ref_used$fat_rates, fc_fat_rate, time_steps[i], "fatality_rates")
-      
       
       if(variants){
         variants_name <- unique(df_variants_processed$variant)
         plot_I_variants(dir_name, SIRD_all_variants, variants_name, final_dates)
         
-        infection_rates <- data.frame()
-        I <- data.frame()
-        
+        infection_rates <- data.frame(date=NULL, variant=NULL, mean=NULL)
+        I <- data.frame(date=NULL, variant=NULL, mean=NULL)
+        I_Arima <- data.frame(date=NULL, variant=NULL, mean=NULL)
+        I_seasonal_Arima <- data.frame(date=NULL, variant=NULL, mean=NULL)
+        I_EpiNow <- data.frame(date=NULL, variant=NULL, mean=NULL)
+
         for(k in 1:length(variants_name)){
           results_used_local <- results_used %>%
             filter(variant == variants_name[k])
@@ -162,35 +165,59 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
             infection_rates_log <- log(results_used_local$infection_rates)
             fc_inf_rate <- apply_Prophet(dir_name, df_COVID19_used$date[(nrow(df_COVID19_used)-length(infection_rates_log)+1):nrow(df_COVID19_used)], infection_rates_log, time_steps[i], paste0("inf_rate_", variants_name[k]), mcmc_samples)
             fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
-            fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
-            fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
           }
           else{
-            fc_inf_rate <- data.frame(yhat=rep(0, time_steps[i]), yhat_lower=rep(0, time_steps[i]), yhat_upper=rep(0, time_steps[i]))
+            fc_inf_rate <- data.frame(yhat=rep(0.0, time_steps[i]))
           }
           
           forecast_plot(paste0(dir_name, "/forecast_plot/infection_rates"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, results_ref_used_local$infection_rates, fc_inf_rate, time_steps[i], paste0("infection_rates_", variants_name[k]))
           
-          infection_rates_local <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
+          infection_rates_local <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_inf_rate$yhat)
           infection_rates <- rbind(infection_rates, infection_rates_local)
           
           if(sum(SIRD_used_local$I) > 0){
             # Forecast on I
             SIRD_used_local$I[which(SIRD_used_local$I == 0)] <- min(SIRD_used_local$I[which(SIRD_used_local$I != 0)])
             I_log <- log(SIRD_used_local$I)
+            
             fc_I <- apply_Prophet(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k]), mcmc_samples)
             fc_I$yhat <- exp(fc_I$yhat)
-            fc_I$yhat_lower <- exp(fc_I$yhat_lower)
-            fc_I$yhat_upper <- exp(fc_I$yhat_upper)
+            
+            fc_I_Arima <- apply_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k], "_ARIMA"))
+            fc_I_Arima$mean <- exp(fc_I_Arima$mean)
+            
+            fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k], "_SARIMA"))
+            fc_I_seasonal_Arima$mean <- exp(fc_I_seasonal_Arima$mean)
+            
+            if(i == 1){
+              apply_NeuralProphet(dir_name, df_COVID19_used$date, I_log, time_steps[i], variants_name[k])
+              apply_LSTM(dir_name, df_COVID19_used$date, I_log, time_steps[i], variants_name[k])
+              apply_GRU(dir_name, df_COVID19_used$date, I_log, time_steps[i], variants_name[k])
+              epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_log)
+            }
+            
+            I_local_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=as.vector(fc_I_Arima$mean))
+            I_local_seasonal_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=as.vector(fc_I_seasonal_Arima$mean))
           }
           else{
-            fc_I <- data.frame(yhat=rep(0, time_steps[i]), yhat_lower=rep(0, time_steps[i]), yhat_upper=rep(0, time_steps[i]))
+            fc_I <- data.frame(yhat=rep(0.0, time_steps[i]))
+            fc_I_Arima <- data.frame(mean=rep(0.0, time_steps[i]))
+            fc_I_seasonal_Arima <- data.frame(mean=rep(0.0, time_steps[i]))
+            epinow_forecast <- rep(0.0, time_steps[i])
+            
+            I_local_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I_Arima$mean)
+            I_local_seasonal_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I_seasonal_Arima$mean)
           }
           
           forecast_plot(paste0(dir_name, "/forecast_plot/I"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_COVID19_used$date, df_COVID19_ref_used$date, SIRD_ref_used_local$I, fc_I, time_steps[i], paste0("I_", variants_name[k]))
           
-          I_local <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I$yhat, lower=fc_I$yhat_lower, upper=fc_I$yhat_upper)
+          I_local <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I$yhat)
+          I_local_EpiNow <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=epinow_forecast[1:time_steps[i]])
+          
           I <- rbind(I, I_local)
+          I_Arima <- rbind(I_Arima, I_local_Arima)
+          I_seasonal_Arima <- rbind(I_seasonal_Arima, I_local_seasonal_Arima)
+          I_EpiNow <- rbind(I_EpiNow, I_local_EpiNow)
         }
         
         global_infection_rates <- results_all %>%
@@ -204,18 +231,16 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
         infection_rates_log[which(is.infinite(infection_rates_log) | is.na(infection_rates_log))] <- 0
         fc_inf_rate <- apply_Prophet(dir_name, global_infection_rates$date, infection_rates_log, time_steps[i], "global_inf_rate", mcmc_samples)
         fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
-        fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
-        fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
         forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, global_infection_rates$date, global_infection_rates_ref$date, global_infection_rates_ref$infection_rates, fc_inf_rate, time_steps[i], "infection_rates")
         
-        global_infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
-        global_recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
-        global_fatality_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat, lower=fc_fat_rate$yhat_lower, upper=fc_fat_rate$yhat_upper)
+        global_infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat)
+        global_recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat)
+        global_fatality_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat)
         
         
         # Plot the forecast and the comparisons
         SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, I, SIRD_used, SIRD_ref_used, N[1], variants)
-        compute_error(SIRD_ref_used, I, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants)
+        compute_error(SIRD_ref_used, I, I_Arima, I_seasonal_Arima, I_EpiNow, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants)
       }
       else{
         # Forecast on infection rates
@@ -223,8 +248,6 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
         infection_rates_log[which(is.infinite(infection_rates_log) | is.na(infection_rates_log))] <- 0
         fc_inf_rate <- apply_Prophet(dir_name, SIRD_used$date, infection_rates_log, time_steps[i], "inf_rate", mcmc_samples)
         fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
-        fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
-        fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
         forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, results_ref_used$infection_rates, fc_inf_rate, time_steps[i], "infection_rates")
         
         # Forecast on I
@@ -232,19 +255,34 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
         I_log[which(is.infinite(I_log) | is.na(I_log))] <- 0
         fc_I <- apply_Prophet(dir_name, SIRD_used$date, I_log, time_steps[i], "I", mcmc_samples)
         fc_I$yhat <- exp(fc_I$yhat)
-        fc_I$yhat_lower <- exp(fc_I$yhat_lower)
-        fc_I$yhat_upper <- exp(fc_I$yhat_upper)
         forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, SIRD_ref_used$I, fc_I, time_steps[i], "I")  
         
-        infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
-        recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
-        fatality_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat, lower=fc_fat_rate$yhat_lower, upper=fc_fat_rate$yhat_upper)
+        # Apply auto.arima and auto.arima with seasonality
+        fc_I_Arima <- apply_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], "I_ARIMA")
+        fc_I_Arima$mean <- exp(fc_I_Arima$mean)
         
-        I <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_I$yhat, lower=fc_I$yhat_lower, upper=fc_I$yhat_upper)
+        fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], "I_SARIMA")
+        fc_I_seasonal_Arima$mean <- exp(fc_I_seasonal_Arima$mean)
+        
+        if(i == 1){
+          apply_NeuralProphet(dir_name, df_COVID19_used$date, I_log, time_steps[i], "all")
+          apply_LSTM(dir_name, df_COVID19_used$date, I_log, time_steps[i], "all")
+          apply_GRU(dir_name, df_COVID19_used$date, I_log, time_steps[i], "all")
+          epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_log)
+        }
+
+        infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat)
+        recovery_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat)
+        fatality_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat)
+        
+        I <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_I$yhat)
+        I_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I_Arima$mean)
+        I_seasonal_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=fc_I_seasonal_Arima$mean)
+        I_EpiNow <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=epinow_forecast[1:time_steps[i]])
         
         # Plot the forecast and the comparisons
         SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, immunization_end_rate, fc_I$yhat, SIRD_used, SIRD_ref_used, N[1], variants)
-        compute_error(SIRD_ref_used, I, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants)
+        compute_error(SIRD_ref_used, I, I_Arima, I_seasonal_Arima, I_EpiNow, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants)
       }
     }
     

@@ -339,10 +339,8 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
     date <- c(dates_ref[1:n], dates_ref[n:n_ref], dates_ref[n:n_ref])
     
     value <- c(data_ref[1:n], data_ref[n:n_ref], data_ref[n], data_fc$yhat)
-    low <- c(rep(NA, n_ref+1), data_ref[n], data_fc$yhat_lower)
-    up <- c(rep(NA, n_ref+1), data_ref[n], data_fc$yhat_upper)
     
-    df_plot <- data.frame(date, value, low, up, type)
+    df_plot <- data.frame(date, value, type)
   }
   else{
     type <- rep(NA, n_ref + 1)
@@ -353,10 +351,8 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
     date <- c(dates, seq(as.Date(dates[n]), final_date, q))
     
     value <- c(data_ref[1:n], data_ref[n], data_fc$yhat)
-    low <- c(rep(NA, n), data_ref[n], data_fc$yhat_lower)
-    up <- c(rep(NA, n), data_ref[n], data_fc$yhat_upper)
     
-    df_plot <- data.frame(date, value, low, up, type)
+    df_plot <- data.frame(date, value, type)
   }
   
   plot <- ggplot(df_plot, aes(x=date, col=type)) +

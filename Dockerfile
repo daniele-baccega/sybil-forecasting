@@ -8,7 +8,12 @@ COPY Sybil.R .
 COPY common_functions.R .
 COPY plots.R .
 COPY plots_ascending_scenarios.R .
-COPY datasets .
+COPY neural_prophet.sh .
+COPY neural_prophet.py .
+COPY lstm.sh .
+COPY lstm.py .
+COPY gru.sh .
+COPY gru.py .
 
 ## Run the script
 CMD Rscript reproduce.R

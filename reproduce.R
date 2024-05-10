@@ -14,6 +14,7 @@ library(COVID19)
 library(prophet)
 library(scales)
 library(patchwork)
+library(EpiNow2)
 
 
 # Include the Sybil function and the common functions
@@ -23,7 +24,6 @@ source("plots_ascending_scenarios.R")
 source("common_functions.R")
 
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
-
 
 # Select the configuration (with or without variants)
 # To reproduce the results set the variable to TRUE
