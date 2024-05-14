@@ -178,22 +178,19 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
           if(sum(SIRD_used_local$I) > 0){
             # Forecast on I
             SIRD_used_local$I[which(SIRD_used_local$I == 0)] <- min(SIRD_used_local$I[which(SIRD_used_local$I != 0)])
-            I_log <- log(SIRD_used_local$I)
+            I_plain <- SIRD_used_local$I
             
-            fc_I <- apply_Prophet(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k]), mcmc_samples)
-            fc_I$yhat <- exp(fc_I$yhat)
-            
-            fc_I_Arima <- apply_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k], "_ARIMA"))
-            fc_I_Arima$mean <- exp(fc_I_Arima$mean)
-            
-            fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], paste0("I_", variants_name[k], "_SARIMA"))
-            fc_I_seasonal_Arima$mean <- exp(fc_I_seasonal_Arima$mean)
-            
+            fc_I <- apply_Prophet(dir_name, df_COVID19_used$date, I_plain, time_steps[i], paste0("I_", variants_name[k]), mcmc_samples)
+
+            fc_I_Arima <- apply_Arima(dir_name, df_COVID19_used$date, I_plain, time_steps[i], paste0("I_", variants_name[k], "_ARIMA"))
+
+            fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_plain, time_steps[i], paste0("I_", variants_name[k], "_SARIMA"))
+
             if(i == 1){
-              apply_NeuralProphet(dir_name, df_COVID19_used$date, I_log, time_steps[i], variants_name[k])
-              apply_LSTM(dir_name, df_COVID19_used$date, I_log, time_steps[i], variants_name[k])
-              apply_GRU(dir_name, df_COVID19_used$date, I_log, time_steps[i], variants_name[k])
-              epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_log)
+              apply_NeuralProphet(dir_name, df_COVID19_used$date, I_plain, time_steps[i], variants_name[k])
+              apply_LSTM(dir_name, df_COVID19_used$date, I_plain, time_steps[i], variants_name[k])
+              apply_GRU(dir_name, df_COVID19_used$date, I_plain, time_steps[i], variants_name[k])
+              epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_plain)
             }
             
             I_local_Arima <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), variant=rep(variants_name[k], time_steps[i]), mean=as.vector(fc_I_Arima$mean))
@@ -251,24 +248,21 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
         forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, results_ref_used$infection_rates, fc_inf_rate, time_steps[i], "infection_rates")
         
         # Forecast on I
-        I_log <- log(SIRD_used$I)
-        I_log[which(is.infinite(I_log) | is.na(I_log))] <- 0
-        fc_I <- apply_Prophet(dir_name, SIRD_used$date, I_log, time_steps[i], "I", mcmc_samples)
-        fc_I$yhat <- exp(fc_I$yhat)
+        I_plain <- SIRD_used$I
+        I_plain[which(is.infinite(I_plain) | is.na(I_plain))] <- 0
+        fc_I <- apply_Prophet(dir_name, SIRD_used$date, I_plain, time_steps[i], "I", mcmc_samples)
         forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, SIRD_used$date, SIRD_ref_used$date, SIRD_ref_used$I, fc_I, time_steps[i], "I")  
         
         # Apply auto.arima and auto.arima with seasonality
-        fc_I_Arima <- apply_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], "I_ARIMA")
-        fc_I_Arima$mean <- exp(fc_I_Arima$mean)
-        
-        fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_log, time_steps[i], "I_SARIMA")
-        fc_I_seasonal_Arima$mean <- exp(fc_I_seasonal_Arima$mean)
-        
+        fc_I_Arima <- apply_Arima(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "I_ARIMA")
+
+        fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "I_SARIMA")
+
         if(i == 1){
-          apply_NeuralProphet(dir_name, df_COVID19_used$date, I_log, time_steps[i], "all")
-          apply_LSTM(dir_name, df_COVID19_used$date, I_log, time_steps[i], "all")
-          apply_GRU(dir_name, df_COVID19_used$date, I_log, time_steps[i], "all")
-          epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_log)
+          apply_NeuralProphet(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "all")
+          apply_LSTM(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "all")
+          apply_GRU(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "all")
+          epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_plain)
         }
 
         infection_rates <- data.frame(date=seq.Date(df_COVID19_used$date[n]+1, df_COVID19_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat)

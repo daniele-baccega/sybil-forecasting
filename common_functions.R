@@ -607,7 +607,7 @@ apply_GRU <- function(dir_name, date, values, time_step, variant){
 # Output:
 #   - forecast:                 forecast
 apply_EpiNow <- function(date, values){
-  epinow_df <- data.frame(date=as.Date(as.numeric(date)), confirm=as.integer(exp(values)))
+  epinow_df <- data.frame(date=as.Date(as.numeric(date)), confirm=as.integer(values))
   
   generation_time <- get_generation_time(
     disease = "SARS-CoV-2", source = "ganyani", max = 10, fixed = TRUE
@@ -838,16 +838,16 @@ compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasona
       
       computed_rates_local <- computed_rates %>%
         filter(variant == v)
+    
       
-      
-      rmse_I_local <- round(rmse(real_local$I, computed_I_local$mean))
-      rmse_I_Arima_local <- round(rmse(real_local$I, computed_I_Arima_local$mean))
-      rmse_I_seasonal_Arima_local <- round(rmse(real_local$I, computed_I_seasonal_Arima_local$mean))
-      rmse_I_neural_prophet_local <- round(rmse(real_local$I, computed_I_neural_prophet_local))
-      rmse_I_lstm_local <- round(rmse(real_local$I, computed_I_lstm_local))
-      rmse_I_gru_local <- round(rmse(real_local$I, computed_I_gru_local))
-      rmse_I_EpiNow_local <- round(rmse(real_local$I, computed_I_EpiNow_local$mean))
-      rmse_rates_local <- round(rmse(real_local$I, computed_rates_local$I))
+      rmse_I_local <- rmse(real_local$I, computed_I_local$mean)
+      rmse_I_Arima_local <- rmse(real_local$I, computed_I_Arima_local$mean)
+      rmse_I_seasonal_Arima_local <- rmse(real_local$I, computed_I_seasonal_Arima_local$mean)
+      rmse_I_neural_prophet_local <- rmse(real_local$I, computed_I_neural_prophet_local)
+      rmse_I_lstm_local <- rmse(real_local$I, computed_I_lstm_local)
+      rmse_I_gru_local <- rmse(real_local$I, computed_I_gru_local)
+      rmse_I_EpiNow_local <- rmse(real_local$I, computed_I_EpiNow_local$mean)
+      rmse_rates_local <- rmse(real_local$I, computed_rates_local$I)
       
       rmse_df_local <- data.frame(type=c("Sybil", "Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow2"), min=c(rmse_rates_local[[1]], rmse_I_local[[1]], rmse_I_Arima_local[[1]], rmse_I_seasonal_Arima_local[[1]], rmse_I_neural_prophet_local[[1]], rmse_I_lstm_local[[1]], rmse_I_gru_local[[1]], rmse_I_EpiNow_local[[1]]), max=c(rmse_rates_local[[2]], rmse_I_local[[2]], rmse_I_Arima_local[[2]], rmse_I_seasonal_Arima_local[[2]], rmse_I_neural_prophet_local[[2]], rmse_I_lstm_local[[2]], rmse_I_gru_local[[2]], rmse_I_EpiNow_local[[2]]), rmse=c(rmse_rates_local[[3]], rmse_I_local[[3]], rmse_I_Arima_local[[3]], rmse_I_seasonal_Arima_local[[3]], rmse_I_neural_prophet_local[[3]], rmse_I_lstm_local[[3]], rmse_I_gru_local[[3]], rmse_I_EpiNow_local[[3]]), std=c(rmse_rates_local[[4]], rmse_I_local[[4]], rmse_I_Arima_local[[4]], rmse_I_seasonal_Arima_local[[4]], rmse_I_neural_prophet_local[[4]], rmse_I_lstm_local[[4]], rmse_I_gru_local[[4]], rmse_I_EpiNow_local[[4]]))
       write.csv(file = paste0(dir_name, "/errors/metrics_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
@@ -858,14 +858,14 @@ compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasona
     computed_I_lstm <- read_csv(paste0(dir_name, "lstm_models/forecast_", time_step, "_all.csv"), col_names = c("time", "value"))
     computed_I_gru <- read_csv(paste0(dir_name, "gru_models/forecast_", time_step, "_all.csv"), col_names = c("time", "value"))
     
-    rmse_I <- round(rmse(real$I, computed_I$mean))
-    rmse_I_Arima <- round(rmse(real$I, computed_I_Arima$mean))
-    rmse_I_seasonal_Arima <- round(rmse(real$I, computed_I_seasonal_Arima$mean))
-    rmse_I_neural_prophet <- round(rmse(real$I, computed_I_neural_prophet$mean))
-    rmse_I_lstm <- round(rmse(real$I, computed_I_lstm))
-    rmse_I_gru <- round(rmse(real$I, computed_I_gru))
-    rmse_I_EpiNow <- round(rmse(real$I, computed_I_EpiNow$mean))
-    rmse_rates <- round(rmse(real$I, computed_rates$I))
+    rmse_I <- rmse(real$I, computed_I$mean)
+    rmse_I_Arima <- rmse(real$I, computed_I_Arima$mean)
+    rmse_I_seasonal_Arima <- rmse(real$I, computed_I_seasonal_Arima$mean)
+    rmse_I_neural_prophet <- rmse(real$I, computed_I_neural_prophet$mean)
+    rmse_I_lstm <- rmse(real$I, computed_I_lstm)
+    rmse_I_gru <- rmse(real$I, computed_I_gru)
+    rmse_I_EpiNow <- rmse(real$I, computed_I_EpiNow$mean)
+    rmse_rates <- rmse(real$I, computed_rates$I)
   
     
     rmse_df <- data.frame(type=c("Sybil", "Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow2"), min=c(rmse_rates[[1]], rmse_I[[1]], rmse_I_Arima[[1]], rmse_I_seasonal_Arima[[1]], rmse_I_neural_prophet[[1]], rmse_I_lstm[[1]], rmse_I_gru[[1]], rmse_I_EpiNow[[1]]), max=c(rmse_rates[[2]], rmse_I[[2]], rmse_I_Arima[[2]], rmse_I_seasonal_Arima[[2]], rmse_I_neural_prophet[[2]], rmse_I_lstm[[2]], rmse_I_gru[[2]], rmse_I_EpiNow[[2]]), rmse=c(rmse_rates[[3]], rmse_I[[3]], rmse_I_Arima[[3]], rmse_I_seasonal_Arima[[3]], rmse_I_neural_prophet[[3]], rmse_I_lstm[[3]], rmse_I_gru[[3]], rmse_I_EpiNow[[3]]), std=c(rmse_rates[[4]], rmse_I[[4]], rmse_I_Arima[[4]], rmse_I_seasonal_Arima[[4]], rmse_I_neural_prophet[[4]], rmse_I_lstm[[4]], rmse_I_gru[[4]], rmse_I_EpiNow[[4]]))

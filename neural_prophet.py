@@ -45,10 +45,10 @@ for run in range(runs):
     forecast_21_local = m.predict(df_future_21)
     forecast_28_local = m.predict(df_future_28)
 
-    forecast_7 = forecast_7 + pd.DataFrame(np.array(np.exp(forecast_7_local.loc[:, "yhat1"])))
-    forecast_14 = forecast_14 + pd.DataFrame(np.array(np.exp(forecast_14_local.loc[:, "yhat1"])))
-    forecast_21 = forecast_21 + pd.DataFrame(np.array(np.exp(forecast_21_local.loc[:, "yhat1"])))
-    forecast_28 = forecast_28 + pd.DataFrame(np.array(np.exp(forecast_28_local.loc[:, "yhat1"])))
+    forecast_7 = forecast_7 + pd.DataFrame(np.array(forecast_7_local.loc[:, "yhat1"]))
+    forecast_14 = forecast_14 + pd.DataFrame(np.array(forecast_14_local.loc[:, "yhat1"]))
+    forecast_21 = forecast_21 + pd.DataFrame(np.array(forecast_21_local.loc[:, "yhat1"]))
+    forecast_28 = forecast_28 + pd.DataFrame(np.array(forecast_28_local.loc[:, "yhat1"]))
 
 forecast_7 = forecast_7 / runs
 forecast_14 = forecast_14 / runs

@@ -85,10 +85,10 @@ for run in range(runs):
     forecast_28_local = forecast_days(model, data_scaled, 28, n_steps)
 
     # Reverse the scaling for interpretation
-    forecast_7 = forecast_7 + pd.DataFrame(np.exp(scaler.inverse_transform(forecast_7_local)))
-    forecast_14 = forecast_14 + pd.DataFrame(np.exp(scaler.inverse_transform(forecast_14_local)))
-    forecast_21 = forecast_21 + pd.DataFrame(np.exp(scaler.inverse_transform(forecast_21_local)))
-    forecast_28 = forecast_28 + pd.DataFrame(np.exp(scaler.inverse_transform(forecast_28_local)))
+    forecast_7 = forecast_7 + pd.DataFrame(scaler.inverse_transform(forecast_7_local))
+    forecast_14 = forecast_14 + pd.DataFrame(scaler.inverse_transform(forecast_14_local))
+    forecast_21 = forecast_21 + pd.DataFrame(scaler.inverse_transform(forecast_21_local))
+    forecast_28 = forecast_28 + pd.DataFrame(scaler.inverse_transform(forecast_28_local))
 
 forecast_7 = forecast_7 / runs
 forecast_14 = forecast_14 / runs
