@@ -759,9 +759,15 @@ SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infec
 # Output:
 #   - error:     rmse between actual and predicted
 rmse <- function(actual, predicted) {
-  error <- sqrt(mean((actual - predicted)^2))
+  residuals <- actual - predicted
+
+  min <- min(abs(residuals))
+  max <- max(abs(residuals))
+  std <- sqrt(mean((residuals - mean(residuals))^2))
+
+  rmse <- sqrt(mean((residuals^2)))
   
-  return(error)
+  return(list(min, max, rmse, std))
 }
 
 # Compute the forecast error between the two considered approaches.
@@ -843,8 +849,8 @@ compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasona
       rmse_I_EpiNow_local <- rmse(real_local$I, computed_I_EpiNow_local$mean)
       rmse_rates_local <- rmse(real_local$I, computed_rates_local$I)
       
-      rmse_df_local <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), value=c(rmse_I_local, rmse_I_Arima_local, rmse_I_seasonal_Arima_local, rmse_I_neural_prophet_local, rmse_I_lstm_local, rmse_I_gru_local, rmse_I_EpiNow_local, rmse_rates_local))
-      write.csv(file = paste0(dir_name, "/errors/rmse_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
+      rmse_df_local <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), min=c(rmse_I_local[[1]], rmse_I_Arima_local[[1]], rmse_I_seasonal_Arima_local[[1]], rmse_I_neural_prophet_local[[1]], rmse_I_lstm_local[[1]], rmse_I_gru_local[[1]], rmse_I_EpiNow_local[[1]], rmse_rates_local[[1]]), max=c(rmse_I_local[[2]], rmse_I_Arima_local[[2]], rmse_I_seasonal_Arima_local[[2]], rmse_I_neural_prophet_local[[2]], rmse_I_lstm_local[[2]], rmse_I_gru_local[[2]], rmse_I_EpiNow_local[[2]], rmse_rates_local[[2]]), rmse=c(rmse_I_local[[3]], rmse_I_Arima_local[[3]], rmse_I_seasonal_Arima_local[[3]], rmse_I_neural_prophet_local[[3]], rmse_I_lstm_local[[3]], rmse_I_gru_local[[3]], rmse_I_EpiNow_local[[3]], rmse_rates_local[[3]]), std=c(rmse_I_local[[4]], rmse_I_Arima_local[[4]], rmse_I_seasonal_Arima_local[[4]], rmse_I_neural_prophet_local[[4]], rmse_I_lstm_local[[4]], rmse_I_gru_local[[4]], rmse_I_EpiNow_local[[4]], rmse_rates_local[[4]]))
+      write.csv(file = paste0(dir_name, "/errors/metrics_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
     }
   }
   else{
@@ -862,7 +868,7 @@ compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasona
     rmse_rates <- rmse(real$I, computed_rates$I)
   
     
-    rmse_df <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), value=c(rmse_I, rmse_I_Arima, rmse_I_seasonal_Arima, rmse_I_neural_prophet, rmse_I_lstm, rmse_I_gru, rmse_I_EpiNow, rmse_rates))
-    write.csv(file = paste0(dir_name, "/errors/rmse_", time_step, ".csv"), x = rmse_df, row.names = FALSE, col.names = FALSE)  
+    rmse_df <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), min=c(rmse_I[[1]], rmse_I_Arima[[1]], rmse_I_seasonal_Arima[[1]], rmse_I_neural_prophet[[1]], rmse_I_lstm[[1]], rmse_I_gru[[1]], rmse_I_EpiNow[[1]], rmse_rates[[1]]), max=c(rmse_I[[2]], rmse_I_Arima[[2]], rmse_I_seasonal_Arima[[2]], rmse_I_neural_prophet[[2]], rmse_I_lstm[[2]], rmse_I_gru[[2]], rmse_I_EpiNow[[2]], rmse_rates[[2]]), rmse=c(rmse_I[[3]], rmse_I_Arima[[3]], rmse_I_seasonal_Arima[[3]], rmse_I_neural_prophet[[3]], rmse_I_lstm[[3]], rmse_I_gru[[3]], rmse_I_EpiNow[[3]], rmse_rates[[3]]), std=c(rmse_I[[4]], rmse_I_Arima[[4]], rmse_I_seasonal_Arima[[4]], rmse_I_neural_prophet[[4]], rmse_I_lstm[[4]], rmse_I_gru[[4]], rmse_I_EpiNow[[4]], rmse_rates[[4]]))
+    write.csv(file = paste0(dir_name, "/errors/metrics_", time_step, ".csv"), x = rmse_df, row.names = FALSE, col.names = FALSE)  
   }
 }
