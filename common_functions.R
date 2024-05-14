@@ -843,7 +843,7 @@ compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasona
       rmse_I_EpiNow_local <- rmse(real_local$I, computed_I_EpiNow_local$mean)
       rmse_rates_local <- rmse(real_local$I, computed_rates_local$I)
       
-      rmse_df_local <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), value=c(rmse_I_local, rmse_I_Arima_local, rmse_I_seasonal_Arima_local, rmse_I_neural_prophet_local, rmse_I_lstm_local, rmse_I_gru_local, rmse_I_EpiNow_local, rmse_rates_local))
+      rmse_df_local <- data.frame(type=c("Sybil", "Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow2"), value=c(rmse_rates_local, rmse_I_local, rmse_I_Arima_local, rmse_I_seasonal_Arima_local, rmse_I_neural_prophet_local, rmse_I_lstm_local, rmse_I_gru_local, rmse_I_EpiNow_local))
       write.csv(file = paste0(dir_name, "/errors/rmse_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
     }
   }
@@ -862,7 +862,7 @@ compute_error <- function(real, computed_I, computed_I_Arima, computed_I_seasona
     rmse_rates <- rmse(real$I, computed_rates$I)
   
     
-    rmse_df <- data.frame(type=c("Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow", "Sybil"), value=c(rmse_I, rmse_I_Arima, rmse_I_seasonal_Arima, rmse_I_neural_prophet, rmse_I_lstm, rmse_I_gru, rmse_I_EpiNow, rmse_rates))
+    rmse_df <- data.frame(type=c("Sybil", "Prophet", "ARIMA", "SARIMA", "Neural Prophet", "LSTM", "GRU", "EpiNow2"), value=c(rmse_rates, rmse_I, rmse_I_Arima, rmse_I_seasonal_Arima, rmse_I_neural_prophet, rmse_I_lstm, rmse_I_gru, rmse_I_EpiNow))
     write.csv(file = paste0(dir_name, "/errors/rmse_", time_step, ".csv"), x = rmse_df, row.names = FALSE, col.names = FALSE)  
   }
 }
