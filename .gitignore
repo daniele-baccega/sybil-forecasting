@@ -2,6 +2,7 @@
 *.csv
 *.png
 .Rhistory
+.Rproj.user
 
 !datasets/Germany_2024-05-02.csv
 !datasets/Belgium_2024-05-02.csv
