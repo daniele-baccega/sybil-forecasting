@@ -1,10 +1,6 @@
-## WHAT'S NEW IN VERSION 2.5
-- Separated the data pre-processing from Sybil. Now you have to feed Sybil with two dataframes:
-  * One with four columns named _date_, _new_cases_, _new_deaths_ and _population_ using a daily or weekly step (if you are using a weekly step set the flag _daily_spline_ to TRUE when calling the *Sybil* function). The column _population_ has all equal values.
-  * One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
-  
-## NEWS ON COVID-19 FORECASTING
-- We tried to use estimates of real cases (https://coronasurveys.org/) with Sybil instead of working with data on confirmed cases.
+## WHAT'S NEW IN VERSION 2.0
+- We now use a fixed recovery rate (same for each variant for now) to dispense with data on recoveries which are often bad or not available. Now we only need data on cases and fatalities.
+- We included a pre-processing step using splines to fill missing data and to move from a weekly to a daily step in case of availability of data with a weekly step (without alter too much the information present in the time series).
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
