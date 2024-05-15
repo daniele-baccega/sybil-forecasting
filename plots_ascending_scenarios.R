@@ -1,3 +1,9 @@
+# Makes plots on the first ascending scenario on Italy
+#
+# Input:
+#   - external_dir_names:    names of the external directories
+#   - country:               name of the interested country (e.g. Italy, Austria)
+#   - variants:              true if we are considering variants, false otherwise
 plots_first_ascending_scenario <- function(external_dir_names, country, variants){
   type_variants <- ""
   if(variants)
@@ -84,6 +90,12 @@ plots_first_ascending_scenario <- function(external_dir_names, country, variants
   }
 }
 
+# Makes plots on the second ascending scenario on Italy
+#
+# Input:
+#   - external_dir_names:    names of the external directories
+#   - country:               name of the interested country (e.g. Italy, Austria)
+#   - variants:              true if we are considering variants, false otherwise
 plots_second_ascending_scenario <- function(external_dir_names, country, variants){
   type_variants <- ""
   if(variants)
@@ -160,6 +172,12 @@ plots_second_ascending_scenario <- function(external_dir_names, country, variant
   }
 }
 
+# Makes plots on the scenario on Italy with 11 considered variants
+#
+# Input:
+#   - external_dir_names:    names of the external directories
+#   - country:               name of the interested country (e.g. Italy, Austria)
+#   - variants:              true if we are considering variants, false otherwise
 plots_v11_scenario <- function(external_dir_names, country, variants){
   type_variants <- ""
   if(variants)

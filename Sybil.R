@@ -37,7 +37,7 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
   internal_dir_name <- paste0("SIRD", if(variants) "_Variants" else "", if(immunization_end_rate > 0) "_Reinfection" else "", "/")
   
   relative_errors_df <- data.frame()
-  # Loop on different 'training' windows
+  # Loop on different training windows
   for(j in seq(1, length(external_dir_names))){
     dir_name <- paste0(external_dir_names[j], internal_dir_name)
     
@@ -187,9 +187,9 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
             fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_plain, time_steps[i], paste0("I_", variants_name[k], "_SARIMA"))
 
             if(i == 1){
-              apply_NeuralProphet(dir_name, df_COVID19_used$date, I_plain, time_steps[i], variants_name[k])
-              apply_LSTM(dir_name, df_COVID19_used$date, I_plain, time_steps[i], variants_name[k])
-              apply_GRU(dir_name, df_COVID19_used$date, I_plain, time_steps[i], variants_name[k])
+              apply_NeuralProphet(dir_name, df_COVID19_used$date, I_plain, variants_name[k])
+              apply_LSTM(dir_name, df_COVID19_used$date, I_plain, variants_name[k])
+              apply_GRU(dir_name, df_COVID19_used$date, I_plain, variants_name[k])
               epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_plain)
             }
             
@@ -259,9 +259,9 @@ Sybil <- function(variants = TRUE, global_final_date = as.Date("2023-06-04"), co
         fc_I_seasonal_Arima <- apply_seasonal_Arima(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "I_SARIMA")
 
         if(i == 1){
-          apply_NeuralProphet(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "all")
-          apply_LSTM(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "all")
-          apply_GRU(dir_name, df_COVID19_used$date, I_plain, time_steps[i], "all")
+          apply_NeuralProphet(dir_name, df_COVID19_used$date, I_plain, "all")
+          apply_LSTM(dir_name, df_COVID19_used$date, I_plain, "all")
+          apply_GRU(dir_name, df_COVID19_used$date, I_plain, "all")
           epinow_forecast <- apply_EpiNow(df_COVID19_used$date, I_plain)
         }
 

@@ -119,9 +119,9 @@ plot_infection_rates_variants <- function(dir_name, results_all){
 # Plot SIRD$I with and without the scenarios
 #
 # Inputs:
-#   - dir_name: name of the directory in which put the results
-#   - SIRD_all: evolution of the infection using a SIRD model
-#   - final_dates:            final dates
+#   - dir_name:        name of the directory in which put the results
+#   - SIRD_all:        evolution of the infection using a SIRD model
+#   - final_dates:     final dates
 plot_I <- function(dir_name, SIRD_all, final_dates){
   png(paste0(dir_name, "/I.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
@@ -370,9 +370,10 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
 # Plot the evolution of the deterministic SIRD/SIvRD model.
 #
 # Inputs:
-#   - dir_name:         name of the directory in which put the results
+#   - df_local:         SIRD evolution
 #   - n:                length of the training time series
 #   - n_ref:            length of the training time series + the forecast window
+#   - dir_name:         name of the directory in which put the results
 #   - time_step:        time window to forecast
 #   - ref_data_flag:    true if ground truth for the forecast window exists, false otherwise
 #   - final_date:       final date (for training)

@@ -9,12 +9,14 @@ from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Input, GRU, Dense
 
 
+# Set seed
 def set_seed_fn(seed):
     random.seed(seed)
     np.random.seed(seed)
     set_seed(seed)
     os.environ['TF_DETERMINISTIC_OPS']  = '1'
 
+# Create train sequences
 def create_sequences(data, n_steps):
     x, y = [], []
     for i in range(len(data) - n_steps):
@@ -22,6 +24,7 @@ def create_sequences(data, n_steps):
         y.append(data[i+n_steps, 0])
     return np.array(x), np.array(y)
 
+# Doing forecast
 def forecast_days(model, data, n_days, n_steps):
     last_sequence = data[-n_steps:].reshape(1, n_steps, 1)
     forecast = []
@@ -44,7 +47,7 @@ args = parser.parse_args()
 seed = 76456357
 runs = 10
 
-# Load your time series data
+# Load time series data
 filename = args.directory + "gru_data_" + args.variant + ".csv"
 
 data = pd.read_csv(filename)
@@ -54,7 +57,7 @@ data.set_index('ds', inplace=True)
 scaler = MinMaxScaler(feature_range=(0, 1))
 data_scaled = scaler.fit_transform(data)
 
- # Prepare training sequences
+# Prepare training sequences
 n_steps = 10  # Historical window to look back
 x_train, y_train = create_sequences(data_scaled, n_steps)
 

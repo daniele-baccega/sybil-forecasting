@@ -3,10 +3,12 @@ import pandas as pd
 import argparse
 from neuralprophet import NeuralProphet, set_random_seed
 
-
+# Set seed
 def set_seed_fn(seed):
     np.random.seed(seed)
     set_random_seed(seed)
+
+
 
 parser = argparse.ArgumentParser()
 
@@ -18,7 +20,7 @@ args = parser.parse_args()
 seed = 76456357
 runs = 10
 
-# Load your time series data
+# Load time series data
 filename = args.directory + "neural_prophet_data_" + args.variant + ".csv"
 
 data = pd.read_csv(filename)
@@ -31,8 +33,8 @@ for run in range(runs):
     # Set seed 
     set_seed_fn(seed + run)
 
+    # Build neuralProphet model
     m = NeuralProphet(growth = "linear")
-
     m.fit(data)
 
     df_future_7 = m.make_future_dataframe(data, periods=7)
@@ -40,6 +42,7 @@ for run in range(runs):
     df_future_21 = m.make_future_dataframe(data, periods=21)
     df_future_28 = m.make_future_dataframe(data, periods=28)
 
+    # Forecasting for the desired periods
     forecast_7_local = m.predict(df_future_7)
     forecast_14_local = m.predict(df_future_14)
     forecast_21_local = m.predict(df_future_21)
