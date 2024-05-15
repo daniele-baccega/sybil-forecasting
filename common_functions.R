@@ -227,7 +227,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
   return(list(SIRD_all_variants, df_all_variants))
 }
 
-# Save the rates in a csv file.
+# Save data in a csv file.
 #
 # Inputs:
 #   - dir_name: name of the directory in which put the results
@@ -437,7 +437,6 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
 #   - recovery_rate:          recovery rate
 #   - global_fatality_rates:  global fatality rates
 #   - immunization_end_rate:  immunization end rate
-#   - fc_I:                   forecast on I
 #   - SIRD:                   evolution of the infection using a SIRD/SIvRD model
 #   - SIRD_ref:               evolution of the infection using a SIRD/SIvRD model + the forecast window
 #   - N:                      total population
@@ -445,94 +444,13 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
 #
 # Output:
 #   - SIRD_ev:                evolution of the SIRD/SIvRD in the considered forecast window model using the forecasted rates
-SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, fc_I, SIRD, SIRD_ref, N, variants){
+SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, SIRD, SIRD_ref, N, variants){
   n <- length(unique(SIRD$date))
   n_ref <- n + time_step
   
   SIRD_ev <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, variants, time_step)
   
-  plot_SIRD_evolution(SIRD_ev, n, n_ref, dir_name, time_step, ref_data_flag, final_date, infection_rates, fc_I, SIRD, SIRD_ref, variants)
+  plot_SIRD_evolution(SIRD_ev, n, n_ref, dir_name, time_step, ref_data_flag, final_date, infection_rates, SIRD, SIRD_ref, variants)
   
   return(SIRD_ev)
-}
-
-# Compute the forecast error between the two considered approaches.
-#
-# Input:
-#   - real:           ground truth
-#   - computed_I:     computed I
-#   - computed_rates: computed rates
-#   - final_date:     final date (for training)
-#   - time_step:      time window to forecast
-#   - dir_name:       name of the directory in which put the results
-#   - variants:       true if we are considering variants, false otherwise
-compute_error <- function(real, computed_I, computed_rates, final_date, time_step, dir_name, variants){
-  if(!file.exists(paste0(dir_name, "/errors"))){
-    system(paste0("mkdir ", dir_name, "/errors"))
-  }
-  
-  absolute_error_I <- rep(0, time_step)
-  relative_error_I <- rep(0, time_step)
-  absolute_error_rates <- rep(0, time_step)
-  relative_error_rates <- rep(0, time_step)
-  
-  real <- real %>%
-    filter(date > final_date - time_step)
-  
-  computed_I <- computed_I %>%
-    filter(date > final_date - time_step)
-  
-  computed_rates <- computed_rates %>%
-    filter(date > final_date - time_step)
-  
-  if(variants){
-    variants_name <- unique(computed_rates$variant)
-    for(v in variants_name){
-      real_local <- real %>%
-        filter(variant == v)
-      
-      computed_I_local <- computed_I %>%
-        filter(variant == v)
-      
-      absolute_error_I_local <- abs(real_local$I - computed_I_local$mean)
-      relative_error_I_local <- absolute_error_I_local / real_local$I
-      relative_error_I_local[which(is.na(relative_error_I_local))] <- 0
-      
-      relative_error_I <- relative_error_I + relative_error_I_local
-      
-      
-      computed_rates_local <- computed_rates %>%
-        filter(variant == v)
-      
-      absolute_error_rates_local <- abs(real_local$I - computed_rates_local$I)
-      relative_error_rates_local <- absolute_error_rates_local / real_local$I
-      relative_error_rates_local[which(is.na(relative_error_rates_local))] <- 0
-      
-      relative_errors_df_local <- data.frame(min=c(min(relative_error_I_local), min(relative_error_rates_local)), max=c(max(relative_error_I_local), max(relative_error_rates_local)), mean=c(mean(relative_error_I_local), mean(relative_error_rates_local)), var=c(var(relative_error_I_local), var(relative_error_rates_local)), sd=c(sd(relative_error_I_local), sd(relative_error_rates_local)))
-      write.csv(file = paste0(dir_name, "/errors/errors_", v, "_", time_step, ".csv"), x = relative_errors_df_local)
-      
-      relative_error_rates <- relative_error_rates + relative_error_rates_local
-    }
-    
-    relative_error_I <- relative_error_I / length(variants_name)
-    relative_error_rates <- relative_error_rates / length(variants_name)
-  }
-  else{
-    absolute_error_I_local <- abs(real$I - computed_I$mean)
-    relative_error_I_local <- absolute_error_I_local / real$I
-    relative_error_I_local[which(is.na(relative_error_I_local))] <- 0
-    
-    relative_error_I <- relative_error_I + relative_error_I_local
-    
-    
-    absolute_error_rates_local <- abs(real$I - computed_rates$I)
-    relative_error_rates_local <- absolute_error_rates_local / real$I
-    relative_error_rates_local[which(is.na(relative_error_rates_local))] <- 0
-    
-    relative_error_rates <- relative_error_rates + relative_error_rates_local
-  }
-  
-  relative_errors_df <- data.frame(min=c(min(relative_error_I), min(relative_error_rates)), max=c(max(relative_error_I), max(relative_error_rates)), mean=c(mean(relative_error_I), mean(relative_error_rates)), var=c(var(relative_error_I), var(relative_error_rates)), sd=c(sd(relative_error_I), sd(relative_error_rates)))
-  
-  write.csv(file = paste0(dir_name, "/errors/errors_", time_step, ".csv"), x = relative_errors_df)
 }

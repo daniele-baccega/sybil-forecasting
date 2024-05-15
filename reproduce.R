@@ -1,4 +1,4 @@
-# Prophet with Covid-19 data
+# Sybil with Covid-19 data
 #
 # Author: Daniele Baccega
 # Data: COVID-19 R library
@@ -15,45 +15,34 @@ library(prophet)
 library(scales)
 library(patchwork)
 library(countrycode)
-library(xts)
 
 # Include the Sybil function and the common functions
 source("Sybil.R")
 source("prepare_data.R")
 source("common_functions.R")
 source("plots.R")
-source("plots_ascending_scenarios.R")
 
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 
 # Select the configuration (with or without variants, daily or daily-spline data)
 # If in a particular country data are weekly you have to use daily-spline data.
-# To reproduce the results in the paper (supplementary material, section "Fixed recovery rate")
-# set the variable daily_spline to FALSE and variants to TRUE
 daily_spline <- FALSE
 variants <- TRUE
 
-# Set this flag to true if data related to variants are daily, false if thery are weekly
+# Set this flag to true if data related to variants are daily, false if they are weekly
 daily_variants_data <- FALSE
 
-# Forecast or only extract the rates?
+# Forecast or only extract the rates and the SIRD evolution?
 forecast <- TRUE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
-recovery_rate <- 1 / 10
+recovery_rate <- 1 / 14
 
 # Global initial and final dates
 global_initial_date <- as.Date("2020-02-24")
 global_final_date <- Sys.Date()
-
-# To reproduce the results in the paper set the variable to TRUE
-reproduce <- TRUE
-
-if(reproduce){
-  global_final_date <- as.Date("2023-06-04")
-}
 
 
 # Scenarios with Italy (V=4)
@@ -79,8 +68,8 @@ initial_dates <- c(as.Date("2021-12-20"))
 
 final_dates <- c(as.Date("2022-01-20"))
 
-data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, reproduce, forecast, initial_dates, final_dates)
+Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)

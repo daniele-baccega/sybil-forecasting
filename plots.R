@@ -171,13 +171,14 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
   for(i in 1:length(variants_name)){
     plot <- plot + geom_line(linewidth=2)
   }
+  
+  for(i in 1:length(final_dates)){
+    plot <- plot +
+      geom_vline(aes(xintercept = final_dates[i]), color="#F3474D", linetype="dashed", linewidth=2) +
+      geom_text(aes(x = final_dates[i]-30, label=paste0("\n", i, " forecast"), y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90)
+  }
+  
   plot <- plot +
-    geom_vline(aes(xintercept = final_dates[1]), color="#F3474D", linetype="dashed", linewidth=2) +
-    geom_vline(aes(xintercept = final_dates[2]), color="#F3474D", linetype="dashed", linewidth=2) +
-    geom_vline(aes(xintercept = final_dates[3]), color="#F3474D", linetype="dashed", linewidth=2) +
-    geom_text(aes(x = final_dates[1]-30, label="\n1st forecast", y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[2]-30, label="\n2nd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
-    geom_text(aes(x = final_dates[3]-30, label="\n3rd forecast", y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     scale_colour_manual(values=hue_pal()(length(variants_name))) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     labs(x="Date", y="Population", col="Variants") +
@@ -266,11 +267,10 @@ forecast_plot <- function(dir_name, ref_data_flag, final_date, n, n_ref, dates, 
 #   - ref_data_flag:    true if ground truth for the forecast window exists, false otherwise
 #   - final_date:       final date (for training)
 #   - infection_rates:  infection rates for each variant
-#   - fc_I:             forecast on I
 #   - SIRD:             evolution of the infection using a SIRD/SIvRD model
 #   - SIRD_ref:         evolution of the infection using a SIRD/SIvRD model + the forecast window
 #   - variants:         true if we are considering variants, false otherwise
-plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_data_flag, final_date, infection_rates, fc_I, SIRD, SIRD_ref, variants){
+plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_data_flag, final_date, infection_rates, SIRD, SIRD_ref, variants){
   if(variants){
     variants_name <- unique(infection_rates$variant)
     
@@ -353,22 +353,6 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
-    
-    for(i in 1:length(variants_name)){
-      df_local_I <- df_local %>%
-        filter(variant == variants_name[i])
-      
-      SIRD_ref_local <- SIRD_ref %>%
-        filter(variant == variants_name[i])
-      
-      SIRD_local <- SIRD %>%
-        filter(variant == variants_name[i])
-      
-      fc_I_local <- fc_I %>%
-        filter(variant == variants_name[i])
-      
-      comparison(dir_name, time_step, paste0("I_", variants_name[i]), ref_data_flag, final_date, SIRD_local$date, SIRD_ref_local$date, df_local_I$I, fc_I_local$mean, SIRD_ref_local$I) 
-    }
   }
   else{
     if(ref_data_flag){
@@ -409,61 +393,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
-    
-    comparison(dir_name, time_step, "I", ref_data_flag, final_date, SIRD$date, SIRD_ref$date, df_local$I, fc_I, SIRD_ref$I)
   }
-}
-
-# Generates a comparison plot between the two considered forecast approaches.
-#
-# Inputs:
-#   - dir_name:               name of the directory in which put the results
-#   - time_step:              time window to forecast
-#   - variable_name_variants: string used for save the plot
-#   - ref_data_flag:          true if ground truth for the forecast window exists, false otherwise
-#   - final_date_local:       final date (for training)
-#   - dates:                  dates of the training time series
-#   - dates_ref:              dates of the training time series + the forecast window
-#   - variable_local:         ground truth
-#   - variable_fc:            forecast
-#   - variable_ref:           groung truth in the forecast window
-comparison <- function(dir_name, time_step, variable_name_variants, ref_data_flag, final_date_local, dates, dates_ref, variable_local, variable_fc, variable_ref){
-  n <- length(dates)
-  n_ref <- n + time_step
-  
-  if(ref_data_flag){
-    type <- rep(NA, n_ref + (n_ref - n) * 2 + 3)
-    
-    type[1:n] <- rep("training data", n)
-    type[(n+1):(n_ref+1)] <- rep("forecast with Sybil", n_ref-n+1)
-    type[(n_ref+2):(n_ref+2+(n_ref-n))] <- rep("ground truth for validation", n_ref-n+1)
-    type[(n_ref+3+(n_ref-n)):(n_ref+3+(n_ref-n)*2)] <- rep(paste0("forecast with Prophet"), n_ref-n+1)
-    
-    date <- c(dates_ref, dates_ref[n], dates_ref[n:n_ref], dates_ref[n:n_ref])
-    value <- c(variable_local, variable_ref[n], variable_ref[n:n_ref], variable_ref[n], variable_fc)
-    place <- rep("I", n_ref + (n_ref - n) * 2 + 3)
-  }
-  else{
-    type <- rep(NA, n_ref + (n_ref - n) + 2)
-    
-    type[1:n] <- rep("training data", n)
-    type[(n+1):(n_ref+1)] <- rep("forecast with Sybil", n_ref-n+1)
-    type[(n_ref+2):(n_ref+(n_ref-n)+2)] <- rep("forecast with Prophet", n_ref-n+1)
-    
-    date <- c(dates, seq(dates[n], final_date_local, 1), seq(dates[n], final_date_local, 1))
-    value <- c(variable_local[1:n], variable_local[n], variable_local[(n+1):length(variable_local)], variable_local[n], variable_fc)
-    place <- rep("I", n_ref + (n_ref - n) + 2)
-  }
-  
-  df_plot <- data.frame(date, value, place, type)
-  
-  plot <- ggplot(df_plot, aes(date, value, col=type)) +
-    geom_line(linewidth=1.5) +
-    scale_colour_manual(values=c("#F3474D", "#6C9F6B", "#6B95DB", "#000000")) +
-    theme(legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
-    labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
-    scale_y_continuous(labels = label_scientific())
-  save(plot, file=paste0(dir_name, "/RData/", variable_name_variants, "_compare_", time_step, "_days.RData"))
 }
 
 # Generate final plots.
@@ -602,32 +532,6 @@ final_plots <- function(dir_name, variants_name){
       png(paste0(dir_name, "/forecast_plot/infection_rates/forecast_infection_rates_", variants_name[k], "_onexrow.png"), units="in", width=28, height=34, res=300)
       print(p)
       dev.off()
-      
-      
-      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_7_days.RData"))
-      p1 <- plot 
-      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_14_days.RData"))
-      p2 <- plot 
-      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_21_days.RData"))
-      p3 <- plot 
-      load(paste0(dir_name, "/forecast_plot/RData/I_", variants_name[k], "_compare_28_days.RData"))
-      p4 <- plot 
-      
-      p <- (p1 + p2) / (p3 + p4) +
-        plot_layout(guides = "collect", axis_titles = "collect") &
-        theme(legend.position = "bottom", legend.box = "vertical")
-      
-      png(paste0(dir_name, "/forecast_plot/comparison/I_", variants_name[k], "_compare.png"), units="in", width=34, height=15, res=300)
-      print(p)
-      dev.off()
-      
-      p <- p1 / p2 / p3 / p4 +
-        plot_layout(guides = "collect", axis_titles = "collect") &
-        theme(legend.position = "bottom", legend.box = "vertical")
-      
-      png(paste0(dir_name, "/forecast_plot/comparison/I_", variants_name[k], "_compare_onexrow.png"), units="in", width=28, height=34, res=300)
-      print(p)
-      dev.off()
     }
   }
   else{
@@ -679,32 +583,6 @@ final_plots <- function(dir_name, variants_name){
       theme(legend.position = "bottom", legend.box = "vertical")
     
     png(paste0(dir_name, "/forecast_plot/I/forecast_I_onexrow.png"), units="in", width=28, height=34, res=300)
-    print(p)
-    dev.off()
-    
-    
-    load(paste0(dir_name, "/forecast_plot/RData/I_compare_7_days.RData"))
-    p1 <- plot 
-    load(paste0(dir_name, "/forecast_plot/RData/I_compare_14_days.RData"))
-    p2 <- plot 
-    load(paste0(dir_name, "/forecast_plot/RData/I_compare_21_days.RData"))
-    p3 <- plot 
-    load(paste0(dir_name, "/forecast_plot/RData/I_compare_28_days.RData"))
-    p4 <- plot 
-    
-    p <- (p1 + p2) / (p3 + p4) +
-      plot_layout(guides = "collect", axis_titles = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(dir_name, "/forecast_plot/comparison/I_compare.png"), units="in", width=34, height=15, res=300)
-    print(p)
-    dev.off()
-    
-    p <- p1 / p2 / p3 / p4 +
-      plot_layout(guides = "collect", axis_titles = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
-    
-    png(paste0(dir_name, "/forecast_plot/comparison/I_compare_onexrow.png"), units="in", width=28, height=34, res=300)
     print(p)
     dev.off()
   }

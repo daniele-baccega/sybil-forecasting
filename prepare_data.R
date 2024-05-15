@@ -12,7 +12,6 @@
 #   - country_long:               name of the interested country (e.g. Italy, Austria)
 #   - global_initial_date:        initial date for the data
 #   - global_final_date:          final date for the data
-#   - reproduce:                  reproduce the results of the paper
 #   - variants:                   true if we are considering variants, false otherwise
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
@@ -21,7 +20,7 @@
 # Output:
 #   - df_disease_ref_init:        dataframe with disease data
 #   - df_variants_init:           dataframe with variants data
-download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, reproduce, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -37,12 +36,6 @@ download_files_and_load_data <- function(country_long, global_initial_date, glob
   
   # Check if the files are updated
   updated_file <- file.exists(disease_data) && file.exists(disease_variants_data)
-  
-  if(reproduce){
-    updated_file <- TRUE
-    disease_data <- paste0("datasets/", country_long, "_2023-11-22.csv")
-    disease_variants_data <- "datasets/variants_data_2023-07-25.csv"
-  }
   
   if(!updated_file){
     # Download the updated data
@@ -281,24 +274,23 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
 # Prepare the data for Sybil.
 #
 # Inputs:
-#   - country:                country name
-#   - global_initial_date:    initial date for the data
-#   - global_final_date:      final date for the data
-#   - immunization_end_rate:  immunization end rate
-#   - recovery_rate:          recovery rate
-#   - reproduce:              reproduce paper's results
-#   - variants                true if we are considering variants, false otherwise
+#   - country:                    country name
+#   - global_initial_date:        initial date for the data
+#   - global_final_date:          final date for the data
+#   - immunization_end_rate:      immunization end rate
+#   - recovery_rate:              recovery rate
+#   - variants                    true if we are considering variants, false otherwise
 #   - variants_to_disregard:      variants not to be considered
 #   - variants_aggregated:        aggregation of variants (must be a list)
 #   - variants_aggregated_names:  names of the aggregated variants (must have the same length of variants_aggregated)
-#   - daily_spline            true if we approximate daily data with a spline, false otherwise
+#   - daily_spline                true if we approximate daily data with a spline, false otherwise
 #
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
+prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
   # Download file and load data
-  data <- download_files_and_load_data(country, global_initial_date, global_final_date, reproduce, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
