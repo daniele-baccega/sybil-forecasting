@@ -1,4 +1,4 @@
-# Sybil with Covid-19 data
+# Sybil
 #
 # Author: Daniele Baccega
 # Data: COVID-19 R library
