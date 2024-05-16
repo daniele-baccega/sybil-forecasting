@@ -41,6 +41,7 @@ Log out and log back in so that your group membership is re-evaluated.
 
 ## REFERENCES
 [1] Baccega, Daniele, et al. "Enhancing COVID-19 Forecasting Precision through the Integration of Compartmental Models, Machine Learning and Variants." medRxiv (2024): 2024-03. doi: https://doi.org/10.1101/2024.03.20.24304583
+
 [2] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018). doi: https://doi.org/0.7287/peerj.preprints.3190v2
 
 ## COPYRIGHT AND LICENSE
