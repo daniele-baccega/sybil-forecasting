@@ -168,11 +168,22 @@ plot_I <- function(dir_name, SIRD_all, final_dates){
   print(plot)
   dev.off()
   
-  png(paste0(dir_name, "/I_one_scenario.png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/I_first_scenario.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
     geom_line(linewidth=2) +
     geom_vline(aes(xintercept = as.Date(final_dates[1])), color="#F3474D", linetype="dashed", linewidth=2) +
     geom_text(aes(x = as.Date(final_dates[1])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
+    labs(x="Date", y="Population") +
+    scale_y_continuous(labels = label_scientific())
+  print(plot)
+  dev.off()
+  
+  png(paste0(dir_name, "/I_second_scenario.png"), units="in", width=34, height=15, res=300)
+  plot <- ggplot(SIRD_all, aes(x=date, y=I)) +
+    geom_line(linewidth=2) +
+    geom_vline(aes(xintercept = as.Date(final_dates[2])), color="#F3474D", linetype="dashed", linewidth=2) +
+    geom_text(aes(x = as.Date(final_dates[2])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     labs(x="Date", y="Population") +
     scale_y_continuous(labels = label_scientific())
@@ -269,7 +280,7 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
   print(plot)
   dev.off()
   
-  png(paste0(dir_name, "/I_variants_one_scenario.png"), units="in", width=34, height=15, res=300)
+  png(paste0(dir_name, "/I_variants_first_scenario.png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
   for(i in 1:length(variants_name)){
     plot <- plot + geom_line(linewidth=2)
@@ -277,6 +288,20 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
   plot <- plot +
     geom_vline(aes(xintercept = as.Date(final_dates[1])), color="#F3474D", linetype="dashed", linewidth=2) +
     geom_text(aes(x = as.Date(final_dates[1])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
+    theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
+    labs(x="Date", y="Population", col="Variants") +
+    scale_y_continuous(labels = label_scientific())
+  print(plot)
+  dev.off()
+  
+  png(paste0(dir_name, "/I_variants_second_scenario.png"), units="in", width=34, height=15, res=300)
+  plot <- ggplot(SIRD_all_variants, aes(date, I, color=variant))
+  for(i in 1:length(variants_name)){
+    plot <- plot + geom_line(linewidth=2)
+  }
+  plot <- plot +
+    geom_vline(aes(xintercept = as.Date(final_dates[2])), color="#F3474D", linetype="dashed", linewidth=2) +
+    geom_text(aes(x = as.Date(final_dates[2])-30, label=paste0("\n1st forecast"), y=max(I) - max(I)/8), size = 13, colour="#F3474D", angle=90) +
     theme(legend.position = "bottom", legend.key.size = unit(1.5, 'cm'), axis.text=element_text(size=25), axis.title=element_text(size=30, face="bold"), plot.title = element_text(size=40, face="bold"), legend.title=element_text(size=40, face="bold"), legend.text=element_text(size=38)) +
     labs(x="Date", y="Population", col="Variants") +
     scale_y_continuous(labels = label_scientific())
