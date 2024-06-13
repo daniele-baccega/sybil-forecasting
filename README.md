@@ -4,7 +4,8 @@
   * One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
   
 ## NEWS ON COVID-19 FORECASTING
-- We tried to use estimates of real cases (https://coronasurveys.org/) with Sybil instead of working with data on confirmed cases.
+- We used estimates of real cases [3] with Sybil instead of working with data on confirmed cases.
+- We made predictions on U.S. states.
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
@@ -39,10 +40,18 @@ Add your user to the docker group.
 
 Log out and log back in so that your group membership is re-evaluated.
 
+## HOW TO REPRODUCE THE RESULTS
+To reproduce the results presented in the paper run:
+```
+./reproduce.sh
+```
+
 ## REFERENCES
 [1] Baccega, Daniele, et al. "Enhancing COVID-19 Forecasting Precision through the Integration of Compartmental Models, Machine Learning and Variants." medRxiv (2024): 2024-03. doi: https://doi.org/10.1101/2024.03.20.24304583
 
 [2] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018). doi: https://doi.org/0.7287/peerj.preprints.3190v2
+
+[3] Javier  Alvarez et al. “Estimating active cases of COVID-19”. In: MedRxiv (2021), pp. 2021–12.
 
 ## COPYRIGHT AND LICENSE
 Copyright _Daniele Baccega, Paolo Castagno, Antonio Fernández Anta, Matteo Sereno_
