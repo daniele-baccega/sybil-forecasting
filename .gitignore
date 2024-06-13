@@ -4,3 +4,6 @@
 .Rhistory
 .Rproj.user
 aggregatesUMD/
+
+!datasets/USA_variants.csv
+!datasets/USA_2024-06-13.csv
