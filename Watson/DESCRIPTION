@@ -1,0 +1,26 @@
+Package: covidStateSird
+Title: COVID-19 Forecasting Model
+Version: 0.0.0.9000
+Authors@R: c(
+    person("Gregory L.", "Watson", email = "gwatson@ucla,edu", role = c("aut", "cre")),
+    person("Christina M.", "Ramirez", email = "cr@ucla,edu", role = "aut")
+  )
+Maintainer: Gregory L. Watson <gwatson@ucla.edu>
+Description: This model forecasts COVID-19 deaths and cases in the United States.
+License: MIT + file LICENSE
+Encoding: UTF-8
+LazyData: true
+VignetteBuilder: knitr
+RoxygenNote: 7.1.0
+Depends:
+  R (>= 3.5.0)
+Imports:
+  deSolve,
+  dplyr,
+  foreach,
+  randomForest,
+  tidyselect,
+  TTR
+Suggests: 
+  knitr,
+  rmarkdown
