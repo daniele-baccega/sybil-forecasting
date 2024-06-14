@@ -53,6 +53,8 @@ global_final_date <- Sys.Date()
 country <- "USA"
 region <- "West Virginia"
 region_abbrv <- "WV"
+=======
+>>>>>>> d03d3178ddf2bc336141f6fb72d27268c70fc38e
 city <- ""
 
 if(!file.exists(country)){

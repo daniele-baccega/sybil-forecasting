@@ -4,6 +4,7 @@
 .Rhistory
 .Rproj.user
 aggregatesUMD/
+covidStateSird/
 
 !datasets/USA_variants.zip
 !datasets/USA_2024-06-13.zip
