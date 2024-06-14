@@ -8,3 +8,5 @@ aggregatesUMD/
 !datasets/USA_variants.zip
 !datasets/USA_2024-06-13.zip
 !covidStateSird
+!covidStateSird/Data/StateInterventionDates.csv
+!covidStateSird/Data/COVID-19 Location Covariates - AnalyticStates.csv
