@@ -7,6 +7,7 @@ COPY reproduce.R .
 COPY Sybil.R .
 COPY common_functions.R .
 COPY plots.R .
+COPY prepare_data_USA.R .
 COPY datasets .
 
 ## Run the script

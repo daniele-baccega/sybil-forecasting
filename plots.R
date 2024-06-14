@@ -175,7 +175,7 @@ plot_I_variants <- function(dir_name, SIRD_all_variants, variants_name, final_da
   for(i in 1:length(final_dates)){
     plot <- plot +
       geom_vline(aes(xintercept = final_dates[i]), color="#F3474D", linetype="dashed", linewidth=2) +
-      geom_text(aes(x = final_dates[i]-30, label=paste0("\n", i, " forecast"), y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90)
+      geom_text(aes(x = final_dates[i]-30, label=paste0("\n", i, "st forecast"), y=max(I) - max(I)/8 ), size = 13, colour="#F3474D", angle=90)
   }
   
   plot <- plot +

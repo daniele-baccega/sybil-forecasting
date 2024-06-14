@@ -454,3 +454,82 @@ SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infec
   
   return(SIRD_ev)
 }
+
+# Compute Root Mean Squared Error with standard deviations
+# and minimum and maximum
+#
+# Input:
+#   - actual:    ground-truth
+#   - predicted: predictions
+#
+# Output:
+#   - list:      rmse with standard deviations and minimum and maximum
+rmse <- function(actual, predicted) {
+  residuals <- actual - predicted
+  
+  min <- min(abs(residuals))
+  max <- max(abs(residuals))
+  std <- sqrt(mean((residuals - mean(residuals))^2))
+  
+  rmse <- sqrt(mean((residuals^2)))
+  
+  return(list(min, max, rmse, std))
+}
+
+# Compute the forecast error between the two considered approaches.
+#
+# Input:
+#   - real:                         ground truth
+#   - computed_I_Sybil:             computed I (Sybil)
+#   - final_date:                   final date (for training)
+#   - time_step:                    time window to forecast
+#   - dir_name:                     name of the directory in which put the results
+#   - variants:                     true if we are considering variants, false otherwise
+compute_error <- function(real, computed_I_Sybil, final_date, time_step, dir_name, variants, region_abbrv){
+  if(!file.exists(paste0(dir_name, "/errors"))){
+    system(paste0("mkdir ", dir_name, "/errors"))
+  }
+  
+  real <- real %>%
+    filter(date > final_date - time_step)
+  
+  computed_I_Sybil <- computed_I_Sybil %>%
+    filter(date > final_date - time_step)
+  
+  
+  load(paste0("covidStateSird/Output_GroundTruth/", Sys.Date(), "/Data/", region_abbrv, ".Rdata"))
+  stateFit <- stateFit %>%
+    filter(times <= final_date, times > final_date - time_step)
+  
+  real_covidStateSird <- stateFit
+  
+  load(paste0("covidStateSird/Output/", Sys.Date(), "/Data/", region_abbrv, ".Rdata"))
+  stateFit <- stateFit %>%
+    filter(times <= final_date, times > final_date - time_step)
+  
+  computed_I_covidStateSird <- stateFit
+  rmse_I_covidStateSird <- rmse(real_covidStateSird$I, computed_I_covidStateSird$I)
+  
+  if(variants){
+    variants_name <- unique(computed_I_Sybil$variant)
+    for(v in variants_name){
+      real_local <- real %>%
+        filter(variant == v)
+      
+      computed_I_local_Sybil <- computed_I_Sybil %>%
+        filter(variant == v)
+      
+      rmse_I_Sybil_local <- rmse(real_local$I, computed_I_local_Sybil$I)
+      
+      rmse_df_local <- data.frame(type=c("Sybil", "covidStateSird"), min=c(rmse_I_Sybil_local[[1]], rmse_I_covidStateSird_local[[1]]), max=c(rmse_I_Sybil_local[[2]], rmse_I_covidStateSird_local[[2]]), rmse=c(rmse_I_Sybil_local[[3]], rmse_I_covidStateSird_local[[3]]), std=c(rmse_I_Sybil_local[[4]], rmse_I_covidStateSird_local[[4]]))
+      write.csv(file = paste0(dir_name, "/errors/metrics_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
+    }
+  }
+  else{
+    rmse_I_Sybil <- rmse(real$I, computed_I_Sybil$I)
+    
+    
+    rmse_df <- data.frame(type=c("Sybil", "covidStateSird"), min=c(rmse_I_Sybil[[1]], rmse_I_covidStateSird[[1]]), max=c(rmse_I_Sybil[[2]], rmse_I_covidStateSird[[2]]), rmse=c(rmse_I_Sybil[[3]], rmse_I_covidStateSird[[3]]), std=c(rmse_I_Sybil[[4]], rmse_I_covidStateSird[[4]]))
+    write.csv(file = paste0(dir_name, "/errors/metrics_", time_step, ".csv"), x = rmse_df, row.names = FALSE, col.names = FALSE)  
+  }
+}
