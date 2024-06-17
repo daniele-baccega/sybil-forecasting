@@ -145,10 +145,10 @@ df_disease_all <- data[[2]]
 Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates, region_abbrv)
 
 
-# Scenarios with USA - California (V=4)
+# Scenarios with USA - Pennsylvania (V=4)
 country <- "USA"
-region <- "Arizona"
-region_abbrv <- "AZ"
+region <- "Pennsylvania"
+region_abbrv <- "PA"
 city <- ""
 
 if(!file.exists(country)){
