@@ -147,8 +147,8 @@ Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spli
 
 # Scenarios with USA - California (V=4)
 country <- "USA"
-region <- "California"
-region_abbrv <- "CA"
+region <- "Arizona"
+region_abbrv <- "AZ"
 city <- ""
 
 if(!file.exists(country)){

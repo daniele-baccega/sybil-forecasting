@@ -150,8 +150,8 @@ randomForestDeathModel <- deathForest(stateCovidData_local,
 
 load(paste0(outputPath, "/CasePosteriorSamples", endDate, ".Rdata"))
 
-# Test on CA, CO, NY and WV
-stateSird("CA", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+# Test on AZ, CO, NY and WV
+stateSird("AZ", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
 rfError = TRUE,
 plots = TRUE,
