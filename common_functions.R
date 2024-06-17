@@ -508,6 +508,7 @@ compute_error <- function(real, computed_I_Sybil, final_date, time_step, dir_nam
     filter(times <= final_date, times > final_date - time_step)
   
   computed_I_covidStateSird <- stateFit
+  
   rmse_I_covidStateSird <- rmse(real_covidStateSird$I, computed_I_covidStateSird$I)
   
   if(variants){
@@ -521,7 +522,7 @@ compute_error <- function(real, computed_I_Sybil, final_date, time_step, dir_nam
       
       rmse_I_Sybil_local <- rmse(real_local$I, computed_I_local_Sybil$I)
       
-      rmse_df_local <- data.frame(type=c("Sybil", "covidStateSird"), min=c(rmse_I_Sybil_local[[1]], rmse_I_covidStateSird_local[[1]]), max=c(rmse_I_Sybil_local[[2]], rmse_I_covidStateSird_local[[2]]), rmse=c(rmse_I_Sybil_local[[3]], rmse_I_covidStateSird_local[[3]]), std=c(rmse_I_Sybil_local[[4]], rmse_I_covidStateSird_local[[4]]))
+      rmse_df_local <- data.frame(type=c("Sybil", "covidStateSird"), min=c(rmse_I_Sybil_local[[1]], rmse_I_covidStateSird[[1]]), max=c(rmse_I_Sybil_local[[2]], rmse_I_covidStateSird[[2]]), rmse=c(rmse_I_Sybil_local[[3]], rmse_I_covidStateSird[[3]]), std=c(rmse_I_Sybil_local[[4]], rmse_I_covidStateSird[[4]]))
       write.csv(file = paste0(dir_name, "/errors/metrics_", v, "_", time_step, ".csv"), x = rmse_df_local, row.names = FALSE, col.names = FALSE)
     }
   }
