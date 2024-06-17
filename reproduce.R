@@ -26,8 +26,8 @@ source("plots.R")
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
 # Run covidStateSird (the first to obtain the ground truth, the second to obtain the forecast)
-#render("covidStateSird/vignettes/stateSird_GroundTruth.Rmd")
-#render("covidStateSird/vignettes/stateSird.Rmd")
+render("covidStateSird/vignettes/stateSird_GroundTruth.Rmd")
+render("covidStateSird/vignettes/stateSird.Rmd")
 
 # Select the configuration (with or without variants, daily or daily-spline data)
 # If in a particular country data are weekly you have to use daily-spline data.
