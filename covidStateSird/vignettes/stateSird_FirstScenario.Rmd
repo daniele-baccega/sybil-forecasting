@@ -27,7 +27,7 @@ endDate <- "2020-11-23"
 minCase <- 100
 
 # toggles "demo" mode, when TRUE exectues an abbreviated run of the model ------
-DEMO <- FALSE
+DEMO <- TRUE
 
 if(DEMO) {
   n.chains = 1
@@ -154,8 +154,7 @@ plots = TRUE,
 n.t = 120,
 lagDays = 28,
 minCases = 100,
-endDay = endDate,
-endPlotDay = "2021-04-01")
+endDay = endDate)
 
 stateSird("CA", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -164,8 +163,7 @@ plots = TRUE,
 n.t = 120,
 lagDays = 28,
 minCases = 100,
-endDay = endDate,
-endPlotDay = "2021-04-01")
+endDay = endDate)
 
 stateSird("TX", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -174,8 +172,7 @@ plots = TRUE,
 n.t = 120,
 lagDays = 28,
 minCases = 100,
-endDay = endDate,
-endPlotDay = "2021-04-01")
+endDay = endDate)
 
 stateSird("CO", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -184,8 +181,7 @@ plots = TRUE,
 n.t = 120,
 lagDays = 28,
 minCases = 100,
-endDay = endDate,
-endPlotDay = "2021-04-01")
+endDay = endDate)
 
 stateSird("NY", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -194,8 +190,7 @@ plots = TRUE,
 n.t = 120,
 lagDays = 28,
 minCases = 100,
-endDay = endDate,
-endPlotDay = "2021-04-01")
+endDay = endDate)
 
 stateSird("WV", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -204,6 +199,5 @@ plots = TRUE,
 n.t = 120,
 lagDays = 28,
 minCases = 100,
-endDay = endDate,
-endPlotDay = "2021-04-01")
+endDay = endDate)
 ```
