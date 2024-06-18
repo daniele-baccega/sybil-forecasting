@@ -23,7 +23,7 @@ source("../R/velocityModel.R")
 
 
 # set final day of training data -----------------------------------------------
-endDate <- "2021-03-01"
+endDate <- "2021-02-07"
 minCase <- 100
 
 # toggles "demo" mode, when TRUE exectues an abbreviated run of the model ------
@@ -133,7 +133,7 @@ save(posteriorSamples,
   file = paste0(outputPath, "/CasePosteriorSamples", endDate, ".Rdata"))
 
 stateCovidData_local <- stateCovidData %>%
-  filter(date >= 20210201)
+  filter(date >= 20210107)
 
 # train death model ------------------------------------------------------------
 randomForestDeathModel <- deathForest(stateCovidData_local, 

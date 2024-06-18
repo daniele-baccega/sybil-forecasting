@@ -74,10 +74,10 @@ external_dir_names <- c(paste0(gsub(" ", "_", country), gsub(" ", "_", region), 
                         paste0(gsub(" ", "_", country), gsub(" ", "_", region), gsub(" ", "_", city), "/V4/SecondScenario"))
 
 initial_dates <- c(as.Date("2020-10-23"),
-                   as.Date("2021-02-01"))
+                   as.Date("2021-01-07"))
 
 final_dates <- c(as.Date("2020-11-23"),
-                 as.Date("2021-03-01"))
+                 as.Date("2021-02-07"))
 
 data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
@@ -109,10 +109,10 @@ external_dir_names <- c(paste0(gsub(" ", "_", country), gsub(" ", "_", region), 
                         paste0(gsub(" ", "_", country), gsub(" ", "_", region), gsub(" ", "_", city), "/V4/SecondScenario"))
 
 initial_dates <- c(as.Date("2020-10-23"),
-                   as.Date("2021-02-01"))
+                   as.Date("2021-01-07"))
 
 final_dates <- c(as.Date("2020-11-23"),
-                 as.Date("2021-03-01"))
+                 as.Date("2021-02-07"))
 
 data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
@@ -144,10 +144,10 @@ external_dir_names <- c(paste0(gsub(" ", "_", country), gsub(" ", "_", region), 
                         paste0(gsub(" ", "_", country), gsub(" ", "_", region), gsub(" ", "_", city), "/V4/SecondScenario"))
 
 initial_dates <- c(as.Date("2020-10-23"),
-                   as.Date("2021-02-01"))
+                   as.Date("2021-01-07"))
 
 final_dates <- c(as.Date("2020-11-23"),
-                 as.Date("2021-03-01"))
+                 as.Date("2021-02-07"))
 
 data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
@@ -178,10 +178,10 @@ external_dir_names <- c(paste0(gsub(" ", "_", country), gsub(" ", "_", region), 
                         paste0(gsub(" ", "_", country), gsub(" ", "_", region), gsub(" ", "_", city), "/V4/SecondScenario"))
 
 initial_dates <- c(as.Date("2020-10-23"),
-                   as.Date("2021-02-01"))
+                   as.Date("2021-01-07"))
 
 final_dates <- c(as.Date("2020-11-23"),
-                 as.Date("2021-03-01"))
+                 as.Date("2021-02-07"))
 
 data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
@@ -212,10 +212,10 @@ external_dir_names <- c(paste0(gsub(" ", "_", country), gsub(" ", "_", region), 
                         paste0(gsub(" ", "_", country), gsub(" ", "_", region), gsub(" ", "_", city), "/V4/SecondScenario"))
 
 initial_dates <- c(as.Date("2020-10-23"),
-                   as.Date("2021-02-01"))
+                   as.Date("2021-01-07"))
 
 final_dates <- c(as.Date("2020-11-23"),
-                 as.Date("2021-03-01"))
+                 as.Date("2021-02-07"))
 
 data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
@@ -246,10 +246,10 @@ external_dir_names <- c(paste0(gsub(" ", "_", country), gsub(" ", "_", region), 
                         paste0(gsub(" ", "_", country), gsub(" ", "_", region), gsub(" ", "_", city), "/V4/SecondScenario"))
 
 initial_dates <- c(as.Date("2020-10-23"),
-                   as.Date("2021-02-01"))
+                   as.Date("2021-01-07"))
 
 final_dates <- c(as.Date("2020-11-23"),
-                 as.Date("2021-03-01"))
+                 as.Date("2021-02-07"))
 
 data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
