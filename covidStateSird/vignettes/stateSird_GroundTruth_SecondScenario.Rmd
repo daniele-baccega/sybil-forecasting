@@ -23,7 +23,7 @@ source("../R/velocityModel.R")
 
 
 # set final day of training data -----------------------------------------------
-endDate <- "2021-03-01"
+endDate <- "2021-04-01"
 minCase <- 100
 
 # toggles "demo" mode, when TRUE exectues an abbreviated run of the model ------
@@ -207,4 +207,3 @@ minCases = 100,
 endDay = endDate,
 endPlotDay = "2021-04-01")
 ```
-

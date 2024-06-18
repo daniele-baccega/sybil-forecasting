@@ -207,4 +207,3 @@ minCases = 100,
 endDay = endDate,
 endPlotDay = "2021-04-01")
 ```
-

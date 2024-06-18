@@ -68,7 +68,7 @@ stateCovidData <- read.csv(stateDataCSV)
 write.csv(stateCovidData, paste0(outputPath, "/stateCovidData.csv"))
 
 # covariates for death model ---------------------------------------------------
-covariates <- read.csv(paste0(covidDir, 
+covariates <- read.csv(paste0(covidDir,
                        "/Data/COVID-19 Location Covariates - AnalyticStates.csv"))
 covariates[, c("heartDisease", "lungCancer", "diabetes", "copd")] <-
   covariates[, c("heartDisease", "lungCancer", "diabetes", "copd")] / 100000
@@ -207,4 +207,3 @@ minCases = 100,
 endDay = endDate,
 endPlotDay = "2021-04-01")
 ```
-
