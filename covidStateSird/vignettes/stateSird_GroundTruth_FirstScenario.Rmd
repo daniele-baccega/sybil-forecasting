@@ -10,7 +10,7 @@ vignette: >
 # SIRD Analysis
 
 ```{r load_libraries}
-#library(covidStateSird)
+library(covidStateSird)
 library(foreach)
 library(randomForest)
 library(doParallel)
@@ -50,8 +50,8 @@ covidDir <- ".."
 
 doParallel::registerDoParallel(cores=5)
 
-outputPath <- file.path(covidDir, "Output_GroundTruth", Sys.Date())
-dir.create(file.path(covidDir, "Output_GroundTruth"))
+outputPath <- file.path(covidDir, "Output_GroundTruth_FirstScenario", Sys.Date())
+dir.create(file.path(covidDir, "Output_GroundTruth_FirstScenario"))
 dir.create(outputPath)
 dir.create(file.path(outputPath, "/Tables/"))
 dir.create(file.path(outputPath, "/Plots/"))
@@ -126,10 +126,6 @@ velocModel <- R2jags::jags(data = velocLogCasesList,
 
 timeElapsed <- (Sys.time() - start)
 
-# plotVelocityFit(velocModel$BUGSoutput$mean,
-#                stateCovidData, states, stateInterventions,
-#                fileName = paste0(outputPath, "/Plots/velocityModelFit.pdf"))
-
 
 posteriorSamples <- velocModel$BUGSoutput$sims.list
 
@@ -150,8 +146,28 @@ randomForestDeathModel <- deathForest(stateCovidData,
 
 load(paste0(outputPath, "/CasePosteriorSamples", endDate, ".Rdata"))
 
-# Test on AZ, CO, NY and WV
-stateSird("AZ", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+# Test on FL, CA, TX, CO, NY and WV
+stateSird("FL", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+randomForestDeathModel, posteriorSamples,
+rfError = TRUE,
+plots = TRUE,
+n.t = 120,
+lagDays = 28,
+minCases = 100,
+endDay = endDate,
+endPlotDay = "2021-04-01")
+
+stateSird("CA", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+randomForestDeathModel, posteriorSamples,
+rfError = TRUE,
+plots = TRUE,
+n.t = 120,
+lagDays = 28,
+minCases = 100,
+endDay = endDate,
+endPlotDay = "2021-04-01")
+
+stateSird("TX", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
 rfError = TRUE,
 plots = TRUE,
@@ -190,24 +206,5 @@ lagDays = 28,
 minCases = 100,
 endDay = endDate,
 endPlotDay = "2021-04-01")
-
-# run state SIRD models --------------------------------------------------------
-# foreach(i = 1:length(states)) %dopar% {
-#   stateSird(states[i],
-#             states,
-#             covariates,
-#             stateInterventions,
-#             velocLogCases,
-#             stateCovidData,
-#             randomForestDeathModel,
-#             posteriorSamples,
-#             rfError = TRUE,
-#             plots = TRUE,
-#             n.t = 120,
-#             lagDays = 21,
-#             minCases = 100,
-#             endDay = endDate,
-#             endPlotDay = "2020-12-23")
-# }
 ```
 

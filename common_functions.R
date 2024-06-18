@@ -485,7 +485,7 @@ rmse <- function(actual, predicted) {
 #   - time_step:                    time window to forecast
 #   - dir_name:                     name of the directory in which put the results
 #   - variants:                     true if we are considering variants, false otherwise
-compute_error <- function(real, computed_I_Sybil, final_date, time_step, dir_name, variants, region_abbrv){
+compute_error <- function(real, computed_I_Sybil, final_date, time_step, dir_name, variants, region_abbrv, j){
   if(!file.exists(paste0(dir_name, "/errors"))){
     system(paste0("mkdir ", dir_name, "/errors"))
   }
@@ -496,14 +496,22 @@ compute_error <- function(real, computed_I_Sybil, final_date, time_step, dir_nam
   computed_I_Sybil <- computed_I_Sybil %>%
     filter(date > final_date - time_step)
   
+  if(j == 1){
+    dirname_covidStateSird_groundtruth <- "Output_GroundTruth_FirstScenario"
+    dirname_covidStateSird <- "Output_FirstScenario"
+  }
+  else{
+    dirname_covidStateSird_groundtruth <- "Output_GroundTruth_SecondScenario"
+    dirname_covidStateSird <- "Output_SecondScenario"
+  }
   
-  load(paste0("covidStateSird/Output_GroundTruth/", Sys.Date(), "/Data/", region_abbrv, ".Rdata"))
+  load(paste0("covidStateSird/", dirname_covidStateSird_groundtruth ,"/", Sys.Date(), "/Data/", region_abbrv, ".Rdata"))
   stateFit <- stateFit %>%
     filter(times <= final_date, times > final_date - time_step)
   
   real_covidStateSird <- stateFit
   
-  load(paste0("covidStateSird/Output/", Sys.Date(), "/Data/", region_abbrv, ".Rdata"))
+  load(paste0("covidStateSird/", dirname_covidStateSird, "/", Sys.Date(), "/Data/", region_abbrv, ".Rdata"))
   stateFit <- stateFit %>%
     filter(times <= final_date, times > final_date - time_step)
   

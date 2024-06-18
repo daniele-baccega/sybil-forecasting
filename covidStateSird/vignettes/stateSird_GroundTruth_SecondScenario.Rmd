@@ -23,11 +23,11 @@ source("../R/velocityModel.R")
 
 
 # set final day of training data -----------------------------------------------
-endDate <- "2020-11-23"
+endDate <- "2021-03-01"
 minCase <- 100
 
 # toggles "demo" mode, when TRUE exectues an abbreviated run of the model ------
-DEMO <- FALSE
+DEMO <- TRUE
 
 if(DEMO) {
   n.chains = 1
@@ -50,8 +50,8 @@ covidDir <- ".."
 
 doParallel::registerDoParallel(cores=5)
 
-outputPath <- file.path(covidDir, "Output", Sys.Date())
-dir.create(file.path(covidDir, "Output"))
+outputPath <- file.path(covidDir, "Output_GroundTruth_SecondScenario", Sys.Date())
+dir.create(file.path(covidDir, "Output_GroundTruth_SecondScenario"))
 dir.create(outputPath)
 dir.create(file.path(outputPath, "/Tables/"))
 dir.create(file.path(outputPath, "/Plots/"))
@@ -126,10 +126,6 @@ velocModel <- R2jags::jags(data = velocLogCasesList,
 
 timeElapsed <- (Sys.time() - start)
 
-# plotVelocityFit(velocModel$BUGSoutput$mean,
-#                stateCovidData, states, stateInterventions,
-#                fileName = paste0(outputPath, "/Plots/velocityModelFit.pdf"))
-
 
 posteriorSamples <- velocModel$BUGSoutput$sims.list
 
@@ -137,10 +133,10 @@ save(posteriorSamples,
   file = paste0(outputPath, "/CasePosteriorSamples", endDate, ".Rdata"))
 
 stateCovidData_local <- stateCovidData %>%
-  filter(date >= 20201023)
+  filter(date >= 20210201)
 
 # train death model ------------------------------------------------------------
-randomForestDeathModel <- deathForest(stateCovidData_local, 
+randomForestDeathModel <- deathForest(stateCovidData, 
                                       states,
                                       covariates, 
                                       28, 
@@ -150,8 +146,8 @@ randomForestDeathModel <- deathForest(stateCovidData_local,
 
 load(paste0(outputPath, "/CasePosteriorSamples", endDate, ".Rdata"))
 
-# Test on AZ, CO, NY and WV
-stateSird("AZ", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+# Test on FL, CA, TX, CO, NY and WV
+stateSird("FL", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
 rfError = TRUE,
 plots = TRUE,
@@ -159,7 +155,27 @@ n.t = 120,
 lagDays = 28,
 minCases = 100,
 endDay = endDate,
-endPlotDay = "2020-12-23")
+endPlotDay = "2021-04-01")
+
+stateSird("CA", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+randomForestDeathModel, posteriorSamples,
+rfError = TRUE,
+plots = TRUE,
+n.t = 120,
+lagDays = 28,
+minCases = 100,
+endDay = endDate,
+endPlotDay = "2021-04-01")
+
+stateSird("TX", states, covariates, stateInterventions, velocLogCases, stateCovidData,
+randomForestDeathModel, posteriorSamples,
+rfError = TRUE,
+plots = TRUE,
+n.t = 120,
+lagDays = 28,
+minCases = 100,
+endDay = endDate,
+endPlotDay = "2021-04-01")
 
 stateSird("CO", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -169,7 +185,7 @@ n.t = 120,
 lagDays = 28,
 minCases = 100,
 endDay = endDate,
-endPlotDay = "2020-12-23")
+endPlotDay = "2021-04-01")
 
 stateSird("NY", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -179,7 +195,7 @@ n.t = 120,
 lagDays = 28,
 minCases = 100,
 endDay = endDate,
-endPlotDay = "2020-12-23")
+endPlotDay = "2021-04-01")
 
 stateSird("WV", states, covariates, stateInterventions, velocLogCases, stateCovidData,
 randomForestDeathModel, posteriorSamples,
@@ -189,25 +205,6 @@ n.t = 120,
 lagDays = 28,
 minCases = 100,
 endDay = endDate,
-endPlotDay = "2020-12-23")
-
-# run state SIRD models --------------------------------------------------------
-# foreach(i = 1:length(states)) %dopar% {
-#   stateSird(states[i],
-#             states,
-#             covariates,
-#             stateInterventions,
-#             velocLogCases,
-#             stateCovidData,
-#             randomForestDeathModel,
-#             posteriorSamples,
-#             rfError = TRUE,
-#             plots = TRUE,
-#             n.t = 120,
-#             lagDays = 21,
-#             minCases = 100,
-#             endDay = endDate,
-#             endPlotDay = "2020-12-23")
-# }
+endPlotDay = "2021-04-01")
 ```
 
