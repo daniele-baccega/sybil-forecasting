@@ -27,7 +27,7 @@ endDate <- "2020-11-23"
 minCase <- 100
 
 # toggles "demo" mode, when TRUE exectues an abbreviated run of the model ------
-DEMO <- TRUE
+DEMO <- FALSE
 
 if(DEMO) {
   n.chains = 1
@@ -66,6 +66,9 @@ stateDataCSV <- "https://raw.githubusercontent.com/COVID19Tracking/covid-public-
 
 stateCovidData <- read.csv(stateDataCSV)
 write.csv(stateCovidData, paste0(outputPath, "/stateCovidData.csv"))
+
+stateCovidData_local <- stateCovidData %>%
+  filter(date >= 20201023)
 
 # covariates for death model ---------------------------------------------------
 covariates <- read.csv(paste0(covidDir,
@@ -131,9 +134,6 @@ posteriorSamples <- velocModel$BUGSoutput$sims.list
 
 save(posteriorSamples,
   file = paste0(outputPath, "/CasePosteriorSamples", endDate, ".Rdata"))
-
-stateCovidData_local <- stateCovidData %>%
-  filter(date >= 20201023)
 
 # train death model ------------------------------------------------------------
 randomForestDeathModel <- deathForest(stateCovidData_local, 
