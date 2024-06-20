@@ -90,7 +90,7 @@ loc <- 0
 for(i in 1:length(states)) {
   loc <- loc + 1
 
-  velocLoc <- velocitiesState(stateCovidData, states[i], stateInterventions, 
+  velocLoc <- velocitiesState(stateCovidData_local, states[i], stateInterventions, 
                               minCases = minCase, endDate = endDate)
   population <- stateInterventions$statePopulation[stateInterventions$stateAbbreviation == states[i]]
   
