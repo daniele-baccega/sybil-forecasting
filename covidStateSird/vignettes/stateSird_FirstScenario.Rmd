@@ -27,7 +27,7 @@ endDate <- "2020-12-31"
 minCase <- 100
 
 # toggles "demo" mode, when TRUE exectues an abbreviated run of the model ------
-DEMO <- TRUE
+DEMO <- FALSE
 
 if(DEMO) {
   n.chains = 1

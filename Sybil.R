@@ -212,8 +212,8 @@ Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_varian
           
           # Plot the forecast and the comparisons
           SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
-          #if(!is.na(region_abbrv))
-          # compute_error(SIRD_ref_used, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants, region_abbrv, j)
+          if(!is.na(region_abbrv))
+           compute_error(SIRD_ref_used, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants, region_abbrv, j)
         }
         else{
           # Forecast on infection rates
@@ -241,8 +241,8 @@ Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_varian
           
           # Plot the forecast and the comparisons
           SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rate, fatality_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
-          #if(!is.na(region_abbrv))
-          #  compute_error(SIRD_ref_used, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants, region_abbrv, j)
+          if(!is.na(region_abbrv))
+            compute_error(SIRD_ref_used, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants, region_abbrv, j)
         }
       }
       
