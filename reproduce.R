@@ -49,10 +49,10 @@ global_initial_date <- as.Date("2020-02-24")
 global_final_date <- Sys.Date()
 
 
-# Scenarios with USA - West Virginia (V=4)
+# Scenarios with USA - Colorado (V=4)
 country <- "USA"
-region <- "West Virginia"
-region_abbrv <- "WV"
+region <- "Colorado"
+region_abbrv <- "CO"
 city <- ""
 
 if(!file.exists(country)){
@@ -79,7 +79,6 @@ df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
 Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates, region_abbrv)
-
 
 # Scenarios with USA - New York (V=4)
 country <- "USA"
@@ -112,11 +111,10 @@ df_disease_all <- data[[2]]
 
 Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates, region_abbrv)
 
-
-# Scenarios with USA - Colorado (V=4)
+# Scenarios with USA - West Virginia (V=4)
 country <- "USA"
-region <- "Colorado"
-region_abbrv <- "CO"
+region <- "West Virginia"
+region_abbrv <- "WV"
 city <- ""
 
 if(!file.exists(country)){

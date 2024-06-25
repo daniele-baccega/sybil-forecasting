@@ -1,9 +1,12 @@
 *.RData
 *.csv
 *.png
+*.html
 .Rhistory
 .Rproj.user
 aggregatesUMD/
+covidStateSird/Output_FirstScenario/
+covidStateSird/Output_GroundTruth_FirstScenario/
 
 !datasets/USA_variants.zip
 !datasets/USA_2024-06-13.zip
