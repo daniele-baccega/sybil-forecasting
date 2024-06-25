@@ -6,6 +6,7 @@
 ## NEWS ON COVID-19 FORECASTING
 - We used estimates of real cases [3] with Sybil instead of working with data on confirmed cases.
 - We made predictions on U.S. states.
+- We compared Sybil's performance with the framework of Watson et al. [4] using USA data.
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
@@ -52,6 +53,8 @@ To reproduce the results presented in the paper run:
 [2] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018). doi: https://doi.org/0.7287/peerj.preprints.3190v2
 
 [3] Javier  Alvarez et al. “Estimating active cases of COVID-19”. In: MedRxiv (2021), pp. 2021–12.
+
+[4] Watson GL, Xiong D, Zhang L, Zoller JA, Shamshoian J, et al. (2021) Pandemic velocity: Forecasting COVID-19 in the US with a machine learning & Bayesian time series compartmental model. PLOS Computational Biology 17(3): e1008837. https://doi.org/10.1371/journal.pcbi.1008837
 
 ## COPYRIGHT AND LICENSE
 Copyright _Daniele Baccega, Paolo Castagno, Antonio Fernández Anta, Matteo Sereno_
