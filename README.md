@@ -1,12 +1,8 @@
-## WHAT'S NEW IN VERSION 2.5
-- Separated the data pre-processing from Sybil. Now you have to feed Sybil with two dataframes:
-  * One with four columns named _date_, _new_cases_, _new_deaths_ and _population_ using a daily or weekly step (if you are using a weekly step set the flag _daily_spline_ to TRUE when calling the *Sybil* function). The column _population_ has all equal values.
-  * One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
+## WHAT'S NEW IN VERSION 3.0
+...
   
 ## NEWS ON COVID-19 FORECASTING
-- We used estimates of real cases [3] with Sybil instead of working with data on confirmed cases.
-- We made predictions on U.S. states.
-- We compared Sybil's performance with the framework of Watson et al. [4] using USA data.
+...
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
@@ -51,10 +47,6 @@ To reproduce the results presented in the paper run:
 [1] Baccega, Daniele, et al. "Enhancing COVID-19 Forecasting Precision through the Integration of Compartmental Models, Machine Learning and Variants." medRxiv (2024): 2024-03. doi: https://doi.org/10.1101/2024.03.20.24304583
 
 [2] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018). doi: https://doi.org/0.7287/peerj.preprints.3190v2
-
-[3] Javier  Alvarez et al. “Estimating active cases of COVID-19”. In: MedRxiv (2021), pp. 2021–12.
-
-[4] Watson GL, Xiong D, Zhang L, Zoller JA, Shamshoian J, et al. (2021) Pandemic velocity: Forecasting COVID-19 in the US with a machine learning & Bayesian time series compartmental model. PLOS Computational Biology 17(3): e1008837. https://doi.org/10.1371/journal.pcbi.1008837
 
 ## COPYRIGHT AND LICENSE
 Copyright _Daniele Baccega, Paolo Castagno, Antonio Fernández Anta, Matteo Sereno_

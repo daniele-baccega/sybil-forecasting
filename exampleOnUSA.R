@@ -25,10 +25,6 @@ source("plots.R")
 
 Sys.setlocale("LC_TIME", "en_US.UTF-8")
 
-# Run covidStateSird (the first to obtain the ground truth, the second to obtain the forecast)
-render("covidStateSird/vignettes/stateSird_GroundTruth_FirstScenario.Rmd")
-render("covidStateSird/vignettes/stateSird_FirstScenario.Rmd")
-
 # Select the configuration (with or without variants, daily or daily-spline data)
 # If in a particular country data are weekly you have to use daily-spline data.
 daily_spline <- FALSE
@@ -52,7 +48,6 @@ global_final_date <- Sys.Date()
 # Scenarios with USA - Colorado (V=4)
 country <- "USA"
 region <- "Colorado"
-region_abbrv <- "CO"
 city <- ""
 
 if(!file.exists(country)){
@@ -78,12 +73,11 @@ data <- prepare_data_USA(country, global_initial_date, global_final_date, immuni
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates, region_abbrv)
+Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)
 
 # Scenarios with USA - New York (V=4)
 country <- "USA"
 region <- "New York"
-region_abbrv <- "NY"
 city <- ""
 
 if(!file.exists(country)){
@@ -109,12 +103,11 @@ data <- prepare_data_USA(country, global_initial_date, global_final_date, immuni
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates, region_abbrv)
+Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)
 
 # Scenarios with USA - West Virginia (V=4)
 country <- "USA"
 region <- "West Virginia"
-region_abbrv <- "WV"
 city <- ""
 
 if(!file.exists(country)){
@@ -140,4 +133,4 @@ data <- prepare_data_USA(country, global_initial_date, global_final_date, immuni
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates, region_abbrv)
+Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)

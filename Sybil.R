@@ -17,7 +17,7 @@
 #   - forecast:                   true if you want to do the forecasts, false if you only want to extract the rates
 #   - initial_dates:              initial dates
 #   - final_dates:                final dates
-Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_variants_data = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, forecast = FALSE, initial_dates = c(), final_dates = c(), region_abbrv = NA){
+Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_variants_data = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, forecast = FALSE, initial_dates = c(), final_dates = c()){
   if(forecast && (length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names)))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   
@@ -212,8 +212,6 @@ Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_varian
           
           # Plot the forecast and the comparisons
           SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, recovery_rate, global_fatality_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
-          if(!is.na(region_abbrv))
-           compute_error(SIRD_ref_used, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants, region_abbrv, j)
         }
         else{
           # Forecast on infection rates
@@ -241,8 +239,6 @@ Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_varian
           
           # Plot the forecast and the comparisons
           SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rate, fatality_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
-          if(!is.na(region_abbrv))
-            compute_error(SIRD_ref_used, SIRD_final, final_dates_ref[i], time_steps[i], dir_name, variants, region_abbrv, j)
         }
       }
       
