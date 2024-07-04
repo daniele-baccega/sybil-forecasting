@@ -1,9 +1,9 @@
 ## BRANCHES
 The **main** branch refers to the main results presented in [1] (together with the comparisons with other approaches).
 There are different branches beyond the main branch:
-- sybil-v2.0: this branch refers to the results presented in [1] using a fixed recovery rates, here, we also included a pre-processing step to fill missing data and to move from a weekly to a daily step in case of availability of data with a weekly step.
-- sybil-v2.5: this branch refers to the results presented in [1] using data on USA (together with the comparison of Sybil's performance with the framework of Watson et al. [3]); here, we also separated the data pre-processing from Sybil and we tried to use estimates of real cases [4, 5, 6, 7] instead of working with data on confirmed cases; we are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
-- sybil-v3.0: this branch will host a more usable and cleaned version of Sybil.
+- **sybil-v2.0**: this branch refers to the results presented in [1] using a fixed recovery rates, here, we also included a pre-processing step to fill missing data and to move from a weekly to a daily step in case of availability of data with a weekly step.
+- **sybil-v2.5**: this branch refers to the results presented in [1] using data on USA (together with the comparison of Sybil's performance with the framework of Watson et al. [3]); here, we also separated the data pre-processing from Sybil and we tried to use estimates of real cases [4, 5, 6, 7] instead of working with data on confirmed cases; we are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
+- **sybil-v3.0**: this branch will host a more usable and cleaned version of Sybil.
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
