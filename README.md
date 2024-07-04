@@ -8,6 +8,9 @@
 - We made predictions on U.S. states.
 - We compared Sybil's performance with the framework of Watson et al. [4] using USA data.
 
+## IN PROGRESS
+- We are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
+
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
 The rapid global spread of the virus has affected nearly every part of the world.
