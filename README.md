@@ -4,9 +4,9 @@
   * One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
   
 ## NEWS ON COVID-19 FORECASTING
-- We used estimates of real cases [3] with Sybil instead of working with data on confirmed cases.
+- We used estimates of real cases [3, 4, 5, 6] with Sybil instead of working with data on confirmed cases.
 - We made predictions on U.S. states.
-- We compared Sybil's performance with the framework of Watson et al. [4] using USA data.
+- We compared Sybil's performance with the framework of Watson et al. [7] using USA data.
 
 ## IN PROGRESS
 - We are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
@@ -55,9 +55,15 @@ To reproduce the results presented in the paper run:
 
 [2] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018). doi: https://doi.org/0.7287/peerj.preprints.3190v2
 
-[3] Javier  Alvarez et al. “Estimating active cases of COVID-19”. In: MedRxiv (2021), pp. 2021–12.
+[3] Javier  ́Alvarez et al. “Estimating active cases of COVID-19”. In: MedRxiv (2021), pp. 2021–12.
 
-[4] Watson GL, Xiong D, Zhang L, Zoller JA, Shamshoian J, et al. (2021) Pandemic velocity: Forecasting COVID-19 in the US with a machine learning & Bayesian time series compartmental model. PLOS Computational Biology 17(3): e1008837. https://doi.org/10.1371/journal.pcbi.1008837
+[4] Christina M Astley et al. “Global monitoring of the impact of the COVID-19 pandemic through online surveys sampled from the Facebook user base”. In: Proceedings of the National Academy of Sciences 118.51 (2021), e2111455118.
+
+[5] Jes ́us Rufino et al. “Using survey data to estimate the impact of the omicron variant on vaccine efficacy against COVID-19 infection”. In: Scientific Reports 13.1 (2023), p. 900.
+
+[6]Joshua A Salomon et al. “The US COVID-19 Trends and Impact Survey: Continuous real-time measurement of COVID-19 symptoms, risks, protective behaviors, testing, and vaccination”. In: Proceedings of the National Academy of Sciences 118.51 (2021), e2111454118.
+
+[7] Watson GL, Xiong D, Zhang L, Zoller JA, Shamshoian J, et al. (2021) Pandemic velocity: Forecasting COVID-19 in the US with a machine learning & Bayesian time series compartmental model. PLOS Computational Biology 17(3): e1008837. https://doi.org/10.1371/journal.pcbi.1008837
 
 ## COPYRIGHT AND LICENSE
 Copyright _Daniele Baccega, Paolo Castagno, Antonio Fernández Anta, Matteo Sereno_
