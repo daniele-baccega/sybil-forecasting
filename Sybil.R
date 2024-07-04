@@ -21,9 +21,9 @@ Sybil <- function(df_disease_all, df_variants_all, variants = TRUE, daily_varian
   if(forecast && (length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names)))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   
-  # recovery_data <- FALSE
-  # if("new_recoveries" %in% names(df_disease_all))
-  #   recovery_data <- TRUE
+  recovery_data <- FALSE
+  if("new_recoveries" %in% names(df_disease_all))
+    recovery_data <- TRUE
   
   ref_data_flag <- rep(FALSE, 4)
   time_steps <- c(7, 14, 21, 28)
