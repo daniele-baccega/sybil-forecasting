@@ -349,7 +349,7 @@ plot_SIRD_evolution <- function(df_local, n, n_ref, dir_name, time_step, ref_dat
       geom_line(aes(date, value, col=variant, linetype=type), linewidth=1.5) +
       facet_wrap(~place, scales="free_y") +
       scale_colour_manual(values=c(hue_pal()(length(variants_name)), "#808080")) +
-      theme(panel.spacing = unit(1, "cm"), legend.key.size = unit(2, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=40, face="bold"), plot.title = element_text(size=450, face="bold"), legend.title=element_text(size=50, face="bold"), legend.text=element_text(size=48), strip.text.x = element_blank()) +
+      theme(panel.spacing = unit(1, "cm"), legend.key.size = unit(2, 'cm'), axis.text=element_text(size=35), axis.title=element_text(size=40, face="bold"), plot.title = element_text(size=50, face="bold"), legend.title=element_text(size=50, face="bold"), legend.text=element_text(size=48), strip.text.x = element_blank()) +
       labs(title=paste0(time_step, " days"), x="Date", y="Population", color="Variants", linetype="Type") +
       scale_y_continuous(labels = label_scientific())
     save(plot, file = paste0(dir_name, "/RData/SIRD_forecast_", time_step, "_days.RData"))
