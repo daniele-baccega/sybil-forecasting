@@ -1,3 +1,10 @@
+## BRANCHES
+The **main** branch refers to the main results presented in [1] (together with the comparisons with other approaches).
+There are different branches beyond the main branch:
+- **sybil-v2.0**: this branch refers to the results presented in [1] using a fixed recovery rates, here, we also included a pre-processing step to fill missing data and to move from a weekly to a daily step in case of availability of data with a weekly step.
+- **sybil-v2.5**: this branch refers to the results presented in [1] using data on USA (together with the comparison of Sybil's performance with the framework of Watson et al. [3]); here, we also separated the data pre-processing from Sybil and we tried to use estimates of real cases [4, 5, 6, 7] instead of working with data on confirmed cases; we are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
+- **sybil-v3.0**: this branch will host a more usable and cleaned version of Sybil.
+
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
 The rapid global spread of the virus has affected nearly every part of the world.
@@ -41,6 +48,16 @@ To reproduce the results presented in the paper run:
 [1] Baccega, Daniele, et al. "Enhancing COVID-19 Forecasting Precision through the Integration of Compartmental Models, Machine Learning and Variants." medRxiv (2024): 2024-03. doi: https://doi.org/10.1101/2024.03.20.24304583
 
 [2] Taylor, S.J., Letham, B.: Forecasting at scale. The American Statistician 72(1), 37–45 (2018). doi: https://doi.org/0.7287/peerj.preprints.3190v2
+
+[3] Watson GL, Xiong D, Zhang L, Zoller JA, Shamshoian J, et al. (2021) Pandemic velocity: Forecasting COVID-19 in the US with a machine learning & Bayesian time series compartmental model. PLOS Computational Biology 17(3): e1008837. https://doi.org/10.1371/journal.pcbi.1008837
+
+[4] Javier  ́Alvarez et al. “Estimating active cases of COVID-19”. In: MedRxiv (2021), pp. 2021–12.
+
+[5] Christina M Astley et al. “Global monitoring of the impact of the COVID-19 pandemic through online surveys sampled from the Facebook user base”. In: Proceedings of the National Academy of Sciences 118.51 (2021), e2111455118.
+
+[6] Jes ́us Rufino et al. “Using survey data to estimate the impact of the omicron variant on vaccine efficacy against COVID-19 infection”. In: Scientific Reports 13.1 (2023), p. 900.
+
+[7]Joshua A Salomon et al. “The US COVID-19 Trends and Impact Survey: Continuous real-time measurement of COVID-19 symptoms, risks, protective behaviors, testing, and vaccination”. In: Proceedings of the National Academy of Sciences 118.51 (2021), e2111454118.
 
 ## COPYRIGHT AND LICENSE
 Copyright _Daniele Baccega, Paolo Castagno, Antonio Fernández Anta, Matteo Sereno_
