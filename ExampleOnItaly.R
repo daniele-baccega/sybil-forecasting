@@ -57,7 +57,7 @@ if(!file.exists(country)){
 variants_to_disregard <- c("AY.4.2", "B.1.1.529", "B.1.1.7+E484K", "B.1.617.3", "BA.2+L452X", "BA.3", "BA.4/BA.5", "SGTF", "UNK")
 variants_aggregated <- list(Alpha = c("B.1.1.7"),
                             Delta = c("B.1.617.2"),
-                            Omicron = c("BA.1", "BA.2", "BA.2.75", "BA.4", "BA.5", "BQ.1", "XBB", "XBB.1.5", "XBB.1.5+F456L"),
+                            Omicron = c("BA.2.86", "XBB.1.5-like", "XBB.1.5-like+F456L", "BA.1", "BA.2", "BA.2.75", "BA.4", "BA.5", "BQ.1", "XBB", "XBB.1.5", "XBB.1.5+F456L"),
                             Other = c("B.1.351", "B.1.427/B.1.429", "B.1.525", "B.1.616", "B.1.617.1", "B.1.620", "B.1.621", "C.37", "P.1", "P.3", "B.1.427-B.1.429", "Other"))
 variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
 
