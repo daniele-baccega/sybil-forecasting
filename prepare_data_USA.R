@@ -51,6 +51,7 @@ download_files_and_load_data_USA <- function(country_long, global_initial_date, 
   
   # Read and preprocess the data
   df_disease_ref_init <- read.csv(disease_data)
+
   df_disease_ref_init[df_disease_ref_init == ""] <- NA
   df_disease_ref_init$confirmed[is.na(df_disease_ref_init$confirmed) & df_disease_ref_init$date <= "2020-04-01"] <- 0
   df_disease_ref_init$deaths[is.na(df_disease_ref_init$deaths) & df_disease_ref_init$date <= "2020-04-01"] <- 0
