@@ -437,6 +437,32 @@ final_plots <- function(dir_name, variants_name){
   dev.off()
   
   
+  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_7_days.RData"))
+  p1 <- plot 
+  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_14_days.RData"))
+  p2 <- plot 
+  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_21_days.RData"))
+  p3 <- plot 
+  load(paste0(dir_name, "/forecast_plot/RData/forecast_recovery_rates_28_days.RData"))
+  p4 <- plot 
+  
+  p <- (p1 + p2) / (p3 + p4) +
+    plot_layout(guides = "collect", axis_titles = "collect") &
+    theme(legend.position = "bottom", legend.box = "vertical")
+  
+  png(paste0(dir_name, "/forecast_plot/forecast_recovery_rates.png"), units="in", width=34, height=15, res=300)
+  print(p)
+  dev.off()
+  
+  p <- p1 / p2 / p3 / p4 +
+    plot_layout(guides = "collect", axis_titles = "collect") &
+    theme(legend.position = "bottom", legend.box = "vertical")
+  
+  png(paste0(dir_name, "/forecast_plot/forecast_recovery_rates_onexrow.png"), units="in", width=28, height=34, res=300)
+  print(p)
+  dev.off()
+  
+  
   load(paste0(dir_name, "/forecast_plot/RData/forecast_fatality_rates_7_days.RData"))
   p1 <- plot 
   load(paste0(dir_name, "/forecast_plot/RData/forecast_fatality_rates_14_days.RData"))
