@@ -1,8 +1,18 @@
+## WHAT YOU NEED TO RUN SYBIL
+You have to feed Sybil with two dataframes and an array:
+- One with eight columns named _date_, _new_cases_, _new_deaths_, _new_recoveries_ (optional), _total_cases_, _total_deaths_, _total_recoveries_ (optional) and _population_ using a daily or a weekly step (if you are using a weekly step, set the flag _daily_spline_ to TRUE when calling the **Sybil** function). The column _population_ has all equal values. If you do not provide the _new_recoveries_ and the _total_recoveries_ columns, you have to specify a fixed recovery rate (_recovery_rate_ parameter of **Sybil** function, with a default value equals to $\frac{1}{14}$).
+- One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
+- An array of four elements with the initial marking of the compartmental model [S, I, R, D].
+
 ## WHAT'S NEW IN VERSION 3.0
-...
-  
+- Added an array in input to Sybil: the initial marking of the compartmental model [S, I, R, D].
+- 
+
 ## NEWS ON COVID-19 FORECASTING
 ...
+
+## IN PROGRESS
+- We are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
