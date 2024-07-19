@@ -17,7 +17,7 @@
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-compartmental_models <- function(dir_name, df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate){
+compartmental_models <- function(SIRDS_initial_marking, dir_name, df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate){
   if(file.exists(paste0(dir_name, "/data/date.RData"))){
     load(paste0(dir_name, "/data/date.RData"))
     new_data <- !(today == Sys.Date())
@@ -34,10 +34,10 @@ compartmental_models <- function(dir_name, df_disease_ref, df_variants_ref, immu
       # Build the SIRD model from the data
       S_local <- I_local <- R_local <- D_local <- rep(0, n)
       
-      S_local[1] <- N - df_disease_ref$total_cases[1]
-      I_local[1] <- df_disease_ref$total_cases[1]
-      R_local[1] <- 0
-      D_local[1] <- df_disease_ref$total_deaths[1]
+      S_local[1] <- SIRDS_initial_marking[1]
+      I_local[1] <- SIRDS_initial_marking[2]
+      R_local[1] <- SIRDS_initial_marking[3]
+      D_local[1] <- SIRDS_initial_marking[4]
       
       for(t in 2:n){
         S_local[t] <- S_local[t-1] - df_disease_ref$new_cases[t] + R_local[t-1] * immunization_end_rate
@@ -50,10 +50,10 @@ compartmental_models <- function(dir_name, df_disease_ref, df_variants_ref, immu
       # Weekly data (we need this data to generate daily spline data)
       S_local_weekly <- I_local_weekly <- R_local_weekly <- D_local_weekly <- rep(0, n_weekly)
       
-      S_local_weekly[1] <- N - df_disease_ref$total_cases[1]
-      I_local_weekly[1] <- df_disease_ref$total_cases[1]
-      R_local_weekly[1] <- 0
-      D_local_weekly[1] <- df_disease_ref$total_deaths[1]
+      S_local_weekly[1] <- SIRDS_initial_marking[1]
+      I_local_weekly[1] <- SIRDS_initial_marking[2]
+      R_local_weekly[1] <- SIRDS_initial_marking[3]
+      D_local_weekly[1] <- SIRDS_initial_marking[4]
       
       recovery_rate_weekly <- recovery_rate * 7
       immunization_end_rate_weekly <- immunization_end_rate * 7
@@ -158,6 +158,8 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
     variants_data_spline[variants_data_spline < 0] <- 0
       
     variants_spline_df <- data.frame(date=seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1), y=variants_data_spline, variant=rep(v, length(variants_data_spline)))
+    variants_spline_df <- variants_spline_df %>% 
+      filter(date >= df_disease_all$date[1])
     
     variants_global_df <- rbind(variants_global_df, variants_spline_df)
     

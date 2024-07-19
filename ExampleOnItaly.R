@@ -71,5 +71,6 @@ final_dates <- c(as.Date("2022-01-20"))
 data <- prepare_data_Coronasurveys(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
+SIRDS_initial_marking <- data[[3]]
 
-Sybil(df_disease_all, df_variants_all, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)
+Sybil(df_disease_all, df_variants_all, SIRDS_initial_marking, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)

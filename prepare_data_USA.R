@@ -287,7 +287,12 @@ compute_data_USA <- function(df_disease_ref, df_variants_ref, global_initial_dat
     df_variants_ref$date <- rep(variants_date, length(unique(df_variants_ref$variant)))
   }
   
-  return(list(df_variants_ref, df_disease_ref))
+  SIRDS_initial_marking <- c(unique(df_disease_ref$population) - df_disease_ref$total_cases[1] - df_disease_ref$total_deaths[1],
+                             df_disease_ref$total_cases[1],
+                             0,
+                             df_disease_ref$total_deaths[1])
+  
+  return(list(df_variants_ref, df_disease_ref, SIRDS_initial_marking))
 }
 
 
@@ -318,6 +323,7 @@ prepare_data_USA <- function(country, global_initial_date, global_final_date, im
   data <- compute_data_USA(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
+  SIRDS_initial_marking <- data[[3]]
   
   if(nrow(df_variants_all) > 0){
     df_variants_all <- df_variants_all %>%
@@ -327,5 +333,5 @@ prepare_data_USA <- function(country, global_initial_date, global_final_date, im
   df_disease_all <- df_disease_all %>%
     select(date, new_cases, total_cases, new_deaths, total_deaths, population)
   
-  return(list(df_variants_all, df_disease_all))
+  return(list(df_variants_all, df_disease_all, SIRDS_initial_marking))
 }

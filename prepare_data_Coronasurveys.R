@@ -199,8 +199,7 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
   coronasurveys_data <- NA
   for(i in 1:nrow(dirs)){
     if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
-      return(NULL)
-      #stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
+      stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
       
     
     coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
@@ -218,7 +217,7 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
   coronasurveys_data <- coronasurveys_data %>%
     filter(date <= global_final_date)
   
-  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.8)$y
+  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.7)$y
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
   
   coronasurveys_data <- coronasurveys_data %>%
@@ -273,8 +272,15 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
     
     df_variants_ref$date <- rep(variants_date, length(unique(df_variants_ref$variant)))
   }
+
+  SIRDS_initial_marking <- c(unique(df_disease_ref$population) - coronasurveys_data$p_cli[1] - df_disease_ref$total_deaths[1],
+                             coronasurveys_data$p_cli[1],
+                             0,
+                             df_disease_ref$total_deaths[1])
+
+  df_disease_ref <- df_disease_ref[-1,]
   
-  return(list(df_variants_ref, df_disease_ref))
+  return(list(df_variants_ref, df_disease_ref, SIRDS_initial_marking))
 }
 
 # Prepare the data for Sybil.
@@ -306,6 +312,7 @@ prepare_data_Coronasurveys <- function(country, global_initial_date, global_fina
   
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
+  SIRDS_initial_marking <- data[[3]]
   
   if(nrow(df_variants_all) > 0){
     df_variants_all <- df_variants_all %>%
@@ -315,5 +322,5 @@ prepare_data_Coronasurveys <- function(country, global_initial_date, global_fina
   df_disease_all <- df_disease_all %>%
     select(date, new_cases, total_cases, new_deaths, total_deaths, population)
   
-  return(list(df_variants_all, df_disease_all))
+  return(list(df_variants_all, df_disease_all, SIRDS_initial_marking))
 }
