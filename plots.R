@@ -77,6 +77,15 @@ plot_rates <- function(dir_name, results_all, type = ""){
   print(plot)
   dev.off()
   
+  png(paste0(dir_name, "/recovery_rates", type, ".png"), units="in", width=34, height=15, res=300)
+  plot <- ggplot(results_all) +
+    geom_line(aes(x=date, y=rec_rates), linewidth=2) +
+    theme(legend.position = "bottom", legend.key.size = unit(2, 'cm'), axis.text=element_text(size=45), axis.title=element_text(size=40, face="bold"), plot.title = element_text(size=50, face="bold"), legend.title=element_text(size=50, face="bold"), legend.text=element_text(size=48)) +
+    labs(x="Date", y="Infection rates") +
+    scale_y_continuous(labels = label_scientific())
+  print(plot)
+  dev.off()
+  
   png(paste0(dir_name, "/fatality_rates", type, ".png"), units="in", width=34, height=15, res=300)
   plot <- ggplot(results_all) +
     geom_line(aes(x=date, y=fat_rates), linewidth=2) +
