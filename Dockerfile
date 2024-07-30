@@ -6,10 +6,11 @@ LABEL maintainer="Daniele Baccega <daniele.baccega@unito.it>"
 COPY Sybil.R .
 COPY common_functions.R .
 COPY plots.R .
-COPY prepare_data_Coronasurveys.R .
-COPY prepare_data_USA.R .
-COPY ExampleOnItaly.R .
+COPY prepare_data_Italy_VaccinationFixedRecoveryRateAndCoronasurveys.R .
+COPY ExampleOnItaly_VaccinationFixedRecoveryRateAndCoronasurveys.R .
+COPY NeuralProphet.sh .
+COPY NeuralProphet.py .
 COPY datasets .
 
 ## Run the script
-CMD Rscript ExampleOnItaly.R
+CMD Rscript ExampleOnItaly_VaccinationFixedRecoveryRateAndCoronasurveys.R

@@ -14,38 +14,40 @@
 #   - fat_rates:              fatality rates
 #   - immunization_end_rate:  immunization end rate
 #   - N:                      total population
-SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, immunization_end_rate, N){
+SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, vac_rates, immunization_end_rate, N){
   # Reproduce the evolution of the SIRD model starting from the extracted rates
   n <- nrow(SIRD)
   
-  S_local <- I_local <- R_local <- D_local <- rep(0, n)
+  S_local <- I_local <- R_local <- D_local <- V_local <- rep(0, n)
   
   S_local[1] <- SIRD$S[1]
   I_local[1] <- SIRD$I[1]
   R_local[1] <- SIRD$R[1]
   D_local[1] <- SIRD$D[1]
+  V_local[1] <- SIRD$V[1]
   
   for(t in 1:(n-1)){
-    S_local[t+1] <- S_local[t] - infection_rates[t] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate
+    S_local[t+1] <- S_local[t] - infection_rates[t] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate - S_local[t] * vac_rates[t] + V_local[t] * immunization_end_rate
     I_local[t+1] <- I_local[t] + infection_rates[t] * I_local[t] * S_local[t] / N - I_local[t] * (rec_rates[t] + fat_rates[t])
     R_local[t+1] <- R_local[t] + I_local[t] * rec_rates[t] - R_local[t] * immunization_end_rate
     D_local[t+1] <- D_local[t] + I_local[t] * fat_rates[t]
+    V_local[t+1] <- V_local[t] + S_local[t] * vac_rates[t] - V_local[t] * immunization_end_rate
   }
   
-  date <- rep(SIRD$date, 4)
-  value <- c(S_local, I_local, R_local, D_local)
-  place <- c(rep("S", n), rep("I", n), rep("R", n), rep("D", n))
+  date <- rep(SIRD$date, 5)
+  value <- c(S_local, I_local, R_local, D_local, V_local)
+  place <- c(rep("S", n), rep("I", n), rep("R", n), rep("D", n), rep("V", n))
   
   df_plot <- data.frame(date, value, place)
-  df_plot$place = factor(df_plot$place, levels = c("S", "I", "R", "D"))
+  df_plot$place = factor(df_plot$place, levels = c("S", "I", "R", "D", "V"))
   
-  value <- c(SIRD$S, SIRD$I, SIRD$R, SIRD$D)
+  value <- c(SIRD$S, SIRD$I, SIRD$R, SIRD$D, SIRD$V)
   
   df_plot_ref <- data.frame(date, value, place)
-  df_plot_ref$place = factor(df_plot_ref$place, levels = c("S", "I", "R", "D"))
+  df_plot_ref$place = factor(df_plot_ref$place, levels = c("S", "I", "R", "D", "V"))
   
   df_plot <- df_plot %>%
-    mutate(type = "SIRD")
+    mutate(type = "SIRDV")
   
   df_plot_ref <- df_plot_ref %>%
     mutate(type = "Real")
@@ -81,7 +83,7 @@ plot_rates <- function(dir_name, results_all, type = ""){
   plot <- ggplot(results_all) +
     geom_line(aes(x=date, y=rec_rates), linewidth=2) +
     theme(legend.position = "bottom", legend.key.size = unit(2, 'cm'), axis.text=element_text(size=45), axis.title=element_text(size=40, face="bold"), plot.title = element_text(size=50, face="bold"), legend.title=element_text(size=50, face="bold"), legend.text=element_text(size=48)) +
-    labs(x="Date", y="Infection rates") +
+    labs(x="Date", y="Recovery rates") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()
@@ -91,6 +93,15 @@ plot_rates <- function(dir_name, results_all, type = ""){
     geom_line(aes(x=date, y=fat_rates), linewidth=2) +
     theme(legend.position = "bottom", legend.key.size = unit(2, 'cm'), axis.text=element_text(size=45), axis.title=element_text(size=40, face="bold"), plot.title = element_text(size=50, face="bold"), legend.title=element_text(size=50, face="bold"), legend.text=element_text(size=48)) +
     labs(x="Date", y="Fatality rates") +
+    scale_y_continuous(labels = label_scientific())
+  print(plot)
+  dev.off()
+  
+  png(paste0(dir_name, "/vaccination_rates", type, ".png"), units="in", width=34, height=15, res=300)
+  plot <- ggplot(results_all) +
+    geom_line(aes(x=date, y=vac_rates), linewidth=2) +
+    theme(legend.position = "bottom", legend.key.size = unit(2, 'cm'), axis.text=element_text(size=45), axis.title=element_text(size=40, face="bold"), plot.title = element_text(size=50, face="bold"), legend.title=element_text(size=50, face="bold"), legend.text=element_text(size=48)) +
+    labs(x="Date", y="Vaccination rates") +
     scale_y_continuous(labels = label_scientific())
   print(plot)
   dev.off()

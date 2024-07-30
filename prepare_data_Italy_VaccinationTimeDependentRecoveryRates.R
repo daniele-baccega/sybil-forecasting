@@ -6,7 +6,7 @@
 
 # Custom functions to prepare the data to feed Sybil
 
-# Coronasurveys estimates
+# Time-dependent recovery rates and vaccination
 
 # Download files and load data
 #
@@ -22,7 +22,7 @@
 # Output:
 #   - df_disease_ref_init:        dataframe with disease data
 #   - df_variants_init:           dataframe with variants data
-download_files_and_load_data_Coronasurveys <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -57,17 +57,21 @@ download_files_and_load_data_Coronasurveys <- function(country_long, global_init
   # Read and preprocess the data
   df_disease_ref_init <- read.csv(disease_data)
   df_disease_ref_init[df_disease_ref_init == ""] <- NA
+  df_disease_ref_init$people_fully_vaccinated[is.na(df_disease_ref_init$people_fully_vaccinated) & df_disease_ref_init$date <= "2020-12-26"] <- 0
   df_disease_ref_init$confirmed[is.na(df_disease_ref_init$confirmed) & df_disease_ref_init$date <= "2020-04-01"] <- 0
+  df_disease_ref_init$recovered[is.na(df_disease_ref_init$recovered) & df_disease_ref_init$date <= "2020-04-01"] <- 0
   df_disease_ref_init$deaths[is.na(df_disease_ref_init$deaths) & df_disease_ref_init$date <= "2020-04-01"] <- 0
   
   df_disease_ref_init <- df_disease_ref_init %>%
     filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3))
   
   df_disease_ref_init <- df_disease_ref_init %>%
-    mutate(confirmed = na.approx(confirmed, na.rm = FALSE), deaths = na.approx(deaths, na.rm = FALSE))
+    mutate(confirmed = na.approx(confirmed, na.rm = FALSE), people_fully_vaccinated = na.approx(people_fully_vaccinated, na.rm = FALSE), recovered = na.approx(recovered, na.rm = FALSE), deaths = na.approx(deaths, na.rm = FALSE))
   
   df_disease_ref_init <- df_disease_ref_init %>%
-    filter(!is.na(confirmed), !is.na(deaths), date <= global_final_date, date >= global_initial_date)
+    filter(!is.na(confirmed), !is.na(recovered), !is.na(people_fully_vaccinated), !is.na(deaths), date <= global_final_date, date >= global_initial_date)
+  
+  df_disease_ref_init$people_fully_vaccinated[is.na(df_disease_ref_init$people_fully_vaccinated)] <- 0
   
   df_variants_init <- data.frame()
   if(variants){
@@ -100,7 +104,7 @@ download_files_and_load_data_Coronasurveys <- function(country_long, global_init
       aggregate(percent_variant ~ year_week + variant + week + year, FUN=sum) %>%
       arrange(year_week)
     
-    df_variants_init <- filter_variants_Coronasurveys(df_variants_init)
+    df_variants_init <- filter_variants(df_variants_init)
     
     df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   }
@@ -115,7 +119,7 @@ download_files_and_load_data_Coronasurveys <- function(country_long, global_init
 #
 # Output:
 #   . df_variants:      dataframe with variants data (filtered)
-filter_variants_Coronasurveys <- function(df_variants_init){
+filter_variants <- function(df_variants_init){
   variants_names <- unique(df_variants_init$variant)
   
   other_proportion <- c()
@@ -175,68 +179,17 @@ filter_variants_Coronasurveys <- function(df_variants_init){
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country){
+compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country){
   # Preprocess data
   N <- df_disease_ref$population[1]
   
   df_disease_ref <- df_disease_ref %>%
-    mutate(total_deaths = deaths) %>%
-    select(date, total_deaths, population) %>%
-    mutate(new_deaths = diff(c(0, total_deaths))) %>%
+    mutate(total_deaths = deaths, total_cases = confirmed, total_recoveries = recovered, total_vaccines = people_fully_vaccinated) %>%
+    select(date, total_deaths, total_recoveries, total_cases, total_vaccines, population) %>%
+    mutate(new_deaths = diff(c(0, total_deaths)), new_cases = diff(c(0, total_cases)), new_recoveries = diff(c(0, total_recoveries)), new_vaccines = diff(c(0, total_vaccines))) %>%
     filter(date >= global_initial_date)
-  
-  initial_month <- as.numeric(format(global_initial_date, "%m"))
-  initial_year <- as.numeric(format(global_initial_date, "%Y"))
-  final_month <- as.numeric(format(global_final_date, "%m"))
-  final_year <- as.numeric(format(global_final_date, "%Y"))
-  
-  initial_quarter_number <- ceiling(initial_month / 3)
-  final_quarter_number <- ceiling(final_month / 3)
-  
-  dirs <- data.frame(directory=list.dirs("aggregatesUMD", recursive = FALSE)) %>%
-    filter(directory >= paste0("aggregatesUMD/", initial_year, "-Q", initial_quarter_number), directory <= paste0("aggregatesUMD/", final_year, "-Q", final_quarter_number))
-  
-  coronasurveys_data <- NA
-  for(i in 1:nrow(dirs)){
-    if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
-      stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
-      
-    
-    coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
-    coronasurveys_data_local <- coronasurveys_data_local %>%
-      select(date, p_cli)
-    
-    if(!is.data.frame(coronasurveys_data)){
-      coronasurveys_data <- coronasurveys_data_local
-    }
-    else{
-      coronasurveys_data <- rbind(coronasurveys_data, coronasurveys_data_local)
-    }
-  }
-  
-  coronasurveys_data <- coronasurveys_data %>%
-    filter(date <= global_final_date)
-  
-  coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.7)$y
-  coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
-  
-  coronasurveys_data <- coronasurveys_data %>%
-    filter(!is.na(p_cli))
-  
-  
-  
-  df_disease_ref <- df_disease_ref %>%
-    filter(date >= min(coronasurveys_data$date), date <= max(coronasurveys_data$date))
-  df_disease_ref <- df_disease_ref %>%
-    mutate(new_cases = c(diff(coronasurveys_data$p_cli) + recovery_rate * coronasurveys_data$p_cli[1:(nrow(coronasurveys_data)-1)] + new_deaths[1:(nrow(coronasurveys_data)-1)], 0))
-  df_disease_ref <- df_disease_ref[1:(nrow(df_disease_ref)-1),]
 
   df_disease_ref$new_cases[which(df_disease_ref$new_cases < 0)] <- 0
-  
-  df_disease_ref <- df_disease_ref %>%
-    mutate(total_cases = coronasurveys_data$p_cli[1] + cumsum(new_cases))
-  
-  df_disease_ref <- rbind(data.frame(date=as.Date(df_disease_ref$date[1])-1, total_deaths=df_disease_ref$total_deaths[1]-df_disease_ref$new_deaths[1], population= df_disease_ref$population[1], new_deaths=0, new_cases=0, total_cases=coronasurveys_data$p_cli[1]), df_disease_ref)
   
   df_disease_ref$date <- as.Date(df_disease_ref$date)
   
@@ -246,6 +199,9 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
   df_disease_ref$year[which(df_disease_ref$year == 2021 & df_disease_ref$week == 53)] <- 2020
   df_disease_ref$year[which(df_disease_ref$year == 2022 & df_disease_ref$week == 52 & df_disease_ref$date <= as.Date("2022-02-01"))] <- 2021
   df_disease_ref$year[which(df_disease_ref$year == 2023 & df_disease_ref$week == 52 & df_disease_ref$date <= as.Date("2023-02-01"))] <- 2022
+  
+  df_disease_ref <- df_disease_ref %>%
+    filter(!((year == df_variants_ref$year[nrow(df_variants_ref)] & week > df_variants_ref$week[nrow(df_variants_ref)]) | (year > df_variants_ref$year[nrow(df_variants_ref)])))
   
   variants_date <- df_disease_ref %>%
     group_by(year, week) %>%
@@ -257,6 +213,8 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
       group_by(week, year) %>%
       summarize(new_cases = sum(new_cases),
                 new_deaths = sum(new_deaths),
+                new_recoveries = sum(new_recoveries),
+                new_vaccines = sum(new_vaccines),
                 date = first(date)) %>%
       filter(!is.na(new_cases))
 
@@ -264,7 +222,7 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
 
     df_disease_ref$population <- rep(N, nrow(df_disease_ref))
   }
-  
+
   if(variants){
     df_variants_ref <- df_variants_ref %>%
       filter(!(year == df_disease_ref$year[nrow(df_disease_ref)] & week > df_disease_ref$week[nrow(df_disease_ref)]), !(year > df_disease_ref$year[nrow(df_disease_ref)]), !(year == df_disease_ref$year[1] & week < df_disease_ref$week[1]), !(year < df_disease_ref$year[1])) %>%
@@ -273,10 +231,11 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
     df_variants_ref$date <- rep(variants_date, length(unique(df_variants_ref$variant)))
   }
 
-  SIRDS_initial_marking <- c(unique(df_disease_ref$population) - coronasurveys_data$p_cli[1] - df_disease_ref$total_deaths[1],
-                             coronasurveys_data$p_cli[1],
-                             0,
-                             df_disease_ref$total_deaths[1])
+  SIRDS_initial_marking <- c(unique(df_disease_ref$population) - df_disease_ref$total_cases[1] - df_disease_ref$total_deaths[1] - - df_disease_ref$total_recoveries[1] - df_disease_ref$total_vaccines[1],
+                             df_disease_ref$total_cases[1],
+                             df_disease_ref$total_recoveries[1],
+                             df_disease_ref$total_deaths[1],
+                             df_disease_ref$total_vaccines[1])
 
   df_disease_ref <- df_disease_ref[-1,]
   
@@ -300,13 +259,13 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-prepare_data_Coronasurveys <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
+prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
   # Download file and load data
-  data <- download_files_and_load_data_Coronasurveys(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
-  data <- compute_data_Coronasurveys(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
+  data <- compute_data(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
   if(is.null(data))
     return(NULL)
   
@@ -320,7 +279,7 @@ prepare_data_Coronasurveys <- function(country, global_initial_date, global_fina
   }
   
   df_disease_all <- df_disease_all %>%
-    select(date, new_cases, total_cases, new_deaths, total_deaths, population)
+    select(date, new_cases, total_cases, new_deaths, total_deaths, new_recoveries, total_recoveries, new_vaccines, total_vaccines, population)
   
   return(list(df_variants_all, df_disease_all, SIRDS_initial_marking))
 }

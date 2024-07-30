@@ -43,6 +43,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
     if(!file.exists(dir_name)){
       system(paste0("mkdir -p ", dir_name))
       system(paste0("mkdir -p ", dir_name, "/prophet_models"))
+      system(paste0("mkdir -p ", dir_name, "/neural_prophet_models"))
       system(paste0("mkdir -p ", dir_name, "/data"))
       system(paste0("mkdir -p ", dir_name, "/forecast_plot"))
       
@@ -58,9 +59,9 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
     df_disease_all <- data[[2]]
     SIRD_all <- data[[3]]
     results_all <- data[[4]]
-
+    
     # Check if we can reproduce the real data using a SIRD model with the previously computed rates
-    SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, immunization_end_rate, df_disease_all$population[1])
+    SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, results_all$vac_rates, immunization_end_rate, df_disease_all$population[1])
     
     SIRD_all_variants <- data.frame()
     results_all_variants <- data.frame()
@@ -120,10 +121,21 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
         
         ref_data_flag[i] <- df_disease_all$date[nrow(df_disease_all)-1] >= (df_disease_used$date[n] + time_steps[i])
         
+        # Forecast on vaccination rates
+        results_used$vac_rates[which(results_used$vac_rates <= 1e-10)] <- min(results_used$vac_rates[which(results_used$vac_rates > 1e-10)])
+        vac_rates_log <- log(unique(results_used$vac_rates))
+        fc_vac_rate <- apply_Prophet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(vac_rates_log)+1):nrow(df_disease_used)], vac_rates_log, time_steps[i], "vac_rate")
+        #fc_vac_rate <- apply_NeuralProphet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(vac_rates_log)+1):nrow(df_disease_used)], vac_rates_log,time_steps[i], "vac_rate")
+        fc_vac_rate$yhat <- exp(fc_vac_rate$yhat)
+        fc_vac_rate$yhat_lower <- exp(fc_vac_rate$yhat_lower)
+        fc_vac_rate$yhat_upper <- exp(fc_vac_rate$yhat_upper)
+        forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_disease_used$date, df_disease_ref_used$date, results_ref_used$vac_rates, fc_vac_rate, time_steps[i], "vaccination_rates")
+        
         # Forecast on fatality rates
         results_used$fat_rates[which(results_used$fat_rates <= 1e-10)] <- min(results_used$fat_rates[which(results_used$fat_rates > 1e-10)])
         fat_rates_log <- log(unique(results_used$fat_rates))
         fc_fat_rate <- apply_Prophet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(fat_rates_log)+1):nrow(df_disease_used)], fat_rates_log, time_steps[i], "fat_rate")
+        #fc_fat_rate <- apply_NeuralProphet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(fat_rates_log)+1):nrow(df_disease_used)], fat_rates_log,time_steps[i], "fat_rate")
         fc_fat_rate$yhat <- exp(fc_fat_rate$yhat)
         fc_fat_rate$yhat_lower <- exp(fc_fat_rate$yhat_lower)
         fc_fat_rate$yhat_upper <- exp(fc_fat_rate$yhat_upper)
@@ -134,6 +146,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
           results_used$rec_rates[which(results_used$rec_rates <= 1e-10)] <- min(results_used$rec_rates[which(results_used$rec_rates > 1e-10)])
           rec_rates_log <- log(unique(results_used$rec_rates))
           fc_rec_rate <- apply_Prophet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(rec_rates_log)+1):nrow(df_disease_used)], rec_rates_log, time_steps[i], "rec_rates")
+          #fc_rec_rate <- apply_NeuralProphet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(rec_rates_log)+1):nrow(df_disease_used)], rec_rates_log, time_steps[i], "rec_rates")
           fc_rec_rate$yhat <- exp(fc_rec_rate$yhat)
           fc_rec_rate$yhat_lower <- exp(fc_rec_rate$yhat_lower)
           fc_rec_rate$yhat_upper <- exp(fc_rec_rate$yhat_upper)
@@ -170,6 +183,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
               
               infection_rates_log <- log(results_used_local$infection_rates)
               fc_inf_rate <- apply_Prophet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(infection_rates_log)+1):nrow(df_disease_used)], infection_rates_log, time_steps[i], paste0("inf_rate_", variants_name[k]))
+              #fc_inf_rate <- apply_NeuralProphet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(infection_rates_log)+1):nrow(df_disease_used)], infection_rates_log, time_steps[i], paste0("inf_rate_", variants_name[k]))
               fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
               fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
               fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
@@ -188,6 +202,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
               SIRD_used_local$I[which(SIRD_used_local$I == 0)] <- min(SIRD_used_local$I[which(SIRD_used_local$I != 0)])
               I_log <- log(SIRD_used_local$I)
               fc_I <- apply_Prophet(dir_name, df_disease_used$date, I_log, time_steps[i], paste0("I_", variants_name[k]))
+              #fc_I <- apply_NeuralProphet(dir_name, df_disease_used$date, I_log, time_steps[i], paste0("I_", variants_name[k]))
               fc_I$yhat <- exp(fc_I$yhat)
               fc_I$yhat_lower <- exp(fc_I$yhat_lower)
               fc_I$yhat_upper <- exp(fc_I$yhat_upper)
@@ -216,6 +231,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
           infection_rates_log <- log(global_infection_rates$infection_rates)
           infection_rates_log[which(is.infinite(infection_rates_log) | is.na(infection_rates_log))] <- 0
           fc_inf_rate <- apply_Prophet(dir_name, global_infection_rates$date, infection_rates_log, time_steps[i], "global_inf_rate")
+          #fc_inf_rate <- apply_NeuralProphet(dir_name, global_infection_rates$date, infection_rates_log, time_steps[i], "global_inf_rate")
           fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
           fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
           fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
@@ -224,16 +240,18 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
           global_infection_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
           global_recovery_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
           global_fatality_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat, lower=fc_fat_rate$yhat_lower, upper=fc_fat_rate$yhat_upper)
+          global_vaccination_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_vac_rate$yhat, lower=fc_vac_rate$yhat_lower, upper=fc_vac_rate$yhat_upper)
           
           
           # Plot the forecast and the comparisons
-          SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
+          SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
         }
         else{
           # Forecast on infection rates
           infection_rates_log <- log(results_used$infection_rates)
           infection_rates_log[which(is.infinite(infection_rates_log) | is.na(infection_rates_log))] <- 0
           fc_inf_rate <- apply_Prophet(dir_name, SIRD_used$date, infection_rates_log, time_steps[i], "inf_rate")
+          #fc_inf_rate <- apply_NeuralProphet(dir_name, SIRD_used$date, infection_rates_log, time_steps[i], "inf_rate")
           fc_inf_rate$yhat <- exp(fc_inf_rate$yhat)
           fc_inf_rate$yhat_lower <- exp(fc_inf_rate$yhat_lower)
           fc_inf_rate$yhat_upper <- exp(fc_inf_rate$yhat_upper)
@@ -245,6 +263,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
           I_log <- log(SIRD_used$I)
           I_log[which(is.infinite(I_log) | is.na(I_log))] <- 0
           fc_I <- apply_Prophet(dir_name, SIRD_used$date, I_log, time_steps[i], "I")
+          #fc_I <- apply_NeuralProphet(dir_name, SIRD_used$date, I_log, time_steps[i], "I")
           fc_I$yhat <- exp(fc_I$yhat)
           fc_I$yhat_lower <- exp(fc_I$yhat_lower)
           fc_I$yhat_upper <- exp(fc_I$yhat_upper)
@@ -253,11 +272,12 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
           infection_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_inf_rate$yhat, lower=fc_inf_rate$yhat_lower, upper=fc_inf_rate$yhat_upper)
           recovery_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_rec_rate$yhat, lower=fc_rec_rate$yhat_lower, upper=fc_rec_rate$yhat_upper)
           fatality_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_fat_rate$yhat, lower=fc_fat_rate$yhat_lower, upper=fc_fat_rate$yhat_upper)
+          vaccination_rates <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_vac_rate$yhat, lower=fc_vac_rate$yhat_lower, upper=fc_vac_rate$yhat_upper)
           
           I <- data.frame(date=seq.Date(df_disease_used$date[n]+1, df_disease_used$date[n]+time_steps[i], 1), mean=fc_I$yhat, lower=fc_I$yhat_lower, upper=fc_I$yhat_upper)
           
           # Plot the forecast and the comparisons
-          SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
+          SIRD_final <- SIRD_evolution(paste0(dir_name, "/forecast_plot"), time_steps[i], ref_data_flag[i], final_dates_ref[i], infection_rates, infection_rates, recovery_rates, fatality_rates, vaccination_rates, immunization_end_rate, SIRD_used, SIRD_ref_used, N[1], variants)
         }
       }
       

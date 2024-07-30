@@ -69,7 +69,7 @@ initial_dates <- c(as.Date("2021-04-01"))
 
 final_dates <- c(as.Date("2021-05-01"))
 
-data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 SIRDS_initial_marking <- data[[3]]

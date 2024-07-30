@@ -32,21 +32,22 @@ compartmental_models <- function(SIRDS_initial_marking, dir_name, df_disease_ref
     
     if(!daily_spline){
       # Build the SIRD model from the data
-      S_local <- I_local <- R_local <- D_local <- V_local <- rep(0, n)
+      S_local <- I_local <- R_local <- D_local <- Vs_local <- Vf_local <- rep(0, n)
       
       S_local[1] <- SIRDS_initial_marking[1]
       I_local[1] <- SIRDS_initial_marking[2]
       R_local[1] <- SIRDS_initial_marking[3]
       D_local[1] <- SIRDS_initial_marking[4]
-      V_local[1] <- SIRDS_initial_marking[5]
+      Vs_local[1] <- SIRDS_initial_marking[5]
+      Vf_local[1] <- SIRDS_initial_marking[5]
       
       if(recovery_data){
         for(t in 2:n){
-          S_local[t] <- S_local[t-1] - df_disease_ref$new_cases[t] + R_local[t-1] * immunization_end_rate - df_disease_ref$new_vaccines[t] + V_local[t-1] * immunization_end_rate
+          S_local[t] <- S_local[t-1] - (S_local[t]/(S_local[t] + Vf_local[t])) * df_disease_ref$new_cases[t] + (R_local[t-1] + Vs_local[t-1] + Vf_local[t-1]) * immunization_end_rate - df_disease_ref$new_vaccines[t]
           I_local[t] <- I_local[t-1] + df_disease_ref$new_cases[t] - (df_disease_ref$new_deaths[t] + df_disease_ref$new_recoveries[t])
           R_local[t] <- R_local[t-1] + df_disease_ref$new_recoveries[t] - R_local[t-1] * immunization_end_rate
           D_local[t] <- D_local[t-1] + df_disease_ref$new_deaths[t]
-          V_local[t] <- V_local[t-1] + df_disease_ref$new_vaccines[t] - V_local[t-1] * immunization_end_rate
+          V_local[t] <- V_local[t-1] + df_disease_ref$new_vaccines[t]
         }
       }
       else{
@@ -105,14 +106,14 @@ compartmental_models <- function(SIRDS_initial_marking, dir_name, df_disease_ref
       D_local <- D_spline(seq(1, length(df_disease_ref$date)))
       V_local <- V_spline(seq(1, length(df_disease_ref$date)))
     }
-   
+    
     SIRD_all <- data.frame(date=df_disease_ref$date, S=S_local, I=I_local, R=R_local, D=D_local, V=V_local)
     
     # Extract the rates
     results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1))
     
     plot_rates(dir_name, results_all)
-
+    
     today <- Sys.Date()
     save(df_variants_ref, df_disease_ref, S_local, I_local, R_local, D_local, V_local, SIRD_all, results_all, file=paste0(dir_name, "/data/data.RData"))
     save(today, file=paste0(dir_name, "/data/date.RData"))
@@ -186,7 +187,7 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
     }
     
     variants_data_spline[variants_data_spline < 0] <- 0
-      
+    
     variants_spline_df <- data.frame(date=seq.Date(df_variants_local$date[1], df_variants_local$date[nrow(df_variants_local)], 1), y=variants_data_spline, variant=rep(v, length(variants_data_spline)))
     variants_spline_df <- variants_spline_df %>% 
       filter(date >= df_disease_all$date[1])
@@ -208,7 +209,7 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
   
   results_all <- results_all %>%
     filter(date <= df_variants$date[nrow(df_variants)])
-      
+  
   return(list(variants_global_df, df_disease_all, SIRD_all, results_all))
 }
 
@@ -248,7 +249,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
     
     SIRD_all_variants <- rbind(SIRD_all_variants, data.frame(date=SIRD_variant$date, S=SIRD_variant$S, I=SIRD_variant$I, R=SIRD_variant$R, D=SIRD_variant$D, V=SIRD_variant$V, variant=variants_name[i]))
   }
-
+  
   df_variants_names <- df_variants %>%
     filter(date != SIRD_all_used$date[nrow(SIRD_all_used)])
   
@@ -305,7 +306,7 @@ filter_data <- function(df_disease_ref, SIRD_all, SIRD_all_variants, results_all
   # Dataframes
   df_disease <- df_disease_ref %>%
     filter(date <= final_date)
-
+  
   SIRD <- SIRD_all %>%
     filter(date <= final_date)
   
@@ -470,7 +471,7 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
     R_local[1:n] <- SIRD$R
     D_local[1:n] <- SIRD$D
     V_local[1:n] <- SIRD$V
-
+    
     for(t in n:(n_ref-1)){
       S_local[t+1] <- S_local[t] - infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate - S_local[t] * global_vaccination_rates$mean[(t-n)+1] + V_local[t] * immunization_end_rate
       I_local[t+1] <- I_local[t] + infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N - I_local[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])

@@ -18,7 +18,7 @@ library(countrycode)
 
 # Include the Sybil function and the common functions
 source("Sybil.R")
-source("prepare_data_Coronasurveys.R")
+source("prepare_data_Italy_FixedRecoveryRateAndCoronasurveys.R")
 source("common_functions.R")
 source("plots.R")
 
@@ -68,7 +68,7 @@ initial_dates <- c(as.Date("2021-12-20"))
 
 final_dates <- c(as.Date("2022-01-20"))
 
-data <- prepare_data_Coronasurveys(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 SIRDS_initial_marking <- data[[3]]
