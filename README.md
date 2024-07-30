@@ -1,15 +1,14 @@
 ## WHAT'S NEW IN VERSION 2.5
+
 Separated the data pre-processing from Sybil. Now you have to feed Sybil with two dataframes:
-- One with four columns named _date_, _new_cases_, _new_deaths_, _new_recoveries_ (optional), _total_cases_, _total_deaths_, _total_recoveries_ (optional) and _population_ using a daily or a weekly step (if you are using a weekly step, set the flag _daily_spline_ to TRUE when calling the **Sybil** function). The column _population_ has all equal values. If you do not provide the _new_recoveries_ and the _total_recoveries_ columns, you have to specify a fixed recovery rate (_recovery_rate_ parameter of **Sybil** function, with a default value equals to $\frac{1}{14}$). The _total_cases_, _total_deaths_ and _total_recoveries_ (optional) are useful to initialize the compartmental model.
+- One with six columns named _date_, _new_cases_, _new_deaths_, _total_cases_, _total_deaths_, and _population_ using a daily or a weekly step (if you are using a weekly step, set the flag _daily_spline_ to TRUE when calling the **Sybil** function). The column _population_ has all equal values. The _total_cases_ and the _total_deaths_ are useful to initialize the compartmental model.
 - One with three columns named _date_, _variant_ (name of a particular variant) and _percent_variant_ (proportion of the variant in the population; must be a number in [0, 1]). If you are not interested in modeling variant, pass an empty dataframe.
 
 ## NEWS ON COVID-19 FORECASTING
+
 - We used estimates of real cases [3, 4, 5, 6] with Sybil instead of working with data on confirmed cases.
 - We made predictions on U.S. states.
 - We compared Sybil's performance with the framework of Watson et al. [7] using USA data.
-
-## IN PROGRESS
-- We are introducing the possibility to work with data on recoveries or with a fixed recovery rate.
 
 ## INTRODUCTION
 
