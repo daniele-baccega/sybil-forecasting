@@ -74,7 +74,7 @@ initial_dates <- c(as.Date("2020-12-01"))
 
 final_dates <- c(as.Date("2020-12-31"))
 
-data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
@@ -105,7 +105,7 @@ initial_dates <- c(as.Date("2020-12-01"))
 
 final_dates <- c(as.Date("2020-12-31"))
 
-data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 
@@ -136,7 +136,7 @@ initial_dates <- c(as.Date("2020-12-01"))
 
 final_dates <- c(as.Date("2020-12-31"))
 
-data <- prepare_data_USA(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
+data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region, city)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 

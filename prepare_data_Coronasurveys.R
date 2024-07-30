@@ -22,7 +22,7 @@
 # Output:
 #   - df_disease_ref_init:        dataframe with disease data
 #   - df_variants_init:           dataframe with variants data
-download_files_and_load_data_Coronasurveys <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -100,7 +100,7 @@ download_files_and_load_data_Coronasurveys <- function(country_long, global_init
       aggregate(percent_variant ~ year_week + variant + week + year, FUN=sum) %>%
       arrange(year_week)
     
-    df_variants_init <- filter_variants_Coronasurveys(df_variants_init)
+    df_variants_init <- filter_variants(df_variants_init)
     
     df_variants_init$percent_variant[which(df_variants_init$percent_variant > 1.0)] <- 1.0
   }
@@ -115,7 +115,7 @@ download_files_and_load_data_Coronasurveys <- function(country_long, global_init
 #
 # Output:
 #   . df_variants:      dataframe with variants data (filtered)
-filter_variants_Coronasurveys <- function(df_variants_init){
+filter_variants <- function(df_variants_init){
   variants_names <- unique(df_variants_init$variant)
   
   other_proportion <- c()
@@ -175,7 +175,7 @@ filter_variants_Coronasurveys <- function(df_variants_init){
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country){
+compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country){
   # Preprocess data
   N <- df_disease_ref$population[1]
   
@@ -199,9 +199,8 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
   coronasurveys_data <- NA
   for(i in 1:nrow(dirs)){
     if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
-      return(NULL)
-      #stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
-      
+      return(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
+
     
     coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
     coronasurveys_data_local <- coronasurveys_data_local %>%
@@ -294,15 +293,15 @@ compute_data_Coronasurveys <- function(df_disease_ref, df_variants_ref, global_i
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-prepare_data_Coronasurveys <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
+prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
   # Download file and load data
-  data <- download_files_and_load_data_Coronasurveys(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
-  data <- compute_data_Coronasurveys(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
-  if(is.null(data))
-    return(NULL)
+  data <- compute_data(df_disease_init, df_variants_init, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, daily_spline, country)
+  if(!is.list(data))
+    return(data)
   
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
