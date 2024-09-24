@@ -122,13 +122,19 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
         ref_data_flag[i] <- df_disease_all$date[nrow(df_disease_all)-1] >= (df_disease_used$date[n] + time_steps[i])
         
         # Forecast on vaccination rates
-        results_used$vac_rates[which(results_used$vac_rates <= 1e-10)] <- min(results_used$vac_rates[which(results_used$vac_rates > 1e-10)])
-        vac_rates_log <- log(unique(results_used$vac_rates))
-        fc_vac_rate <- apply_Prophet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(vac_rates_log)+1):nrow(df_disease_used)], vac_rates_log, time_steps[i], "vac_rate")
-        #fc_vac_rate <- apply_NeuralProphet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(vac_rates_log)+1):nrow(df_disease_used)], vac_rates_log,time_steps[i], "vac_rate")
-        fc_vac_rate$yhat <- exp(fc_vac_rate$yhat)
-        fc_vac_rate$yhat_lower <- exp(fc_vac_rate$yhat_lower)
-        fc_vac_rate$yhat_upper <- exp(fc_vac_rate$yhat_upper)
+        if(sum(results_used$vac_rates) > 1e-5){
+          results_used$vac_rates[which(results_used$vac_rates <= 1e-10)] <- min(results_used$vac_rates[which(results_used$vac_rates > 1e-10)])
+          vac_rates_log <- log(unique(results_used$vac_rates))
+          fc_vac_rate <- apply_Prophet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(vac_rates_log)+1):nrow(df_disease_used)], vac_rates_log, time_steps[i], "vac_rate")
+          #fc_vac_rate <- apply_NeuralProphet(dir_name, df_disease_used$date[(nrow(df_disease_used)-length(vac_rates_log)+1):nrow(df_disease_used)], vac_rates_log,time_steps[i], "vac_rate")
+          fc_vac_rate$yhat <- exp(fc_vac_rate$yhat)
+          fc_vac_rate$yhat_lower <- exp(fc_vac_rate$yhat_lower)
+          fc_vac_rate$yhat_upper <- exp(fc_vac_rate$yhat_upper)
+        }
+        else{
+          fc_vac_rate <- data.frame(yhat=rep(0, time_steps[i]), yhat_lower=rep(0, time_steps[i]), yhat_upper=rep(0, time_steps[i]))
+        }
+        
         forecast_plot(paste0(dir_name, "/forecast_plot"), ref_data_flag[i], final_dates_ref[i], n, n_ref, df_disease_used$date, df_disease_ref_used$date, results_ref_used$vac_rates, fc_vac_rate, time_steps[i], "vaccination_rates")
         
         # Forecast on fatality rates

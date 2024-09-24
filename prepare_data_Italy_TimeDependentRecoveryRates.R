@@ -230,7 +230,8 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   SIRDS_initial_marking <- c(unique(df_disease_ref$population) - df_disease_ref$total_cases[1] - df_disease_ref$total_deaths[1] - - df_disease_ref$total_recoveries[1],
                              df_disease_ref$total_cases[1],
                              df_disease_ref$total_recoveries[1],
-                             df_disease_ref$total_deaths[1])
+                             df_disease_ref$total_deaths[1],
+                             0)
 
   df_disease_ref <- df_disease_ref[-1,]
   
@@ -275,6 +276,9 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   
   df_disease_all <- df_disease_all %>%
     select(date, new_cases, total_cases, new_deaths, total_deaths, new_recoveries, total_recoveries, population)
+  
+  df_disease_all$new_vaccines <- rep(0, nrow(df_disease_all))
+  df_disease_all$total_vaccines <- rep(0, nrow(df_disease_all))
   
   return(list(df_variants_all, df_disease_all, SIRDS_initial_marking))
 }

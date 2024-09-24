@@ -64,9 +64,9 @@ variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
 # First scenario on Italy
 external_dir_names <- c(paste0(country, "/V4/Example/"))
 
-initial_dates <- c(as.Date("2021-11-13"))
+initial_dates <- c(as.Date("2021-11-20"))
 
-final_dates <- c(as.Date("2022-01-13"))
+final_dates <- c(as.Date("2022-01-20"))
 
 data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]

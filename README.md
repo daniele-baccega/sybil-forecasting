@@ -7,9 +7,7 @@ You have to feed Sybil with two dataframes and an array:
 ## WHAT'S NEW IN VERSION 3.0
 - Added an array in input to Sybil: the initial marking of the compartmental model [S, I, R, D].
 - We introduced the possibility to work with data on recoveries or with a fixed recovery rate.
-
-## IN PROGRESS
-- We are introducing the possibility to use data on vaccinations.
+- We introduced the possibility to use data on vaccinations.
 
 ## INTRODUCTION
 The COVID-19 pandemic, caused by the SARS-CoV-2 virus, highlights the intricate challenges of addressing the most impactful global health crisis of the 21st century.
