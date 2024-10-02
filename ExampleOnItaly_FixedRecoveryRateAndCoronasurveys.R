@@ -28,21 +28,23 @@ Sys.setlocale("LC_TIME", "en_US.UTF-8")
 # Select the configuration (with or without variants, daily or daily-spline data)
 # If in a particular country data are weekly you have to use daily-spline data.
 daily_spline <- FALSE
-variants <- TRUE
+variants <- FALSE
 
 # Set this flag to true if data related to variants are daily, false if they are weekly
 daily_variants_data <- FALSE
 
 # Forecast or only extract the rates and the SIRD evolution?
-forecast <- TRUE
+forecast <- FALSE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
 recovery_rate <- 1 / 14
 
 # Global initial and final dates
-global_initial_date <- as.Date("2020-02-24")
-global_final_date <- Sys.Date()
+global_initial_date <- as.Date("2020-04-26")
+global_final_date <- as.Date("2021-05-19")
+# global_initial_date <- as.Date("2020-02-24")
+# global_final_date <- Sys.Date()
 
 
 # Scenarios with Italy (V=4)
@@ -72,5 +74,6 @@ data <- prepare_data(country, global_initial_date, global_final_date, immunizati
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 SIRDS_initial_marking <- data[[3]]
+response_Facebook <- data[[4]]
 
-Sybil(df_disease_all, df_variants_all, SIRDS_initial_marking, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)
+Sybil(df_disease_all, df_variants_all, SIRDS_initial_marking, response_Facebook, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)

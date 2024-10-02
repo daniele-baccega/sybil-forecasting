@@ -17,7 +17,7 @@
 #   - forecast:                   true if you want to do the forecasts, false if you only want to extract the rates
 #   - initial_dates:              initial dates
 #   - final_dates:                final dates
-Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, variants = TRUE, daily_variants_data = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, forecast = FALSE, initial_dates = c(), final_dates = c()){
+Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, response_Facebook, variants = TRUE, daily_variants_data = TRUE, daily_spline = FALSE, external_dir_names = paste0("Scenario_", as.numeric(Sys.time())), immunization_end_rate = 1 / 180, recovery_rate = 1 / 14, forecast = FALSE, initial_dates = c(), final_dates = c()){
   if(forecast && (length(initial_dates) != length(final_dates) || length(initial_dates) != length(external_dir_names)))
     stop("Variables initial_dates, final_dates and external_dir_names must have the same size!")
   
@@ -54,14 +54,14 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
     }
     
     # Compute and save all the data
-    data <- compartmental_models(SIRDS_initial_marking, dir_name, df_disease_all, df_variants_all, immunization_end_rate, recovery_rate, recovery_data)
+    data <- compartmental_models(SIRDS_initial_marking, response_Facebook, dir_name, df_disease_all, df_variants_all, immunization_end_rate, recovery_rate, recovery_data)
     df_variants_all <- data[[1]]
     df_disease_all <- data[[2]]
     SIRD_all <- data[[3]]
     results_all <- data[[4]]
     
     # Check if we can reproduce the real data using a SIRD model with the previously computed rates
-    SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, results_all$vac_rates, immunization_end_rate, df_disease_all$population[1])
+    SIRD_check(dir_name, SIRD_all, results_all$infection_rates, results_all$rec_rates, results_all$fat_rates, results_all$vac_rates, immunization_end_rate, df_disease_all$population[1], response_Facebook)
     
     SIRD_all_variants <- data.frame()
     results_all_variants <- data.frame()
@@ -73,7 +73,7 @@ Sybil <- function(df_disease_all, df_variants_all, SIRDS_initial_marking, varian
       SIRD_all <- data[[3]]
       results_all <- data[[4]]
 
-      variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_disease_all$population[1])
+      variants_data <- SIRD_variants(dir_name, df_variants_processed, SIRD_all, results_all, immunization_end_rate, df_disease_all$population[1], response_Facebook)
       SIRD_all_variants <- variants_data[[1]]
       results_all_variants <- variants_data[[2]]
       

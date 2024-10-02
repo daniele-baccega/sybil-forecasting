@@ -17,7 +17,7 @@
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-compartmental_models <- function(SIRDS_initial_marking, dir_name, df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, recovery_data){
+compartmental_models <- function(SIRDS_initial_marking, response_Facebook, dir_name, df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, recovery_data){
   if(file.exists(paste0(dir_name, "/data/date.RData"))){
     load(paste0(dir_name, "/data/date.RData"))
     new_data <- !(today == Sys.Date())
@@ -109,7 +109,7 @@ compartmental_models <- function(SIRDS_initial_marking, dir_name, df_disease_ref
     SIRD_all <- data.frame(date=df_disease_ref$date, S=S_local, I=I_local, R=R_local, D=D_local, V=V_local)
     
     # Extract the rates
-    results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1))
+    results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1), response_Facebook[-nrow(SIRD_all),])
     
     plot_rates(dir_name, results_all)
 
@@ -134,11 +134,11 @@ compartmental_models <- function(SIRDS_initial_marking, dir_name, df_disease_ref
 #
 # Output:
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N){
+get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N, response_Facebook){
   vac_rates <- (c(diff(SIRD$V), after_date_SIRD$V - SIRD$V[nrow(SIRD)]) + SIRD$V * immunization_end_rate) / SIRD$S
   fat_rates <- c(diff(SIRD$D), after_date_SIRD$D - SIRD$D[nrow(SIRD)]) / SIRD$I
   rec_rates <- (c(diff(SIRD$R), after_date_SIRD$R - SIRD$R[nrow(SIRD)]) + SIRD$R * immunization_end_rate) / SIRD$I
-  infection_rates <- (c(diff(SIRD$I), after_date_SIRD$I - SIRD$I[nrow(SIRD)]) + SIRD$I * (rec_rates + fat_rates)) * (N / (SIRD$S * SIRD$I))
+  infection_rates <- (c(diff(SIRD$I), after_date_SIRD$I - SIRD$I[nrow(SIRD)]) + SIRD$I * (rec_rates + fat_rates)) * (N / (SIRD$S * SIRD$I * response_Facebook))
   
   vac_rates[vac_rates < 0] <- 0
   fat_rates[fat_rates < 0] <- 0
@@ -225,7 +225,7 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
 # Output:
 #   - SIRD_all_variants:      evolution of the infection using a SIvRD model
 #   - df_all_variants:        infection, recovery and fatality rates extracted from the SIvRD model for each variant
-SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N){
+SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N, response_Facebook){
   variants_name <- unique(df_variants$variant)
   
   SIRD_all_used <- SIRD_all
@@ -241,7 +241,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
     I_variant <- SIRD_all_used$I * df_variants_local$y
     
     SIRD_variant <- data.frame(date=SIRD_all_used$date, S=SIRD_all_used$S, I=I_variant, R=SIRD_all_used$R, D=SIRD_all_used$D, V=SIRD_all_used$V)
-    infection_rates_variant <- (diff(SIRD_variant$I) + SIRD_variant$I[-nrow(SIRD_variant)] * (results_all_used$rec_rates[-nrow(SIRD_variant)] + results_all_used$fat_rates[-nrow(SIRD_variant)])) * (rep(N, nrow(SIRD_variant)-1) / (SIRD_variant$S[-nrow(SIRD_variant)] * SIRD_all_used$I[-nrow(SIRD_variant)]))
+    infection_rates_variant <- (diff(SIRD_variant$I) + SIRD_variant$I[-nrow(SIRD_variant)] * (results_all_used$rec_rates[-nrow(SIRD_variant)] + results_all_used$fat_rates[-nrow(SIRD_variant)])) * (rep(N, nrow(SIRD_variant)-1) / (SIRD_variant$S[-nrow(SIRD_variant)] * SIRD_all_used$I[-nrow(SIRD_variant)] * response_Facebook$average_mobility[-nrow(SIRD_variant)]))
     infection_rates_variant[is.na(infection_rates_variant) | is.infinite(infection_rates_variant) | infection_rates_variant < 0] <- 0
     
     infection_rates_all_variants <- c(infection_rates_all_variants, infection_rates_variant)

@@ -14,7 +14,7 @@
 #   - fat_rates:              fatality rates
 #   - immunization_end_rate:  immunization end rate
 #   - N:                      total population
-SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, vac_rates, immunization_end_rate, N){
+SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, vac_rates, immunization_end_rate, N, response_Facebook){
   # Reproduce the evolution of the SIRD model starting from the extracted rates
   n <- nrow(SIRD)
   
@@ -27,8 +27,8 @@ SIRD_check <- function(dir_name, SIRD, infection_rates, rec_rates, fat_rates, va
   V_local[1] <- SIRD$V[1]
   
   for(t in 1:(n-1)){
-    S_local[t+1] <- S_local[t] - infection_rates[t] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate - S_local[t] * vac_rates[t] + V_local[t] * immunization_end_rate
-    I_local[t+1] <- I_local[t] + infection_rates[t] * I_local[t] * S_local[t] / N - I_local[t] * (rec_rates[t] + fat_rates[t])
+    S_local[t+1] <- S_local[t] - infection_rates[t] * response_Facebook$average_mobility[t] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate - S_local[t] * vac_rates[t] + V_local[t] * immunization_end_rate
+    I_local[t+1] <- I_local[t] + infection_rates[t] * response_Facebook$average_mobility[t] * I_local[t] * S_local[t] / N - I_local[t] * (rec_rates[t] + fat_rates[t])
     R_local[t+1] <- R_local[t] + I_local[t] * rec_rates[t] - R_local[t] * immunization_end_rate
     D_local[t+1] <- D_local[t] + I_local[t] * fat_rates[t]
     V_local[t+1] <- V_local[t] + S_local[t] * vac_rates[t] - V_local[t] * immunization_end_rate

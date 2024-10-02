@@ -196,13 +196,15 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   dirs <- data.frame(directory=list.dirs("aggregatesUMD", recursive = FALSE)) %>%
     filter(directory >= paste0("aggregatesUMD/", initial_year, "-Q", initial_quarter_number), directory <= paste0("aggregatesUMD/", final_year, "-Q", final_quarter_number))
   
+  dirs$directory <- paste0(dirs$directory, "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")
+  
   coronasurveys_data <- data.frame(date=NULL, p_cli=NULL)
   for(i in 1:nrow(dirs)){
-    if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
+    if(!file.exists(dirs$directory[i]))
       stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
       
     
-    coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
+    coronasurveys_data_local <- read.csv(dirs$directory[i])
     coronasurveys_data_local <- coronasurveys_data_local %>%
       select(date, p_cli)
     
@@ -216,7 +218,8 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
   
   coronasurveys_data <- coronasurveys_data %>%
-    filter(!is.na(p_cli))
+    filter(!is.na(p_cli), date >= df_disease_ref$date[1], date <= df_disease_ref$date[nrow(df_disease_ref)])
+  
   
   
   
@@ -232,7 +235,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     mutate(total_cases = coronasurveys_data$p_cli[1] + cumsum(new_cases))
   
   df_disease_ref <- rbind(data.frame(date=as.Date(df_disease_ref$date[1])-1, total_deaths=df_disease_ref$total_deaths[1]-df_disease_ref$new_deaths[1], population= df_disease_ref$population[1], new_deaths=0, new_cases=0, total_cases=coronasurveys_data$p_cli[1]), df_disease_ref)
-  
+    
   df_disease_ref$date <- as.Date(df_disease_ref$date)
   
   df_disease_ref$week <- as.integer(substr(format(df_disease_ref$date, format="%Y-%V"), 6, 7))
@@ -276,7 +279,79 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
 
   df_disease_ref <- df_disease_ref[-1,]
   
-  return(list(df_variants_ref, df_disease_ref, SIRDS_initial_marking))
+  
+  
+  
+  response_Facebook <- do.call(rbind,
+                               lapply(dirs$directory, function(x){
+                                 response_Facebook_local <- read.csv(x, na.strings = "")
+                                 response_Facebook_local <- response_Facebook_local %>%
+                                   filter(date >= global_initial_date)
+                                 
+                                 if(all(c("C0_1.0", "C0_2.0", "C0_3.0", "C0_4.0", "C0_5.0", "C0_6.0") %in% colnames(response_Facebook_local)) &&
+                                    !any(c("C0_1.2", "C0_2.2", "C0_3.2", "C0_4.2", "C0_5.2", "C0_6.2") %in% colnames(response_Facebook_local))){
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     dplyr::rename(C0_1.2 = C0_1.0, C0_2.2 = C0_2.0, C0_3.2 = C0_3.0, C0_4.2 = C0_4.0, C0_5.2 = C0_5.0, C0_6.2 = C0_6.0)
+                                 }
+                                 
+                                 if(all(c("C0_1.0", "C0_2.0", "C0_3.0", "C0_4.0", "C0_5.0", "C0_6.0") %in% colnames(response_Facebook_local)) &&
+                                    all(c("C0_1.2", "C0_2.2", "C0_3.2", "C0_4.2", "C0_5.2", "C0_6.2") %in% colnames(response_Facebook_local))){
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     mutate(C0_1.2 = C0_1.0 + C0_1.2, C0_2.2 = C0_2.0 + C0_2.2, C0_3.2 = C0_3.0 + C0_3.2, C0_4.2 = C0_4.0 + C0_4.2, C0_5.2 = C0_5.0 + C0_5.2, C0_6.2 = C0_6.0 + C0_6.2)
+                                 }
+                                 
+                                 if(all(c("C2.0", "C2.1", "C2.2", "C2.3") %in% colnames(response_Facebook_local)) &&
+                                    !("C2.4" %in% colnames(response_Facebook_local))){
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     dplyr::rename(C2.4 = C2.0 + C2.4)
+                                 }
+                                 
+                                 if(all(c("C2.0", "C2.1", "C2.2", "C2.3") %in% colnames(response_Facebook_local)) &&
+                                    "C2.4" %in% colnames(response_Facebook_local)){
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     mutate(C2.4 = C2.0)
+                                 }
+                                 
+                                 if(!any(c("C5.1", "C5.2", "C5.3", "C5.4", "C5.5", "C5.5") %in% colnames(response_Facebook_local))){
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     mutate(C5.1 = NA, C5.2 = NA, C5.3 = NA, C5.4 = NA, C5.5 = NA, C5.5 = NA)
+                                 }
+                                 
+                                 if(all(c("C2.1", "C2.2", "C2.3", "C2.4", "C2.NA") %in% colnames(response_Facebook_local))){
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     select(country_agg, date, Finished, C0_1.1, C0_1.2, C0_2.1, C0_2.2, C0_3.1, C0_3.2, C0_4.1, C0_4.2, C0_5.1, C0_5.2, C0_6.1, C0_6.2, C2.1, C2.2, C2.3, C2.4, C2.NA, E5, E7, C5.1, C5.2, C5.3, C5.4, C5.5)
+                                 }
+                                 else{
+                                   response_Facebook_local <- response_Facebook_local %>%
+                                     select(country_agg, date, Finished, C0_1.1, C0_1.2, C0_2.1, C0_2.2, C0_3.1, C0_3.2, C0_4.1, C0_4.2, C0_5.1, C0_5.2, C0_6.1, C0_6.2, E5, E7, C5.1, C5.2, C5.3, C5.4, C5.5) %>%
+                                     mutate(C2.1=NA, C2.2=NA, C2.3=NA, C2.4=NA, C2.NA=NA)
+                                 }
+                                 
+                                 response_Facebook_local$E7[which(response_Facebook_local$E7 == 0)] <- NA
+                                 
+                                 return(response_Facebook_local)
+                               })
+  )
+  
+  k <- 7
+  
+  response_Facebook <- response_Facebook %>%
+    mutate(residential = rollmean(C0_4.1 / (C0_4.1 + C0_4.2), k, align = "center", na.pad = TRUE),
+           workplaces = rollmean(C0_1.1 / (C0_1.1 + C0_1.2), k, align = "center", na.pad = TRUE), 
+           grocery_and_pharmacy_stores = rollmean(C0_2.1 / (C0_2.1 + C0_2.2), k, align = "center", na.pad = TRUE),
+           transit_stations = rollmean(C0_6.1 / (C0_6.1 + C0_6.2), k, align = "center", na.pad = TRUE),
+           retail_and_recreation = rollmean((C0_3.1 + C0_5.1) / (C0_3.1 + C0_3.2 + C0_5.1 + C0_5.2), k, align = "center", na.pad = TRUE)) %>%
+    filter(date >= df_disease_ref$date[1], date <= df_disease_ref$date[nrow(df_disease_ref)])
+  
+  response_Facebook <- response_Facebook %>%
+    filter(!is.na(grocery_and_pharmacy_stores), !is.na(transit_stations), !is.na(retail_and_recreation), !is.na(workplaces), !is.na(residential))
+  
+  response_Facebook$average_mobility <- (response_Facebook$residential + response_Facebook$workplaces + response_Facebook$grocery_and_pharmacy_stores + response_Facebook$transit_stations + response_Facebook$retail_and_recreation) / 5
+  
+  df_disease_ref <- df_disease_ref %>%
+    filter(date >= response_Facebook$date[1], date <= response_Facebook$date[nrow(response_Facebook)])
+  
+  return(list(df_variants_ref, df_disease_ref, SIRDS_initial_marking, response_Facebook))
 }
 
 # Prepare the data for Sybil.
@@ -309,6 +384,7 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   df_variants_all <- data[[1]]
   df_disease_all <- data[[2]]
   SIRDS_initial_marking <- data[[3]]
+  response_Facebook <- data[[4]]
   
   if(nrow(df_variants_all) > 0){
     df_variants_all <- df_variants_all %>%
@@ -321,5 +397,8 @@ prepare_data <- function(country, global_initial_date, global_final_date, immuni
   df_disease_all$new_vaccines <- rep(0, nrow(df_disease_all))
   df_disease_all$total_vaccines <- rep(0, nrow(df_disease_all))
   
-  return(list(df_variants_all, df_disease_all, SIRDS_initial_marking))
+  response_Facebook <- response_Facebook %>%
+    select(average_mobility)
+  
+  return(list(df_variants_all, df_disease_all, SIRDS_initial_marking, response_Facebook))
 }
