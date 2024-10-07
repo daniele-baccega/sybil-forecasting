@@ -17,7 +17,7 @@
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
 #   - SIRD_all:               evolution of the infection using a SIRD model
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-compartmental_models <- function(SIRDS_initial_marking, response_Facebook, dir_name, df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, recovery_data){
+compartmental_models <- function(SIRDS_initial_marking, response, dir_name, df_disease_ref, df_variants_ref, immunization_end_rate, recovery_rate, recovery_data){
   if(file.exists(paste0(dir_name, "/data/date.RData"))){
     load(paste0(dir_name, "/data/date.RData"))
     new_data <- !(today == Sys.Date())
@@ -109,7 +109,7 @@ compartmental_models <- function(SIRDS_initial_marking, response_Facebook, dir_n
     SIRD_all <- data.frame(date=df_disease_ref$date, S=S_local, I=I_local, R=R_local, D=D_local, V=V_local)
     
     # Extract the rates
-    results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1), response_Facebook[-nrow(SIRD_all),])
+    results_all <- get_rates(SIRD_all[-nrow(SIRD_all),], SIRD_all[nrow(SIRD_all),], immunization_end_rate, rep(N, nrow(SIRD_all)-1), response[-nrow(SIRD_all),])
     
     plot_rates(dir_name, results_all)
 
@@ -134,11 +134,11 @@ compartmental_models <- function(SIRDS_initial_marking, response_Facebook, dir_n
 #
 # Output:
 #   - results_all:            infection, recovery and fatality rates extracted from the SIRD model
-get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N, response_Facebook){
+get_rates <- function(SIRD, after_date_SIRD, immunization_end_rate, N, response){
   vac_rates <- (c(diff(SIRD$V), after_date_SIRD$V - SIRD$V[nrow(SIRD)]) + SIRD$V * immunization_end_rate) / SIRD$S
   fat_rates <- c(diff(SIRD$D), after_date_SIRD$D - SIRD$D[nrow(SIRD)]) / SIRD$I
   rec_rates <- (c(diff(SIRD$R), after_date_SIRD$R - SIRD$R[nrow(SIRD)]) + SIRD$R * immunization_end_rate) / SIRD$I
-  infection_rates <- (c(diff(SIRD$I), after_date_SIRD$I - SIRD$I[nrow(SIRD)]) + SIRD$I * (rec_rates + fat_rates)) * (N / (SIRD$S * SIRD$I * response_Facebook))
+  infection_rates <- (c(diff(SIRD$I), after_date_SIRD$I - SIRD$I[nrow(SIRD)]) + SIRD$I * (rec_rates + fat_rates)) * (N / (SIRD$S * SIRD$I * response$average_mobility))
   
   vac_rates[vac_rates < 0] <- 0
   fat_rates[fat_rates < 0] <- 0
@@ -225,7 +225,7 @@ generate_and_plot_variants_info <- function(dir_name, df_variants, df_disease_al
 # Output:
 #   - SIRD_all_variants:      evolution of the infection using a SIvRD model
 #   - df_all_variants:        infection, recovery and fatality rates extracted from the SIvRD model for each variant
-SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N, response_Facebook){
+SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immunization_end_rate, N, response){
   variants_name <- unique(df_variants$variant)
   
   SIRD_all_used <- SIRD_all
@@ -241,7 +241,7 @@ SIRD_variants <- function(dir_name, df_variants, SIRD_all, results_all, immuniza
     I_variant <- SIRD_all_used$I * df_variants_local$y
     
     SIRD_variant <- data.frame(date=SIRD_all_used$date, S=SIRD_all_used$S, I=I_variant, R=SIRD_all_used$R, D=SIRD_all_used$D, V=SIRD_all_used$V)
-    infection_rates_variant <- (diff(SIRD_variant$I) + SIRD_variant$I[-nrow(SIRD_variant)] * (results_all_used$rec_rates[-nrow(SIRD_variant)] + results_all_used$fat_rates[-nrow(SIRD_variant)])) * (rep(N, nrow(SIRD_variant)-1) / (SIRD_variant$S[-nrow(SIRD_variant)] * SIRD_all_used$I[-nrow(SIRD_variant)] * response_Facebook$average_mobility[-nrow(SIRD_variant)]))
+    infection_rates_variant <- (diff(SIRD_variant$I) + SIRD_variant$I[-nrow(SIRD_variant)] * (results_all_used$rec_rates[-nrow(SIRD_variant)] + results_all_used$fat_rates[-nrow(SIRD_variant)])) * (rep(N, nrow(SIRD_variant)-1) / (SIRD_variant$S[-nrow(SIRD_variant)] * SIRD_all_used$I[-nrow(SIRD_variant)] * response$average_mobility[-nrow(SIRD_variant)]))
     infection_rates_variant[is.na(infection_rates_variant) | is.infinite(infection_rates_variant) | infection_rates_variant < 0] <- 0
     
     infection_rates_all_variants <- c(infection_rates_all_variants, infection_rates_variant)
@@ -290,7 +290,7 @@ save_csv <- function(dir_name, results_all, type){
 #   - SIRD_used:            evolution of the infection
 #   - results_ref_used:     infection, recovery and fatality rates (with the ground truth of the forecast)
 #   - results_used:         infection, recovery and fatality rates
-filter_data <- function(df_disease_ref, SIRD_all, SIRD_all_variants, results_all, results_all_variants, initial_date, final_date, final_date_ref, daily_spline, variants){
+filter_data <- function(df_disease_ref, SIRD_all, SIRD_all_variants, results_all, results_all_variants, response, initial_date, final_date, final_date_ref, daily_spline, variants){
   # Reference dataframes
   df_disease_ref <- df_disease_ref %>%
     filter(date >= initial_date, date <= final_date_ref)
@@ -299,6 +299,9 @@ filter_data <- function(df_disease_ref, SIRD_all, SIRD_all_variants, results_all
     filter(date >= initial_date, date <= final_date_ref)
   
   results_all <- results_all %>%
+    filter(date >= initial_date, date <= final_date_ref)
+  
+  response <- response %>%
     filter(date >= initial_date, date <= final_date_ref)
   
   
@@ -340,7 +343,7 @@ filter_data <- function(df_disease_ref, SIRD_all, SIRD_all_variants, results_all
     results_used <- results_variants
   }
   
-  return(list(df_disease_ref_used, df_disease_used, SIRD_ref_used, SIRD_used, results_ref_used, results_used))
+  return(list(df_disease_ref_used, df_disease_used, SIRD_ref_used, SIRD_used, results_ref_used, results_used, response))
 }
 
 # Applies Prophet.
@@ -415,7 +418,7 @@ apply_NeuralProphet <- function(dir_name, date, values, time_step, suffix){
 #
 # Output:
 #   - SIRD_ev:                evolution of the SIRD/SIvRD in the considered forecast window model using the forecasted rates
-SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, variants, time_step){
+SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, variants, time_step, response){
   if(variants){
     SIRD_all_variants <- SIRD %>%
       group_by(date) %>%
@@ -433,8 +436,8 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
     V_local_all_variants[1:n] <- SIRD_all_variants$V
     
     for(t in n:(n_ref-1)){
-      S_local_all_variants[t+1] <- S_local_all_variants[t] - global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N + R_local_all_variants[t] * immunization_end_rate - S_local_all_variants[t] * global_vaccination_rates$mean[(t-n)+1] + V_local_all_variants[t] * immunization_end_rate
-      I_local_all_variants[t+1] <- I_local_all_variants[t] + global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_all_variants[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
+      S_local_all_variants[t+1] <- S_local_all_variants[t] - response$average_mobility[t] * global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N + R_local_all_variants[t] * immunization_end_rate - S_local_all_variants[t] * global_vaccination_rates$mean[(t-n)+1] + V_local_all_variants[t] * immunization_end_rate
+      I_local_all_variants[t+1] <- I_local_all_variants[t] + response$average_mobility[t] * global_infection_rates$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_all_variants[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
       R_local_all_variants[t+1] <- R_local_all_variants[t] + I_local_all_variants[t] * global_recovery_rates$mean[(t-n)+1] - R_local_all_variants[t] * immunization_end_rate
       D_local_all_variants[t+1] <- D_local_all_variants[t] + I_local_all_variants[t] * global_fatality_rates$mean[(t-n)+1]
       V_local_all_variants[t+1] <- V_local_all_variants[t] + S_local_all_variants[t] * global_vaccination_rates$mean[(t-n)+1] - V_local_all_variants[t] * immunization_end_rate
@@ -454,7 +457,7 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
       I_local_variant[1:n] <- SIRD_variant$I
       
       for(t in n:(n_ref-1)){
-        I_local_variant[t+1] <- I_local_variant[t] + infection_rates_variant$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_variant[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
+        I_local_variant[t+1] <- I_local_variant[t] + response$average_mobility[t] * infection_rates_variant$mean[(t-n)+1] * I_local_all_variants[t] * S_local_all_variants[t] / N - I_local_variant[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
       }
       
       I_local <- rbind(I_local, data.frame(I=I_local_variant, variant=rep(variants_name[i], n_ref)))
@@ -472,8 +475,8 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
     V_local[1:n] <- SIRD$V
 
     for(t in n:(n_ref-1)){
-      S_local[t+1] <- S_local[t] - infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate - S_local[t] * global_vaccination_rates$mean[(t-n)+1] + V_local[t] * immunization_end_rate
-      I_local[t+1] <- I_local[t] + infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N - I_local[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
+      S_local[t+1] <- S_local[t] - response$average_mobility[t] * infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N + R_local[t] * immunization_end_rate - S_local[t] * global_vaccination_rates$mean[(t-n)+1] + V_local[t] * immunization_end_rate
+      I_local[t+1] <- I_local[t] + response$average_mobility[t] * infection_rates$mean[(t-n)+1] * I_local[t] * S_local[t] / N - I_local[t] * (global_recovery_rates$mean[(t-n)+1] + global_fatality_rates$mean[(t-n)+1])
       R_local[t+1] <- R_local[t] + I_local[t] * global_recovery_rates$mean[(t-n)+1] - R_local[t] * immunization_end_rate
       D_local[t+1] <- D_local[t] + I_local[t] * global_fatality_rates$mean[(t-n)+1]
       V_local[t+1] <- V_local[t] + S_local[t] * global_vaccination_rates$mean[(t-n)+1] - V_local[t] * immunization_end_rate
@@ -504,11 +507,11 @@ SIRD_det <- function(n, n_ref, N, SIRD, infection_rates, global_infection_rates,
 #
 # Output:
 #   - SIRD_ev:                evolution of the SIRD/SIvRD in the considered forecast window model using the forecasted rates
-SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, SIRD, SIRD_ref, N, variants){
+SIRD_evolution <- function(dir_name, time_step, ref_data_flag, final_date, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, SIRD, SIRD_ref, N, variants, response){
   n <- length(unique(SIRD$date))
   n_ref <- n + time_step
   
-  SIRD_ev <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, variants, time_step)
+  SIRD_ev <- SIRD_det(n, n_ref, N, SIRD, infection_rates, global_infection_rates, global_recovery_rates, global_fatality_rates, global_vaccination_rates, immunization_end_rate, variants, time_step, response)
   
   plot_SIRD_evolution(SIRD_ev, n, n_ref, dir_name, time_step, ref_data_flag, final_date, infection_rates, SIRD, SIRD_ref, variants)
   

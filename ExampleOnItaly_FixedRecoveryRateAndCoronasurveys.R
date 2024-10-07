@@ -34,11 +34,15 @@ variants <- FALSE
 daily_variants_data <- FALSE
 
 # Forecast or only extract the rates and the SIRD evolution?
-forecast <- FALSE
+forecast <- TRUE
 
 # Initialize some variables
 immunization_end_rate <- 1 / 180
 recovery_rate <- 1 / 14
+
+# Facebook or Google mobility data
+#mobility_data <- "Facebook"
+mobility_data <- "Google"
 
 # Global initial and final dates
 global_initial_date <- as.Date("2020-04-26")
@@ -49,6 +53,7 @@ global_final_date <- as.Date("2021-05-19")
 
 # Scenarios with Italy (V=4)
 country <- "Italy"
+country_short <- "IT"
 
 if(!file.exists(country)){
   system(paste0("mkdir -p ", country))
@@ -66,14 +71,14 @@ variants_aggregated_names <- list("Alpha", "Delta", "Omicron", "Other")
 # First scenario on Italy
 external_dir_names <- c(paste0(country, "/V4/Example/"))
 
-initial_dates <- c(as.Date("2021-12-20"))
+initial_dates <- c(as.Date("2020-08-14"))
 
-final_dates <- c(as.Date("2022-01-20"))
+final_dates <- c(as.Date("2020-09-14"))
 
-data <- prepare_data(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
+data <- prepare_data(country, country_short, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, mobility_data, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline)
 df_variants_all <- data[[1]]
 df_disease_all <- data[[2]]
 SIRDS_initial_marking <- data[[3]]
-response_Facebook <- data[[4]]
+response <- data[[4]]
 
-Sybil(df_disease_all, df_variants_all, SIRDS_initial_marking, response_Facebook, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)
+Sybil(df_disease_all, df_variants_all, SIRDS_initial_marking, response, variants, daily_variants_data, daily_spline, external_dir_names, immunization_end_rate, recovery_rate, forecast, initial_dates, final_dates)
