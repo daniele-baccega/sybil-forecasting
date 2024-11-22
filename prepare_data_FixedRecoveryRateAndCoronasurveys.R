@@ -210,7 +210,7 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   }
   
   coronasurveys_data <- coronasurveys_data %>%
-    filter(date <= global_final_date)
+    filter(date <= global_final_date, date >= global_initial_date)
   
   coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.7)$y
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
