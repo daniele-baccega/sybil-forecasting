@@ -185,21 +185,23 @@ plots_v11_scenario <- function(external_dir_names, country, variants){
   
   for(i in 1:4){
     load(paste0(external_dir_names[1], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p1 <- plot + labs(title = expression("January 10"^"th")) 
     load(paste0(external_dir_names[2], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p2 <- plot + labs(title = expression("January 11"^"th")) 
     load(paste0(external_dir_names[3], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p3 <- plot + labs(title = expression("January 12"^"th")) 
     load(paste0(external_dir_names[4], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p4 <- plot + labs(title = expression("January 13"^"th")) 
     load(paste0(external_dir_names[5], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p5 <- plot + labs(title = expression("January 14"^"th")) 
     load(paste0(external_dir_names[6], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    
-    p <- (p1 + p2) / (p3 + p4) / (p5 + p6) +
+    p6 <- plot + labs(title = expression("January 15"^"th")) 
+    load(paste0(external_dir_names[7], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/SIRD_forecast_", i*7, "_days.RData"))
+    p7 <- plot + labs(title = expression("January 22"^"nd"))
+        
+    p <- (p1 + p2 + p3) / (p4 + p5 + p6) / (plot_spacer() + p7 + plot_spacer()) +
       plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
+      theme(legend.position = "bottom", legend.box = "vertical", panel.spacing = unit(1, "cm"), legend.key.size = unit(1, 'cm'), legend.title=element_text(size=35, face="bold"), legend.text=element_text(size=33), axis.text=element_text(size=20), axis.title=element_text(size=25, face="bold"), plot.title=element_text(size=25))
     
     png(paste0(country, "/V11/SIRD_forecast_evolution_", i*7, "days", type_variants, ".png"), units="in", width=34, height=15, res=300)
     print(p)
@@ -208,44 +210,48 @@ plots_v11_scenario <- function(external_dir_names, country, variants){
   
   for(i in 1:4){
     load(paste0(external_dir_names[1], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p1 <- plot + labs(title = expression("January 10"^"th"))
     load(paste0(external_dir_names[2], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p2 <- plot + labs(title = expression("January 11"^"th"))
     load(paste0(external_dir_names[3], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p3 <- plot + labs(title = expression("January 12"^"th"))
     load(paste0(external_dir_names[4], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p4 <- plot + labs(title = expression("January 13"^"th"))
     load(paste0(external_dir_names[5], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p5 <- plot + labs(title = expression("January 14"^"th"))
     load(paste0(external_dir_names[6], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
+    p6 <- plot + labs(title = expression("January 15"^"th"))
+    load(paste0(external_dir_names[7], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.1_" else "", i*7, "_days.RData"))
+    p7 <- plot + labs(title = expression("January 22"^"nd"))
     
-    p <- (p1 + p2) / (p3 + p4) / (p5 + p6) +
+    p <- (p1 + p2 + p3) / (p4 + p5 + p6) + (plot_spacer() + p7 + plot_spacer()) +
       plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
+      theme(legend.position = "bottom", legend.box = "vertical", panel.spacing = unit(1, "cm"), legend.key.size = unit(1, 'cm'), legend.title=element_text(size=35, face="bold"), legend.text=element_text(size=33), axis.text=element_text(size=20), axis.title=element_text(size=25, face="bold"), plot.title=element_text(size=25))
     
-    png(paste0(country, "/V11/BA.1_infection_rates_evolution_", i*7, "_days.png"), units="in", width=28, height=26, res=300)
+    png(paste0(country, "/V11/BA.1_infection_rates_evolution_", i*7, "_days.png"), units="in", width=34, height=15, res=300)
     print(p)
     dev.off()
   }
   
   for(i in 1:4){
-    load(paste0(external_dir_names[1], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p1 <- plot + labs(title = expression("January 10"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    load(paste0(external_dir_names[2], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p2 <- plot + labs(title = expression("January 11"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    load(paste0(external_dir_names[3], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p3 <- plot + labs(title = expression("January 12"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    load(paste0(external_dir_names[4], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p4 <- plot + labs(title = expression("January 13"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    load(paste0(external_dir_names[5], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p5 <- plot + labs(title = expression("January 14"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    load(paste0(external_dir_names[6], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", "", i*7, "_days.RData"))
-    p6 <- plot + labs(title = expression("January 15"^"th")) + theme(plot.title=element_text(size=34), axis.title.x = element_blank(), axis.title.y = element_blank())
-    
-    p <- (p1 + p2) / (p3 + p4) / (p5 + p6) +
+    load(paste0(external_dir_names[1], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p1 <- plot + labs(title = expression("January 10"^"th"))
+    load(paste0(external_dir_names[2], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p2 <- plot + labs(title = expression("January 11"^"th"))
+    load(paste0(external_dir_names[3], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p3 <- plot + labs(title = expression("January 12"^"th"))
+    load(paste0(external_dir_names[4], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p4 <- plot + labs(title = expression("January 13"^"th"))
+    load(paste0(external_dir_names[5], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p5 <- plot + labs(title = expression("January 14"^"th"))
+    load(paste0(external_dir_names[6], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p6 <- plot + labs(title = expression("January 15"^"th"))
+    load(paste0(external_dir_names[7], "SIRD", type_variants, "_Reinfection/forecast_plot/RData/forecast_infection_rates_", if(variants) "BA.2_" else "", i*7, "_days.RData"))
+    p7 <- plot + labs(title = expression("January 22"^"nd"))
+
+    p <- (p1 + p2 + p3) / (p4 + p5 + p6) + (plot_spacer() + p7 + plot_spacer()) +
       plot_layout(guides = "collect") &
-      theme(legend.position = "bottom", legend.box = "vertical")
+      theme(legend.position = "bottom", legend.box = "vertical", panel.spacing = unit(1, "cm"), legend.key.size = unit(1, 'cm'), legend.title=element_text(size=35, face="bold"), legend.text=element_text(size=33), axis.text=element_text(size=20), axis.title=element_text(size=25, face="bold"), plot.title=element_text(size=25))
     
     png(paste0(country, "/V11/", if(variants) "BA.2_" else "", "infection_rates_evolution_", i*7, "days", type_variants, ".png"), units="in", width=34, height=15, res=300)
     print(p)
