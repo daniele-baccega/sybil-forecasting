@@ -18,7 +18,7 @@ library(countrycode)
 
 # Include the Sybil function and the common functions
 source("Sybil.R")
-source("prepare_data_Italy_TimeDependentRecoveryRates.R")
+source("prepare_data_TimeDependentRecoveryRates.R")
 source("common_functions.R")
 source("plots.R")
 
