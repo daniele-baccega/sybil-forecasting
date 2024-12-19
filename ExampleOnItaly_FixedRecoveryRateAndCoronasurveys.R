@@ -45,8 +45,8 @@ recovery_rate <- 1 / 14
 mobility_data <- "Google"
 
 # Global initial and final dates
-global_initial_date <- as.Date("2020-04-26")
-global_final_date <- as.Date("2021-05-19")
+global_initial_date <- as.Date("2020-05-09")
+global_final_date <- as.Date("2022-03-01")
 # global_initial_date <- as.Date("2020-02-24")
 # global_final_date <- Sys.Date()
 
