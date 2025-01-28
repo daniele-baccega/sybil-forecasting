@@ -189,37 +189,37 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   initial_year <- as.numeric(format(global_initial_date, "%Y"))
   final_month <- as.numeric(format(global_final_date, "%m"))
   final_year <- as.numeric(format(global_final_date, "%Y"))
-  
+
   initial_quarter_number <- ceiling(initial_month / 3)
   final_quarter_number <- ceiling(final_month / 3)
-  
+
   dirs <- data.frame(directory=list.dirs("aggregatesUMD", recursive = FALSE)) %>%
     filter(directory >= paste0("aggregatesUMD/", initial_year, "-Q", initial_quarter_number), directory <= paste0("aggregatesUMD/", final_year, "-Q", final_quarter_number))
-  
+
   coronasurveys_data <- data.frame(date=NULL, p_cli=NULL)
   for(i in 1:nrow(dirs)){
     if(!file.exists(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv")))
       stop(paste0("There is no file for country ", country, " in ", dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
-      
-    
+
+
     coronasurveys_data_local <- read.csv(paste0(dirs$directory[i], "/aggregates/country/", codelist$iso2c[which(codelist$country.name.en == gsub("_", " ", country))], ".csv"))
     coronasurveys_data_local <- coronasurveys_data_local %>%
       select(date, p_cli)
-    
+
     coronasurveys_data <- rbind(coronasurveys_data, coronasurveys_data_local)
   }
-  
+
   coronasurveys_data <- coronasurveys_data %>%
     filter(date <= global_final_date, date >= global_initial_date)
-  
+
   coronasurveys_data$p_cli <- smooth.spline(coronasurveys_data$p_cli, spar = 0.7)$y
   coronasurveys_data$p_cli <- coronasurveys_data$p_cli * N
-  
+
   coronasurveys_data <- coronasurveys_data %>%
     filter(!is.na(p_cli))
-  
-  
-  
+
+
+
   df_disease_ref <- df_disease_ref %>%
     filter(date >= min(coronasurveys_data$date), date <= max(coronasurveys_data$date))
   df_disease_ref <- df_disease_ref %>%
@@ -227,12 +227,12 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
   df_disease_ref <- df_disease_ref[1:(nrow(df_disease_ref)-1),]
 
   df_disease_ref$new_cases[which(df_disease_ref$new_cases < 0)] <- 0
-  
+
   df_disease_ref <- df_disease_ref %>%
     mutate(total_cases = coronasurveys_data$p_cli[1] + cumsum(new_cases))
-  
+
   df_disease_ref <- rbind(data.frame(date=as.Date(df_disease_ref$date[1])-1, total_deaths=df_disease_ref$total_deaths[1]-df_disease_ref$new_deaths[1], population= df_disease_ref$population[1], new_deaths=0, new_cases=0, total_cases=coronasurveys_data$p_cli[1]), df_disease_ref)
-  
+
   df_disease_ref$date <- as.Date(df_disease_ref$date)
   
   df_disease_ref$week <- as.integer(substr(format(df_disease_ref$date, format="%Y-%V"), 6, 7))
@@ -268,8 +268,8 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
     df_variants_ref$date <- rep(variants_date, length(unique(df_variants_ref$variant)))
   }
 
-  SIRDS_initial_marking <- c(unique(df_disease_ref$population) - coronasurveys_data$p_cli[1] - df_disease_ref$total_deaths[1],
-                             coronasurveys_data$p_cli[1],
+  SIRDS_initial_marking <- c(unique(df_disease_ref$population) - df_disease_ref$total_cases[1] - df_disease_ref$total_deaths[1],
+                             df_disease_ref$total_cases[1],
                              0,
                              df_disease_ref$total_deaths[1],
                              0)
