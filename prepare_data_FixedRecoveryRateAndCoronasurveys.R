@@ -22,7 +22,7 @@
 # Output:
 #   - df_disease_ref_init:        dataframe with disease data
 #   - df_variants_init:           dataframe with variants data
-download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list()){
+download_files_and_load_data <- function(country_long, global_initial_date, global_final_date, variants, variants_to_disregard = list(), variants_aggregated = list(), variants_aggregated_names = list(), region = "", city = ""){
   if(!is.list(variants_aggregated) || !is.list(variants_aggregated_names))
     stop("Variables variants_aggregated and variants_aggregated_names must be lists!")
   
@@ -61,7 +61,7 @@ download_files_and_load_data <- function(country_long, global_initial_date, glob
   df_disease_ref_init$deaths[is.na(df_disease_ref_init$deaths) & df_disease_ref_init$date <= "2020-04-01"] <- 0
   
   df_disease_ref_init <- df_disease_ref_init %>%
-    filter(is.na(administrative_area_level_2), is.na(administrative_area_level_3))
+    filter(((region == "" & is.na(administrative_area_level_2)) | administrative_area_level_2 == region) & ((city == "" & is.na(administrative_area_level_3)) | administrative_area_level_3 == city))
   
   df_disease_ref_init <- df_disease_ref_init %>%
     mutate(confirmed = na.approx(confirmed, na.rm = FALSE), deaths = na.approx(deaths, na.rm = FALSE))
@@ -296,9 +296,9 @@ compute_data <- function(df_disease_ref, df_variants_ref, global_initial_date, g
 # Output:
 #   - df_variants_ref:        dataframe with variants data (after preprocessing)
 #   - df_disease_ref:         dataframe with disease data (after preprocessing)
-prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline){
+prepare_data <- function(country, global_initial_date, global_final_date, immunization_end_rate, recovery_rate, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, daily_spline, region = "", city = ""){
   # Download file and load data
-  data <- download_files_and_load_data(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names)
+  data <- download_files_and_load_data(country, global_initial_date, global_final_date, variants, variants_to_disregard, variants_aggregated, variants_aggregated_names, region, city)
   df_disease_init <- data[[1]]
   df_variants_init <- data[[2]]
 
