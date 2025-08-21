@@ -25,12 +25,12 @@ Ensure your user has the rights to run docker (without the use of sudo). To crea
 
 Create the docker group.
 ```
-  $ sudo groupadd docker
- ```
+  sudo groupadd docker
+```
  
 Add your user to the docker group.
 ```
-  $ sudo usermod -aG docker $USER
+  sudo usermod -aG docker $USER
 ```
 
 Log out and log back in so that your group membership is re-evaluated.
